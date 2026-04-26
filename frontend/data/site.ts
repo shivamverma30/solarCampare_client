@@ -1,5 +1,6 @@
 export const navLinks = [
   { href: "/", label: "Home" },
+  { href: "/#our-products", label: "Our Products" },
   { href: "/calculator", label: "Solar Calculator" },
   { href: "/compare", label: "Compare Panels" },
   { href: "/emi", label: "EMI Calculator" },

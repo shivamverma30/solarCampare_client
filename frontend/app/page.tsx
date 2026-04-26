@@ -5,6 +5,57 @@ import TrustedBrands from "@/components/trusted-brands";
 import Testimonials from "@/components/testimonials";
 import CtaBanner from "@/components/cta-banner";
 
+const topSolarProducts = [
+  {
+    brand: "Goldi Solar",
+    panelType: "Monocrystalline",
+    efficiency: "21.5%",
+    warranty: "25 Years",
+    powerOutput: "400W-600W",
+    bestFor: "Homes & Commercial",
+  },
+  {
+    brand: "Waaree Solar",
+    panelType: "Mono PERC",
+    efficiency: "17%-21%",
+    warranty: "25 Years",
+    powerOutput: "325W-550W",
+    bestFor: "Budget Installations",
+  },
+  {
+    brand: "Vikram Solar",
+    panelType: "Bifacial Glass-Glass",
+    efficiency: "21.73%",
+    warranty: "30 Years",
+    powerOutput: "590W-615W",
+    bestFor: "Premium Rooftops",
+  },
+  {
+    brand: "Panasonic Solar",
+    panelType: "Heterojunction",
+    efficiency: "22.2%",
+    warranty: "25 Years",
+    powerOutput: "400W-410W",
+    bestFor: "Small Roof High Output",
+  },
+  {
+    brand: "Jakson Solar",
+    panelType: "Bifacial Mono PERC",
+    efficiency: "21.5%",
+    warranty: "30 Years",
+    powerOutput: "490W-510W",
+    bestFor: "Hot Climate Areas",
+  },
+  {
+    brand: "Premier Energies",
+    panelType: "Dual Glass Bifacial",
+    efficiency: "High Yield",
+    warranty: "30 Years",
+    powerOutput: "500W+",
+    bestFor: "Long Term ROI",
+  },
+];
+
 export default function Home() {
   return (
     <div>
@@ -51,6 +102,71 @@ export default function Home() {
           <div>
             <p className="text-3xl font-semibold text-white">4.9/5</p>
             <p className="text-sm text-white/82">Average Client Rating</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="our-products" className="mx-auto mt-14 w-full max-w-375 px-4 md:px-8">
+        <div className="mx-auto max-w-7xl rounded-3xl border border-emerald-200/45 bg-white/52 p-6 shadow-[0_18px_52px_rgba(14,116,144,0.12)] backdrop-blur-xl dark:border-emerald-300/18 dark:bg-slate-900/48 md:p-10">
+          <p className="text-xs font-semibold uppercase tracking-[0.26em] text-emerald-700 dark:text-emerald-300">Our Products</p>
+          <h2 className="mt-3 font-serif text-3xl text-slate-900 dark:text-slate-50 md:text-5xl">Top Solar Products</h2>
+          <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-700 dark:text-slate-200 md:text-base">
+            Compare premium solar brands with transparent specifications and trusted performance.
+          </p>
+
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {topSolarProducts.map((product) => (
+              <article
+                key={product.brand}
+                className="group rounded-2xl border border-white/65 bg-linear-to-br from-white/88 via-white/74 to-emerald-50/58 p-5 shadow-lg backdrop-blur-xl transition duration-300 hover:-translate-y-1.5 hover:shadow-[0_20px_34px_rgba(15,23,42,0.18)] dark:border-white/16 dark:from-slate-950/78 dark:via-slate-900/70 dark:to-emerald-950/28 dark:hover:shadow-[0_20px_34px_rgba(2,132,199,0.14)]"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-50">{product.brand}</p>
+                    <p className="mt-1 text-xs uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">Premium Panel</p>
+                  </div>
+                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-amber-300/80 bg-amber-100/85 text-amber-700 dark:border-amber-300/50 dark:bg-amber-300/14 dark:text-amber-200">
+                    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M4 9h16" />
+                      <path d="M4 15h16" />
+                      <path d="M9 4v16" />
+                      <path d="M15 4v16" />
+                      <rect x="3" y="3" width="18" height="18" rx="2" />
+                    </svg>
+                  </span>
+                </div>
+
+                <dl className="mt-5 space-y-3 text-sm">
+                  <div className="flex items-start justify-between gap-3 border-b border-slate-200/70 pb-2 dark:border-slate-700/60">
+                    <dt className="text-slate-600 dark:text-slate-300">Panel Type</dt>
+                    <dd className="text-right font-medium text-slate-900 dark:text-slate-100">{product.panelType}</dd>
+                  </div>
+                  <div className="flex items-start justify-between gap-3 border-b border-slate-200/70 pb-2 dark:border-slate-700/60">
+                    <dt className="text-slate-600 dark:text-slate-300">Efficiency</dt>
+                    <dd className="text-right font-medium text-slate-900 dark:text-slate-100">{product.efficiency}</dd>
+                  </div>
+                  <div className="flex items-start justify-between gap-3 border-b border-slate-200/70 pb-2 dark:border-slate-700/60">
+                    <dt className="text-slate-600 dark:text-slate-300">Warranty</dt>
+                    <dd className="text-right font-medium text-slate-900 dark:text-slate-100">{product.warranty}</dd>
+                  </div>
+                  <div className="flex items-start justify-between gap-3 border-b border-slate-200/70 pb-2 dark:border-slate-700/60">
+                    <dt className="text-slate-600 dark:text-slate-300">Power Output</dt>
+                    <dd className="text-right font-medium text-slate-900 dark:text-slate-100">{product.powerOutput}</dd>
+                  </div>
+                  <div className="flex items-start justify-between gap-3 pb-1">
+                    <dt className="text-slate-600 dark:text-slate-300">Best For</dt>
+                    <dd className="text-right font-medium text-slate-900 dark:text-slate-100">{product.bestFor}</dd>
+                  </div>
+                </dl>
+
+                <Link
+                  href="/compare"
+                  className="mt-5 inline-flex w-full items-center justify-center rounded-full border border-emerald-300/80 bg-emerald-100/85 px-4 py-2.5 text-sm font-semibold text-emerald-900 transition group-hover:bg-emerald-200 dark:border-emerald-300/55 dark:bg-emerald-300/16 dark:text-emerald-100 dark:group-hover:bg-emerald-300/28"
+                >
+                  Compare Now
+                </Link>
+              </article>
+            ))}
           </div>
         </div>
       </section>
