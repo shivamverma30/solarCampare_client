@@ -3,8 +3,8 @@ import Link from "next/link";
 export default function LoginPage() {
   return (
     <section className="mx-auto w-full max-w-6xl px-4 pb-16 md:px-8">
-      <div className="grid overflow-hidden rounded-3xl border border-slate-200 bg-white/75 shadow-xl dark:border-slate-700/70 dark:bg-slate-900/78 dark:shadow-[0_18px_44px_rgba(0,0,0,0.42)] lg:grid-cols-2">
-        <div className="relative hidden bg-linear-to-br from-slate-900 via-slate-800 to-amber-950 p-10 text-white lg:block">
+      <div className="grid overflow-hidden rounded-3xl border border-slate-200 bg-white/90 shadow-xl lg:grid-cols-2">
+        <div className="relative hidden bg-linear-to-br from-slate-950 via-slate-900 to-amber-950 p-10 text-white lg:block">
           <p className="text-xs font-semibold uppercase tracking-[0.26em] text-amber-300">Welcome Back</p>
           <h1 className="mt-3 text-5xl">Power Your Future with Solar</h1>
           <p className="mt-5 max-w-sm text-sm leading-7 text-white/80">
@@ -23,29 +23,29 @@ export default function LoginPage() {
 
         <div className="p-6 md:p-10">
           <p className="text-xs font-semibold uppercase tracking-[0.26em] text-amber-500">Login</p>
-          <h2 className="mt-3 text-4xl text-slate-900 dark:text-slate-50">Sign In to Your Account</h2>
+          <h2 className="mt-3 text-4xl text-slate-900">Sign In to Your Account</h2>
 
           <form className="mt-8 space-y-4">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-100">
+            <label className="block text-sm font-medium text-slate-700">
               Email
               <input
                 type="email"
                 placeholder="you@example.com"
-                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none placeholder:text-slate-500 focus:border-amber-400 dark:border-slate-500 dark:bg-slate-950/92 dark:text-slate-50 dark:placeholder:text-slate-300"
+                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none placeholder:text-slate-500 focus:border-amber-400"
               />
             </label>
 
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-100">
+            <label className="block text-sm font-medium text-slate-700">
               Password
               <input
                 type="password"
                 placeholder="Enter password"
-                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none placeholder:text-slate-500 focus:border-amber-400 dark:border-slate-500 dark:bg-slate-950/92 dark:text-slate-50 dark:placeholder:text-slate-300"
+                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none placeholder:text-slate-500 focus:border-amber-400"
               />
             </label>
 
             <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-              <label className="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-200">
+              <label className="inline-flex items-center gap-2 text-sm text-slate-600">
                 <input type="checkbox" className="h-4 w-4 rounded border-slate-300 accent-amber-500" />
                 Remember me
               </label>
@@ -62,7 +62,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="mt-5 text-sm text-slate-600 dark:text-slate-200">
+          <p className="mt-5 text-sm text-slate-600">
             Do not have an account?{" "}
             <Link href="/signup" className="font-semibold text-amber-600 transition hover:text-amber-500">
               Sign Up
