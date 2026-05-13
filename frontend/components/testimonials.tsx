@@ -1,11 +1,16 @@
+"use client";
+
 import { testimonials } from "@/data/site";
+import { useLocale } from "@/components/locale-provider";
 
 export default function Testimonials() {
+  const { t } = useLocale();
+
   return (
     <section className="mx-auto mt-16 w-full max-w-7xl px-4 pb-16 md:px-8">
       <div className="mb-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.26em] text-amber-500">Testimonials</p>
-        <h2 className="mt-3 font-serif text-3xl text-slate-900 md:text-4xl">Loved by Solar Buyers</h2>
+        <p className="text-xs font-semibold uppercase tracking-[0.26em] text-amber-500">{t("testimonials.eyebrow")}</p>
+        <h2 className="mt-3 font-serif text-3xl text-slate-900 md:text-4xl">{t("testimonials.title")}</h2>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">

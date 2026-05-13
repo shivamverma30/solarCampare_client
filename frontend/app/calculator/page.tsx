@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useLocale } from "@/components/locale-provider";
 
 type PropertyType = "residential" | "commercial";
 
@@ -14,6 +15,7 @@ const citySunFactor: Record<string, number> = {
 };
 
 export default function CalculatorPage() {
+  const { t } = useLocale();
   const [monthlyBill, setMonthlyBill] = useState(5000);
   const [roofSize, setRoofSize] = useState(600);
   const [city, setCity] = useState<keyof typeof citySunFactor>("Ahmedabad");
@@ -43,13 +45,13 @@ export default function CalculatorPage() {
   return (
     <section className="mx-auto w-full max-w-6xl px-4 pb-16 md:px-8">
       <div className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-xl md:p-10">
-        <p className="text-xs font-semibold uppercase tracking-[0.26em] text-amber-500">Solar Calculator</p>
-        <h1 className="mt-3 text-4xl text-slate-900">Estimate Your Solar Potential</h1>
+        <p className="text-xs font-semibold uppercase tracking-[0.26em] text-amber-500">{t("calculator.eyebrow")}</p>
+        <h1 className="mt-3 text-4xl text-slate-900">{t("calculator.title")}</h1>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-2">
           <div className="space-y-4">
             <label className="block text-sm font-medium text-slate-700">
-              Monthly Electricity Bill (INR)
+              {t("calculator.monthlyBill")}
               <input
                 type="number"
                 min={0}
@@ -61,7 +63,7 @@ export default function CalculatorPage() {
             </label>
 
             <label className="block text-sm font-medium text-slate-700">
-              Roof Size (sq. ft.)
+              {t("calculator.roofSize")}
               <input
                 type="number"
                 min={0}
@@ -73,7 +75,7 @@ export default function CalculatorPage() {
             </label>
 
             <label className="block text-sm font-medium text-slate-700">
-              City
+              {t("calculator.city")}
               <select
                 value={city}
                 onChange={(event) => setCity(event.target.value as keyof typeof citySunFactor)}
@@ -88,23 +90,23 @@ export default function CalculatorPage() {
             </label>
 
             <label className="block text-sm font-medium text-slate-700">
-              Property Type
+              {t("calculator.propertyType")}
               <select
                 value={propertyType}
                 onChange={(event) => setPropertyType(event.target.value as PropertyType)}
                 className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-amber-400"
               >
-                <option value="residential">Residential</option>
-                <option value="commercial">Commercial</option>
+                <option value="residential">{t("calculator.residential")}</option>
+                <option value="commercial">{t("calculator.commercial")}</option>
               </select>
             </label>
           </div>
 
           <div className="grid content-start gap-4">
-            <ResultCard title="Recommended Capacity" value={`${result.recommendedKw.toFixed(1)} kW`} />
-            <ResultCard title="Estimated Annual Savings" value={`INR ${Math.round(result.annualSavings).toLocaleString("en-IN")}`} />
-            <ResultCard title="Approx Panel Count" value={`${result.panelCount} panels`} />
-            <ResultCard title="Expected ROI" value={`${result.roiYears.toFixed(1)} years`} />
+            <ResultCard title={t("calculator.recommendedCapacity")} value={`${result.recommendedKw.toFixed(1)} kW`} />
+            <ResultCard title={t("calculator.annualSavings")} value={`INR ${Math.round(result.annualSavings).toLocaleString("en-IN")}`} />
+            <ResultCard title={t("calculator.panelCount")} value={`${result.panelCount} panels`} />
+            <ResultCard title={t("calculator.expectedRoi")} value={`${result.roiYears.toFixed(1)} years`} />
           </div>
         </div>
       </div>

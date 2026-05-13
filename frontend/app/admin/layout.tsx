@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import BrandMark from "@/components/brand-mark";
 import { useAuth } from "@/lib/use-auth";
 import { logout } from "@/lib/auth";
 
@@ -28,31 +29,31 @@ export default function AdminLayout({
   const router = useRouter();
   const { isLoading, isAuthenticated, admin } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
   const isAdminLoginPage = pathname === "/admin";
 
   useEffect(() => {
-    if (!isAdminLoginPage && !isLoading && !isAuthenticated) {
-      router.replace("/admin");
+    if (isAdminLoginPage || isLoading || isAuthenticated || redirecting) {
+      return;
     }
-  }, [isAdminLoginPage, isLoading, isAuthenticated, router]);
+
+    setRedirecting(true);
+    router.replace("/admin");
+  }, [isAdminLoginPage, isLoading, isAuthenticated, redirecting, router]);
 
   if (isAdminLoginPage) {
     return <>{children}</>;
   }
 
-  if (isLoading) {
+  if (isLoading || redirecting || !isAuthenticated) {
     return (
       <div className="flex h-screen items-center justify-center bg-app">
         <div className="text-center">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-amber-400 border-t-transparent"></div>
-          <p className="mt-4 text-app-fg">Loading...</p>
+          <p className="mt-4 text-app-fg">{redirecting ? "Redirecting..." : "Loading..."}</p>
         </div>
       </div>
     );
-  }
-
-  if (!isAuthenticated) {
-    return null;
   }
 
   const handleLogout = () => {
@@ -71,19 +72,13 @@ export default function AdminLayout({
         <div className="flex h-full flex-col">
           {/* Header */}
           <div className="border-b border-slate-200/80 p-6">
-            <Link href="/admin/dashboard" className="flex items-center gap-3">
-              <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-linear-to-br from-amber-300 to-amber-500 text-lg font-black text-slate-950 shadow-md shadow-amber-200/70">
-                ⚡
-              </span>
-              <div>
-                <span className="block font-serif text-lg font-bold tracking-[0.18em] text-slate-900">
-                  SOLARCOMPARE
-                </span>
-                <span className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                  Admin Panel
-                </span>
-              </div>
-            </Link>
+            <BrandMark
+              href="/admin/dashboard"
+              compact
+              className="items-start"
+              titleClassName="text-slate-900"
+              taglineClassName="text-slate-500"
+            />
           </div>
 
           {/* Navigation */}

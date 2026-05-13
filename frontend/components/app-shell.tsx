@@ -6,6 +6,7 @@ import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import FloatingWhatsApp from "@/components/floating-whatsapp";
 import ChatbotPopup from "@/components/chatbot-popup";
+import { LocaleProvider } from "@/components/locale-provider";
 
 type AppShellProps = {
   children: ReactNode;
@@ -17,16 +18,18 @@ export default function AppShell({ children }: AppShellProps) {
   const isHomePage = pathname === "/";
 
   if (isAdminRoute) {
-    return <div className="relative min-h-screen overflow-x-clip">{children}</div>;
+    return <div className="relative min-h-screen flex flex-col overflow-x-hidden">{children}</div>;
   }
 
   return (
-    <div className="relative min-h-screen overflow-x-clip">
-      <Navbar />
-      <main className={isHomePage ? "pt-0" : "pt-24"}>{children}</main>
-      <Footer />
-      <ChatbotPopup />
-      <FloatingWhatsApp />
+    <div className="relative min-h-screen flex flex-col overflow-x-hidden">
+      <LocaleProvider>
+        <Navbar />
+        <main className={isHomePage ? "pt-0 flex-1" : "pt-24 flex-1"}>{children}</main>
+        <Footer />
+        <ChatbotPopup />
+        <FloatingWhatsApp />
+      </LocaleProvider>
     </div>
   );
 }

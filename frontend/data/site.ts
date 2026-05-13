@@ -1,9 +1,9 @@
 export const navLinks = [
-  { href: "/", label: "Home" },
-  { href: "/#our-products", label: "Our Products" },
-  { href: "/calculator", label: "Solar Calculator" },
-  { href: "/compare", label: "Compare Panels" },
-  { href: "/emi", label: "EMI Calculator" },
+  { href: "/", labelKey: "nav.home" },
+  { href: "/#our-products", labelKey: "nav.products" },
+  { href: "/calculator", labelKey: "nav.calculator" },
+  { href: "/compare", labelKey: "nav.compare" },
+  { href: "/emi", labelKey: "nav.emi" },
 ];
 
 export const trustedBrands = ["Goldi", "Tata Power Solar", "Waaree", "Adani Solar", "Luminous", "Vikram"];

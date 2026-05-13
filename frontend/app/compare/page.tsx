@@ -1,25 +1,30 @@
+"use client";
+
 import { panelData } from "@/data/site";
+import { useLocale } from "@/components/locale-provider";
 
 export default function ComparePage() {
+  const { t } = useLocale();
+
   return (
     <section className="mx-auto w-full max-w-7xl px-4 pb-16 md:px-8">
       <div className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-xl md:p-10">
-        <p className="text-xs font-semibold uppercase tracking-[0.26em] text-amber-500">Panel Comparison</p>
-        <h1 className="mt-3 text-4xl text-slate-900">Compare Top Solar Panel Brands</h1>
+        <p className="text-xs font-semibold uppercase tracking-[0.26em] text-amber-500">{t("compare.eyebrow")}</p>
+        <h1 className="mt-3 text-4xl text-slate-900">{t("compare.title")}</h1>
         <p className="mt-3 max-w-2xl text-sm text-slate-600">
-          Evaluate key technical and commercial factors side-by-side to pick the best panel for your usage and budget.
+          {t("compare.description")}
         </p>
 
         <div className="mt-8 overflow-x-auto rounded-2xl border border-slate-200">
           <table className="min-w-full text-left text-sm">
             <thead className="bg-slate-100/90 text-slate-700">
               <tr>
-                <th className="px-4 py-3">Brand</th>
-                <th className="px-4 py-3">Wattage</th>
-                <th className="px-4 py-3">Efficiency</th>
-                <th className="px-4 py-3">Warranty</th>
-                <th className="px-4 py-3">Panel Type</th>
-                <th className="px-4 py-3">Price Range</th>
+                <th className="px-4 py-3">{t("compare.brand")}</th>
+                <th className="px-4 py-3">{t("compare.wattage")}</th>
+                <th className="px-4 py-3">{t("compare.efficiency")}</th>
+                <th className="px-4 py-3">{t("compare.warranty")}</th>
+                <th className="px-4 py-3">{t("compare.panelType")}</th>
+                <th className="px-4 py-3">{t("compare.priceRange")}</th>
               </tr>
             </thead>
             <tbody>
@@ -46,19 +51,19 @@ export default function ComparePage() {
               <h2 className="text-xl text-slate-900">{panel.brand}</h2>
               <div className="mt-3 space-y-2 text-sm text-slate-600">
                 <p>
-                  <span className="font-semibold">Wattage:</span> {panel.wattage}
+                  <span className="font-semibold">{t("compare.wattage")}:</span> {panel.wattage}
                 </p>
                 <p>
-                  <span className="font-semibold">Efficiency:</span> {panel.efficiency}
+                  <span className="font-semibold">{t("compare.efficiency")}:</span> {panel.efficiency}
                 </p>
                 <p>
-                  <span className="font-semibold">Warranty:</span> {panel.warranty}
+                  <span className="font-semibold">{t("compare.warranty")}:</span> {panel.warranty}
                 </p>
                 <p>
-                  <span className="font-semibold">Type:</span> {panel.panelType}
+                  <span className="font-semibold">{t("compare.type")}:</span> {panel.panelType}
                 </p>
                 <p>
-                  <span className="font-semibold">Price:</span> {panel.priceRange}
+                  <span className="font-semibold">{t("compare.price")}:</span> {panel.priceRange}
                 </p>
               </div>
             </article>

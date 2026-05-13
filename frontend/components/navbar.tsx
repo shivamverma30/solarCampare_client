@@ -3,178 +3,120 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import BrandMark from "@/components/brand-mark";
 import { navLinks } from "@/data/site";
+import { Menu, X } from "lucide-react";
+import { useLocale } from "@/components/locale-provider";
+
+// Minimal, single-definition navbar to ensure scrolled text is always visible.
+function LanguageSwitcher({ locale, setLocale, isDark }: { locale: string; setLocale: (l: string) => void; isDark: boolean }) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const close = () => setOpen(false);
+    window.addEventListener("click", close, { once: true });
+    return () => window.removeEventListener("click", close);
+  }, [open]);
+
+  const cls = isDark
+    ? "inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/18 bg-white/8 text-white"
+    : "inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-white text-black";
+
+  return (
+    <div className="relative" onClick={(e) => e.stopPropagation()}>
+      <button className={cls} onClick={() => setOpen((s) => !s)} aria-label="Change language">🌐</button>
+      <div className={`absolute right-0 top-[calc(100%+0.4rem)] w-36 rounded-xl border bg-slate-900/90 text-white shadow-lg transition-all ${open ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"}`}>
+        <button className={`block w-full px-3 py-2 text-left text-xs ${locale === "en" ? "bg-white/12 text-amber-200" : "text-white/80"}`} onClick={() => { setLocale("en"); setOpen(false); }}>English</button>
+        <button className={`block w-full px-3 py-2 text-left text-xs ${locale === "hi" ? "bg-white/12 text-amber-200" : "text-white/80"}`} onClick={() => { setLocale("hi"); setOpen(false); }}>हिन्दी</button>
+      </div>
+    </div>
+  );
+}
 
 export default function Navbar() {
   const pathname = usePathname();
+  const { locale, setLocale, t } = useLocale();
   const [open, setOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const isHomePage = pathname === "/";
-  const isOverlayMode = isHomePage && !isScrolled;
+  const isHome = pathname === "/";
+  const overlay = isHome && !isScrolled;
+  const scrolledTextClass = "text-black";
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 36);
-    };
-
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-
-    return () => window.removeEventListener("scroll", handleScroll);
+    const onScroll = () => setIsScrolled(window.scrollY > 36);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => {
-    if (open && isScrolled) {
-      setOpen(false);
-    }
-  }, [isScrolled, open]);
+  // Hide overlay when not in overlay mode to avoid washing out text
+  const overlayClasses = overlay ? "pointer-events-none absolute inset-0 bg-linear-to-b from-black/24 via-black/8 to-transparent opacity-80" : "hidden";
 
-  const headerClassName = isOverlayMode
+  const headerBase = overlay
     ? "bg-transparent text-white"
-    : isHomePage
-      ? "bg-slate-950/88 text-white shadow-[0_10px_30px_rgba(2,6,23,0.28)]"
-      : "border-b border-slate-200/80 bg-white/96 text-slate-900 shadow-[0_10px_30px_rgba(15,23,42,0.08)]";
-
-  const wrapperClassName = isScrolled
-    ? "py-2"
-    : "py-3 md:py-4";
-
-  const logoClassName = isOverlayMode
-    ? "font-serif text-lg tracking-[0.2em] text-amber-50/92 md:text-[1.55rem]"
-    : isHomePage
-      ? "font-serif text-lg tracking-[0.2em] text-amber-50/92 md:text-[1.45rem]"
-      : "font-serif text-lg tracking-[0.2em] text-slate-900 md:text-[1.45rem]";
-
-  const navLinkClass = (isActive: boolean) =>
-    `group relative px-1 py-2.5 text-[0.7rem] font-medium uppercase tracking-[0.16em] transition duration-300 md:text-[0.74rem] ${
-      isActive
-        ? isOverlayMode || isHomePage
-          ? "text-amber-200"
-          : "text-amber-700"
-        : isOverlayMode || isHomePage
-          ? "text-white/86 hover:text-white"
-          : "text-slate-600 hover:text-slate-900"
-    }`;
-
-  const pillButtonClass = isOverlayMode || isHomePage
-    ? "rounded-full border border-white/16 bg-white/12 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-amber-50/95 backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 hover:bg-white/18"
-    : "rounded-full border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700 transition duration-300 hover:-translate-y-0.5 hover:bg-slate-50";
+    : "bg-white text-black shadow-[0_14px_34px_rgba(15,23,42,0.12)] border-b border-slate-200 backdrop-blur-xl";
 
   return (
-    <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ease-out ${headerClassName}`}>
-      <div className={`relative w-full transition-all duration-500 ease-out ${wrapperClassName}`}>
-        <div
-          className={`pointer-events-none absolute inset-0 ${
-            isOverlayMode
-              ? "bg-linear-to-b from-black/24 via-black/8 to-transparent opacity-80"
-              : "bg-transparent"
-          }`}
-        />
+    <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${headerBase}`}>
+      <div className={`relative mx-auto flex max-w-420 items-center gap-4 px-4 py-3`}> 
+        <div className="absolute inset-0 z-0">
+          <div className={overlayClasses} />
+        </div>
 
-        <div className="relative mx-auto flex w-full max-w-420 items-center gap-4 px-4 sm:px-6 lg:px-8 xl:px-10">
-          <div className="flex min-w-0 flex-1 items-center">
-            <Link href="/" className={logoClassName}>
-              SOLARCOMPARE
-            </Link>
+        <div className="relative z-10 flex w-full items-center">
+          <div className="flex-1">
+            <BrandMark href="/" compact titleClassName={overlay ? "text-amber-50" : scrolledTextClass} taglineClassName={overlay ? "text-amber-100/80" : "text-black/70"} />
           </div>
 
-          <nav className="hidden flex-1 items-center justify-center gap-5 lg:flex xl:gap-7">
-            {navLinks.map((link) => {
-              const isActive = pathname === link.href;
-
+          <nav className="hidden lg:flex flex-1 justify-center gap-6">
+            {navLinks.map((l) => {
+              const active = pathname === l.href;
+              const base = overlay ? (active ? "text-amber-200" : "text-white/90") : "text-black";
+              const labelText = (l as any).labelKey ? t((l as any).labelKey) : (l as any).label;
               return (
-                <Link key={link.href} href={link.href} className={navLinkClass(isActive)}>
-                  <span className="relative inline-flex items-center justify-center">
-                    {link.label}
-                    <span
-                      className={`absolute -bottom-1.5 left-0 h-px w-full origin-left bg-amber-200 transition-transform duration-300 ${
-                        isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
-                      }`}
-                    />
+                <Link key={l.href} href={l.href} className={`group text-sm uppercase tracking-wider ${base} px-1 py-2`}>
+                  <span className="relative inline-block">
+                    {labelText}
+                    <span className={`absolute left-0 -bottom-1 h-px w-full bg-amber-200 transform transition-transform ${active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"}`} />
                   </span>
                 </Link>
               );
             })}
           </nav>
 
-          <div className="flex items-center justify-end gap-3">
-            <div className="hidden items-center gap-3 lg:flex">
-              <Link href="/login" className={pillButtonClass}>
-                Login
-              </Link>
-              <Link
-                href="/calculator"
-                className="rounded-full bg-linear-to-r from-amber-300 via-amber-200 to-amber-100 px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.18em] text-slate-950 shadow-[0_12px_30px_rgba(251,191,36,0.28)] transition duration-300 hover:-translate-y-0.5 hover:from-amber-200 hover:to-amber-50"
-              >
-                Get Proposal
-              </Link>
+          <div className="flex items-center gap-3">
+            <div className="hidden lg:flex items-center gap-3">
+              <LanguageSwitcher locale={locale} setLocale={setLocale} isDark={overlay} />
+              <Link href="/login" className={overlay ? "rounded-full border border-white/16 bg-white/12 px-4 py-2 text-xs text-amber-50" : "rounded-full border border-slate-300 bg-white px-4 py-2 text-xs text-black shadow-sm"}>{t("buttons.login")}</Link>
+              <Link href="/calculator" className="hidden md:inline-block rounded-full bg-amber-300 px-4 py-2 text-xs font-semibold text-black">{t("buttons.getProposal")}</Link>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setOpen((prev) => !prev)}
-              aria-label="Toggle menu"
-              className={`inline-flex h-10 w-10 items-center justify-center rounded-lg border backdrop-blur-xl transition lg:hidden ${
-                isOverlayMode || isHomePage
-                  ? "border-white/16 bg-white/8 text-white hover:bg-white/14"
-                  : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-              }`}
-            >
-              {open ? "×" : "☰"}
+            <button onClick={() => setOpen((s) => !s)} className={overlay ? "inline-flex h-10 w-10 items-center justify-center rounded-lg text-white lg:hidden" : "inline-flex h-10 w-10 items-center justify-center rounded-lg text-black lg:hidden"} aria-label="Toggle menu">
+              {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
 
-        <div
-          className={`absolute inset-x-0 top-full z-50 overflow-hidden border-b px-4 py-3 backdrop-blur-2xl transition-all duration-500 ease-out lg:hidden ${
-            isOverlayMode || isHomePage
-              ? "border-white/10 bg-slate-950/95 shadow-[0_24px_60px_rgba(2,6,23,0.32)]"
-              : "border-slate-200 bg-white/95 shadow-[0_20px_50px_rgba(15,23,42,0.12)]"
-          } ${
-            open ? "max-h-112 opacity-100" : "pointer-events-none max-h-0 opacity-0"
-          }`}
-        >
-          <div className="mx-auto w-full max-w-420 px-0 sm:px-2">
-            <nav className="grid gap-1.5">
-              {navLinks.map((link) => {
-                const isActive = pathname === link.href;
-
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setOpen(false)}
-                    className={`rounded-lg px-4 py-3 text-sm font-medium uppercase tracking-[0.18em] transition ${
-                      isOverlayMode || isHomePage
-                        ? isActive
-                          ? "bg-white/10 text-amber-200"
-                          : "text-white/85 hover:bg-white/8 hover:text-white"
-                        : isActive
-                          ? "bg-amber-50 text-amber-700"
-                          : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
-                    }`}
-                  >
-                    {link.label}
-                  </Link>
-                );
-              })}
+        {/* Mobile menu */}
+        <div className={`absolute left-0 right-0 top-full z-40 lg:hidden transition-all duration-300 ${open ? "block" : "hidden"}`}>
+          <div className={`mx-auto max-w-420 rounded-b-xl bg-white shadow-md border-t border-slate-200`}> 
+            <nav className="grid gap-1 p-3">
+              {navLinks.map((l) => {
+                  const labelText = (l as any).labelKey ? t((l as any).labelKey) : (l as any).label;
+                  return (
+                    <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="block rounded-md px-4 py-3 text-sm text-black">{labelText}</Link>
+                  );
+                })}
+              <div className="mt-2 flex gap-2 px-3 pb-3">
+                <Link href="/login" className="flex-1 rounded-full border px-4 py-2 text-sm text-black">{t("buttons.login")}</Link>
+                <Link href="/calculator" className="flex-1 rounded-full bg-amber-300 px-4 py-2 text-sm text-black">{t("buttons.getProposal")}</Link>
+              </div>
             </nav>
-
-            <div className="mt-3 flex flex-wrap items-center gap-2.5">
-              <Link href="/login" onClick={() => setOpen(false)} className={pillButtonClass}>
-                Login
-              </Link>
-              <Link
-                href="/calculator"
-                onClick={() => setOpen(false)}
-                className="rounded-full bg-linear-to-r from-amber-300 via-amber-200 to-amber-100 px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.18em] text-slate-950 shadow-[0_12px_30px_rgba(251,191,36,0.28)]"
-              >
-                Get Proposal
-              </Link>
-            </div>
           </div>
         </div>
       </div>
     </header>
   );
 }
+
+

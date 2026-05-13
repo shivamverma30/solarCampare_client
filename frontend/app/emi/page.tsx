@@ -1,8 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useLocale } from "@/components/locale-provider";
 
 export default function EmiPage() {
+  const { t } = useLocale();
   const [cost, setCost] = useState(450000);
   const [downPayment, setDownPayment] = useState(50000);
   const [interest, setInterest] = useState(9.5);
@@ -28,13 +30,13 @@ export default function EmiPage() {
   return (
     <section className="mx-auto w-full max-w-5xl px-4 pb-16 md:px-8">
       <div className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-xl md:p-10">
-        <p className="text-xs font-semibold uppercase tracking-[0.26em] text-amber-500">EMI Calculator</p>
-        <h1 className="mt-3 text-4xl text-slate-900">Estimate Your Monthly EMI</h1>
+        <p className="text-xs font-semibold uppercase tracking-[0.26em] text-amber-500">{t("emi.eyebrow")}</p>
+        <h1 className="mt-3 text-4xl text-slate-900">{t("emi.title")}</h1>
 
         <div className="mt-8 grid gap-8 md:grid-cols-2">
           <div className="space-y-4">
             <label className="block text-sm font-medium text-slate-700">
-              Project Cost (INR)
+              {t("emi.projectCost")}
               <input
                 type="number"
                 min={0}
@@ -46,7 +48,7 @@ export default function EmiPage() {
             </label>
 
             <label className="block text-sm font-medium text-slate-700">
-              Down Payment (INR)
+              {t("emi.downPayment")}
               <input
                 type="number"
                 min={0}
@@ -58,7 +60,7 @@ export default function EmiPage() {
             </label>
 
             <label className="block text-sm font-medium text-slate-700">
-              Annual Interest Rate (%)
+              {t("emi.interestRate")}
               <input
                 type="number"
                 min={0}
@@ -71,7 +73,7 @@ export default function EmiPage() {
             </label>
 
             <label className="block text-sm font-medium text-slate-700">
-              Loan Tenure (Years)
+              {t("emi.loanTenure")}
               <input
                 type="number"
                 min={1}
@@ -84,16 +86,16 @@ export default function EmiPage() {
           </div>
 
           <div className="rounded-2xl border border-amber-200/70 bg-linear-to-br from-amber-50 to-white p-6 shadow-sm">
-            <p className="text-xs uppercase tracking-widest text-slate-500">Monthly EMI</p>
+            <p className="text-xs uppercase tracking-widest text-slate-500">{t("emi.monthlyEmi")}</p>
             <p className="mt-3 text-4xl font-semibold text-slate-900">
               INR {Math.round(emi).toLocaleString("en-IN")}
             </p>
 
             <div className="mt-6 space-y-2 text-sm text-slate-600">
-              <p>Total Project Cost: INR {Math.round(cost).toLocaleString("en-IN")}</p>
-              <p>Down Payment: INR {Math.round(downPayment).toLocaleString("en-IN")}</p>
-              <p>Loan Amount: INR {Math.max(0, Math.round(cost - downPayment)).toLocaleString("en-IN")}</p>
-              <p>Tenure: {years} years</p>
+              <p>{t("emi.totalProjectCost")}: INR {Math.round(cost).toLocaleString("en-IN")}</p>
+              <p>{t("emi.downPayment")}: INR {Math.round(downPayment).toLocaleString("en-IN")}</p>
+              <p>{t("emi.loanAmount")}: INR {Math.max(0, Math.round(cost - downPayment)).toLocaleString("en-IN")}</p>
+              <p>{t("emi.tenure")}: {years} {t("emi.years")}</p>
             </div>
           </div>
         </div>

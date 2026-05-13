@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { Viewport } from "next";
 import { Cormorant_Garamond, Manrope } from "next/font/google";
 import "./globals.css";
 import AppShell from "@/components/app-shell";
@@ -15,8 +16,26 @@ const cormorant = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
-  title: "SOLARCOMPARE",
-  description: "Premium solar comparison and calculator platform",
+  title: {
+    default: "Solar Compare by SAFWE ENERGY",
+    template: "%s | Solar Compare by SAFWE ENERGY",
+  },
+  description: "Solar Compare by SAFWE ENERGY is a premium solar comparison and calculator platform.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", type: "image/x-icon" },
+      { url: "/icon.png", type: "image/png" },
+      { url: "/images/safwe-logo.png", type: "image/png" },
+    ],
+    shortcut: ["/icon.png", "/images/safwe-logo.png"],
+    apple: [{ url: "/apple-icon.png", type: "image/png" }, { url: "/images/safwe-logo.png", type: "image/png" }],
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -29,7 +48,7 @@ export default function RootLayout({
       lang="en"
       className={`${manrope.variable} ${cormorant.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-app text-app-fg">
+      <body className="min-h-screen flex flex-col overflow-x-hidden bg-app text-app-fg">
         <AppShell>{children}</AppShell>
       </body>
     </html>

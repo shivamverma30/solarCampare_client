@@ -3,25 +3,28 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import BrandMark from "@/components/brand-mark";
 import { apiClient } from "@/lib/api-client";
-import { getToken, setAdmin, setToken } from "@/lib/auth";
+import { setAdmin, setToken } from "@/lib/auth";
+import { useAuth } from "@/lib/use-auth";
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const { isLoading, isAuthenticated } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [mounted, setMounted] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-
-    const token = getToken();
-    if (token) {
-      router.replace("/admin/dashboard");
+    if (isLoading || !isAuthenticated || redirecting) {
+      return;
     }
-  }, [router]);
+
+    setRedirecting(true);
+    router.replace("/admin/dashboard");
+  }, [isLoading, isAuthenticated, redirecting, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,11 +41,28 @@ export default function AdminLoginPage() {
 
     setToken(response.token!);
     setAdmin(response.admin);
+    setRedirecting(true);
     router.replace("/admin/dashboard");
   };
 
-  if (!mounted) {
-    return null;
+  if (isLoading) {
+    return (
+      <section className="flex min-h-screen items-center justify-center px-4">
+        <div className="rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm">
+          <p className="text-sm font-medium text-slate-600">Checking admin session...</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (redirecting || isAuthenticated) {
+    return (
+      <section className="flex min-h-screen items-center justify-center px-4">
+        <div className="rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm">
+          <p className="text-sm font-medium text-slate-600">Redirecting to dashboard...</p>
+        </div>
+      </section>
+    );
   }
 
   return (
@@ -52,7 +72,14 @@ export default function AdminLoginPage() {
       <div className="relative grid w-full max-w-5xl overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_32px_70px_rgba(15,23,42,0.14)] lg:grid-cols-[1.1fr_1fr]">
         <div className="hidden border-r border-slate-200/80 bg-slate-950 px-10 py-12 text-white lg:flex lg:flex-col lg:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-300">SOLARCOMPARE</p>
+            <BrandMark
+              href="/"
+              compact
+              className="items-start"
+              titleClassName="text-white"
+              taglineClassName="text-amber-200/80"
+            />
+            <p className="mt-8 text-xs font-semibold uppercase tracking-[0.3em] text-amber-300">Admin Access</p>
             <h1 className="mt-5 font-serif text-5xl leading-[1.05]">Admin Control Center</h1>
             <p className="mt-5 max-w-md text-sm leading-7 text-white/86">
               Manage premium solar products, monitor dashboard metrics, and control account settings from one secure workspace.

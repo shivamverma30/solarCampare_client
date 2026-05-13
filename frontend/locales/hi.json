@@ -1,0 +1,141 @@
+{
+  "nav": {
+    "home": "होम",
+    "products": "हमारे उत्पाद",
+    "calculator": "सोलर कैलकुलेटर",
+    "compare": "पैनल तुलना",
+    "emi": "ईएमआई कैलकुलेटर"
+  },
+  "buttons": {
+    "login": "लॉगिन",
+    "getProposal": "प्रस्ताव प्राप्त करें",
+    "calculateMySavings": "मेरी बचत की गणना करें",
+    "comparePanels": "सोलर पैनलों की तुलना करें",
+    "createAccount": "खाता बनाएं",
+    "startCalculation": "गणना शुरू करें",
+    "compareNow": "अभी तुलना करें",
+    "signUp": "साइन अप",
+    "goToLogin": "लॉगिन पर जाएं",
+    "forgotPassword": "पासवर्ड भूल गए"
+  },
+  "site": {
+    "tagline": "Solar Compare by SAFWE ENERGY",
+    "premium": "प्रीमियम सोलर इंटेलिजेंस प्लेटफ़ॉर्म",
+    "heroTitle": "आत्मविश्वास, गति और पारदर्शी लागत के साथ भविष्य-तैयार सोलर सिस्टम बनाएं।",
+    "heroDescription": "शीर्ष ब्रांडों की तुलना करें, बचत का अनुमान लगाएं और एक ही सिनेमैटिक अनुभव में फाइनेंसिंग की गणना करें।"
+  },
+  "home": {
+    "statSystems": "मूल्यांकित सिस्टम",
+    "statSavings": "अनुमानित ग्राहक बचत",
+    "statRating": "औसत ग्राहक रेटिंग",
+    "ourProducts": "हमारे उत्पाद",
+    "topProducts": "शीर्ष सोलर उत्पाद",
+    "productsDescription": "पारदर्शी स्पेसिफिकेशन और भरोसेमंद प्रदर्शन के साथ प्रीमियम सोलर ब्रांडों की तुलना करें।",
+    "premiumPanel": "प्रीमियम पैनल",
+    "panelType": "पैनल प्रकार",
+    "efficiency": "दक्षता",
+    "warranty": "वारंटी",
+    "powerOutput": "पावर आउटपुट",
+    "bestFor": "उपयुक्त"
+  },
+  "benefits": {
+    "title": "क्यों स्मार्ट खरीदार Solar Compare चुनते हैं"
+  },
+  "cta": {
+    "eyebrow": "सोलर अपनाने के लिए तैयार हैं?",
+    "title": "मिनटों में अपना व्यक्तिगत बचत प्रस्ताव प्राप्त करें।",
+    "description": "अपनी प्रॉपर्टी का विश्लेषण करें, पैनल विकल्पों की तुलना करें और मासिक रिटर्न का अनुमान लगाएं।"
+  },
+  "trustedBrands": {
+    "title": "विश्वसनीय ब्रांड जिनकी हम तुलना करते हैं"
+  },
+  "testimonials": {
+    "eyebrow": "प्रशंसापत्र",
+    "title": "सोलर खरीदारों की पसंद"
+  },
+  "chatbot": {
+    "title": "Solar AI सहायक",
+    "close": "बंद करें",
+    "tryAsking": "यह पूछकर देखें:",
+    "toggleLabel": "AI चैट खोलें/बंद करें",
+    "button": "AI चैट"
+  },
+  "footer": {
+    "description": "तेज ROI और स्वच्छ ऊर्जा चाहने वाले ग्राहकों के लिए प्रीमियम सोलर डिस्कवरी प्लेटफ़ॉर्म।",
+    "quickLinks": "त्वरित लिंक",
+    "contact": "संपर्क",
+    "hours": "सोम-शनि | सुबह 9:00 - शाम 7:00",
+    "contactEmail": "hello@safweenergy.com",
+    "contactPhone": "+91 98765 43210",
+    "copyright": "© {year} SAFWE ENERGY। सभी अधिकार सुरक्षित।"
+  },
+  "auth": {
+    "signup": "साइन अप",
+    "welcomeBack": "वापसी पर स्वागत है",
+    "powerFuture": "सोलर के साथ अपना भविष्य सशक्त बनाएं",
+    "signinDescription": "व्यक्तिगत बचत, पैनल तुलना और अपनी सोलर योजना तक पहुंचने के लिए साइन इन करें।",
+    "newTo": "Solar Compare में नए हैं?",
+    "createAccount": "खाता बनाएं",
+    "login": "लॉगिन",
+    "signInToAccount": "अपने खाते में साइन इन करें",
+    "createAccountTitle": "अपना Solar Compare खाता बनाएं",
+    "alreadyHaveAccount": "क्या आपके पास पहले से खाता है?",
+    "dontHaveAccount": "क्या आपका खाता नहीं है?",
+    "getStarted": "शुरू करें",
+    "designJourney": "अपनी प्रीमियम सोलर यात्रा तैयार करें",
+    "signupDescription": "अपनी प्रोफाइल बनाएं, पैनलों की तुलना तेज करें और व्यक्तिगत बचत गणना अनलॉक करें।",
+    "alreadyRegistered": "पहले से पंजीकृत हैं?",
+    "fullName": "पूरा नाम",
+    "email": "ईमेल",
+    "phone": "फ़ोन",
+    "password": "पासवर्ड",
+    "confirmPassword": "पासवर्ड की पुष्टि करें",
+    "rememberMe": "मुझे याद रखें",
+    "emailPlaceholder": "you@example.com",
+    "passwordPlaceholder": "पासवर्ड दर्ज करें",
+    "namePlaceholder": "अपना पूरा नाम",
+    "phonePlaceholder": "+91",
+    "createPasswordPlaceholder": "पासवर्ड बनाएं",
+    "confirmPasswordPlaceholder": "पासवर्ड की पुष्टि करें"
+  },
+  "calculator": {
+    "eyebrow": "सोलर कैलकुलेटर",
+    "title": "अपनी सोलर क्षमता का अनुमान लगाएं",
+    "monthlyBill": "मासिक बिजली बिल (INR)",
+    "roofSize": "छत का आकार (वर्ग फुट)",
+    "city": "शहर",
+    "propertyType": "प्रॉपर्टी प्रकार",
+    "residential": "आवासीय",
+    "commercial": "वाणिज्यिक",
+    "recommendedCapacity": "अनुशंसित क्षमता",
+    "annualSavings": "अनुमानित वार्षिक बचत",
+    "panelCount": "अनुमानित पैनल संख्या",
+    "expectedRoi": "अनुमानित ROI"
+  },
+  "compare": {
+    "eyebrow": "पैनल तुलना",
+    "title": "शीर्ष सोलर पैनल ब्रांडों की तुलना करें",
+    "description": "तकनीकी और वाणिज्यिक कारकों की साथ-साथ तुलना करके सही पैनल चुनें।",
+    "brand": "ब्रांड",
+    "wattage": "वाटेज",
+    "efficiency": "दक्षता",
+    "warranty": "वारंटी",
+    "panelType": "पैनल प्रकार",
+    "priceRange": "मूल्य सीमा",
+    "type": "प्रकार",
+    "price": "कीमत"
+  },
+  "emi": {
+    "eyebrow": "ईएमआई कैलकुलेटर",
+    "title": "अपनी मासिक ईएमआई का अनुमान लगाएं",
+    "projectCost": "प्रोजेक्ट लागत (INR)",
+    "downPayment": "डाउन पेमेंट (INR)",
+    "interestRate": "वार्षिक ब्याज दर (%)",
+    "loanTenure": "ऋण अवधि (वर्ष)",
+    "monthlyEmi": "मासिक ईएमआई",
+    "totalProjectCost": "कुल प्रोजेक्ट लागत",
+    "loanAmount": "ऋण राशि",
+    "tenure": "अवधि",
+    "years": "वर्ष"
+  }
+}

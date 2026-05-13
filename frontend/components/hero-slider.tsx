@@ -32,7 +32,7 @@ export default function HeroSlider() {
           </div>
         );
       })}
-      <div className="absolute inset-0 bg-linear-to-b from-black/74 via-black/70 to-black/82" />
+      <div className="absolute inset-0 bg-linear-to-b from-black/40 via-black/46 to-black/58" />
     </div>
   );
 }

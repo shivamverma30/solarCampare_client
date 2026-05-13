@@ -1,0 +1,141 @@
+{
+  "nav": {
+    "home": "Home",
+    "products": "Our Products",
+    "calculator": "Solar Calculator",
+    "compare": "Compare Panels",
+    "emi": "EMI Calculator"
+  },
+  "buttons": {
+    "login": "Login",
+    "getProposal": "Get Proposal",
+    "calculateMySavings": "Calculate My Savings",
+    "comparePanels": "Compare Solar Panels",
+    "createAccount": "Create Account",
+    "startCalculation": "Start Calculation",
+    "compareNow": "Compare Now",
+    "signUp": "Sign Up",
+    "goToLogin": "Go to Login",
+    "forgotPassword": "Forgot password"
+  },
+  "site": {
+    "tagline": "Solar Compare by SAFWE ENERGY",
+    "premium": "Premium Solar Intelligence Platform",
+    "heroTitle": "Build a future-ready solar system with confidence, speed, and transparent economics.",
+    "heroDescription": "Compare top brands, estimate savings, and calculate financing in one cinematic buying experience crafted for premium homeowners and businesses."
+  },
+  "home": {
+    "statSystems": "Systems Assessed",
+    "statSavings": "Projected Client Savings",
+    "statRating": "Average Client Rating",
+    "ourProducts": "Our Products",
+    "topProducts": "Top Solar Products",
+    "productsDescription": "Compare premium solar brands with transparent specifications and trusted performance.",
+    "premiumPanel": "Premium Panel",
+    "panelType": "Panel Type",
+    "efficiency": "Efficiency",
+    "warranty": "Warranty",
+    "powerOutput": "Power Output",
+    "bestFor": "Best For"
+  },
+  "benefits": {
+    "title": "Why Smart Buyers Choose Solar Compare"
+  },
+  "cta": {
+    "eyebrow": "Ready to go solar?",
+    "title": "Get your personalized savings proposal in minutes.",
+    "description": "Analyze your property, compare panel options, and estimate monthly returns with one guided experience."
+  },
+  "trustedBrands": {
+    "title": "Trusted Brands We Compare"
+  },
+  "testimonials": {
+    "eyebrow": "Testimonials",
+    "title": "Loved by Solar Buyers"
+  },
+  "chatbot": {
+    "title": "Solar AI Assistant",
+    "close": "Close",
+    "tryAsking": "Try asking:",
+    "toggleLabel": "Toggle AI chat",
+    "button": "AI Chat"
+  },
+  "footer": {
+    "description": "Premium solar discovery platform for homeowners and businesses seeking faster ROI and cleaner energy.",
+    "quickLinks": "Quick Links",
+    "contact": "Contact",
+    "hours": "Mon-Sat | 9:00 AM - 7:00 PM",
+    "contactEmail": "hello@safweenergy.com",
+    "contactPhone": "+91 98765 43210",
+    "copyright": "© {year} SAFWE ENERGY. All rights reserved."
+  },
+  "auth": {
+    "signup": "Sign Up",
+    "welcomeBack": "Welcome Back",
+    "powerFuture": "Power Your Future with Solar",
+    "signinDescription": "Sign in to access personalized savings, panel comparisons, and your solar planning journey.",
+    "newTo": "New to Solar Compare?",
+    "createAccount": "Create Account",
+    "login": "Login",
+    "signInToAccount": "Sign In to Your Account",
+    "createAccountTitle": "Create Your Solar Compare Account",
+    "alreadyHaveAccount": "Already have an account?",
+    "dontHaveAccount": "Do not have an account?",
+    "getStarted": "Get Started",
+    "designJourney": "Design Your Premium Solar Journey",
+    "signupDescription": "Build your profile, compare panels faster, and unlock personalized savings calculations with one account.",
+    "alreadyRegistered": "Already registered?",
+    "fullName": "Full Name",
+    "email": "Email",
+    "phone": "Phone",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "rememberMe": "Remember me",
+    "emailPlaceholder": "you@example.com",
+    "passwordPlaceholder": "Enter password",
+    "namePlaceholder": "Your full name",
+    "phonePlaceholder": "+91",
+    "createPasswordPlaceholder": "Create password",
+    "confirmPasswordPlaceholder": "Confirm password"
+  },
+  "calculator": {
+    "eyebrow": "Solar Calculator",
+    "title": "Estimate Your Solar Potential",
+    "monthlyBill": "Monthly Electricity Bill (INR)",
+    "roofSize": "Roof Size (sq. ft.)",
+    "city": "City",
+    "propertyType": "Property Type",
+    "residential": "Residential",
+    "commercial": "Commercial",
+    "recommendedCapacity": "Recommended Capacity",
+    "annualSavings": "Estimated Annual Savings",
+    "panelCount": "Approx Panel Count",
+    "expectedRoi": "Expected ROI"
+  },
+  "compare": {
+    "eyebrow": "Panel Comparison",
+    "title": "Compare Top Solar Panel Brands",
+    "description": "Evaluate key technical and commercial factors side-by-side to pick the best panel for your usage and budget.",
+    "brand": "Brand",
+    "wattage": "Wattage",
+    "efficiency": "Efficiency",
+    "warranty": "Warranty",
+    "panelType": "Panel Type",
+    "priceRange": "Price Range",
+    "type": "Type",
+    "price": "Price"
+  },
+  "emi": {
+    "eyebrow": "EMI Calculator",
+    "title": "Estimate Your Monthly EMI",
+    "projectCost": "Project Cost (INR)",
+    "downPayment": "Down Payment (INR)",
+    "interestRate": "Annual Interest Rate (%)",
+    "loanTenure": "Loan Tenure (Years)",
+    "monthlyEmi": "Monthly EMI",
+    "totalProjectCost": "Total Project Cost",
+    "loanAmount": "Loan Amount",
+    "tenure": "Tenure",
+    "years": "years"
+  }
+}

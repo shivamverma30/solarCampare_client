@@ -7,6 +7,30 @@
   --card: rgba(255, 255, 255, 0.72);
 }
 
+html,
+body {
+  width: 100%;
+  height: 100%;
+  min-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Make anchors and in-page navigation account for the fixed header height.
+   Use a reasonable default offset that matches the navbar's height so that
+   sections linked via #ids are fully visible below the header. */
+:root {
+  --app-header-offset: 72px;
+}
+
+html {
+  scroll-padding-top: var(--app-header-offset);
+}
+
 @theme inline {
   --color-app: var(--background);
   --color-app-fg: var(--foreground);
@@ -15,7 +39,7 @@
 }
 
 body {
-  min-height: 100vh;
+  min-height: 100dvh;
   background:
     radial-gradient(1200px 500px at 10% 0%, rgba(245, 158, 11, 0.18), transparent 60%),
     radial-gradient(900px 460px at 90% 10%, rgba(251, 191, 36, 0.14), transparent 55%),
