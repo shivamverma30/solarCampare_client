@@ -1,6 +1,8 @@
 "use client";
 
 import { useLocale } from "@/components/locale-provider";
+import en from "@/locales/en.json";
+import hi from "@/locales/hi.json";
 
 type SolarTypeContent = {
   badge: string;
@@ -9,8 +11,23 @@ type SolarTypeContent = {
   pros: string[];
 };
 
+type SolarTypesSection = {
+  eyebrow: string;
+  title: string;
+  description: string;
+  onGrid: SolarTypeContent;
+  offGrid: SolarTypeContent;
+  hybrid: SolarTypeContent;
+};
+
+type LocaleContent = {
+  solarTypes: SolarTypesSection;
+};
+
 export default function SolarTypes() {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
+  const localeContent = (locale === "hi" ? hi : en) as unknown as LocaleContent;
+  const solarTypes = localeContent.solarTypes;
 
   const types = [
     {
@@ -46,7 +63,7 @@ export default function SolarTypes() {
 
       <div className="grid gap-4 md:grid-cols-3">
         {types.map((type) => {
-          const typeData = t(`solarTypes.${type.key}`) as SolarTypeContent;
+          const typeData = solarTypes[type.key as keyof Pick<SolarTypesSection, "onGrid" | "offGrid" | "hybrid">];
           const pros = typeData.pros || [];
 
           return (
