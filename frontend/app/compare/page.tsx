@@ -2,10 +2,10 @@
 
 import { panelData } from "@/data/site";
 import { useLocale } from "@/components/locale-provider";
+import DCRComparison from "@/components/dcr-comparison";
 
 export default function ComparePage() {
   const { t } = useLocale();
-
   return (
     <section className="mx-auto w-full max-w-7xl px-4 pb-16 md:px-8">
       <div className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-xl md:p-10">
@@ -69,6 +69,8 @@ export default function ComparePage() {
             </article>
           ))}
         </div>
+
+        <DCRComparison />
       </div>
     </section>
   );

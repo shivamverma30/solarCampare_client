@@ -137,5 +137,137 @@
     "loanAmount": "Loan Amount",
     "tenure": "Tenure",
     "years": "years"
+  },
+  "solarTypes": {
+    "eyebrow": "Solar Technology",
+    "title": "Types of Solar Systems",
+    "description": "Understand which solar installation type suits your home or business — with pros, cons, and best-use cases.",
+    "onGrid": {
+      "badge": "Grid Connected",
+      "title": "On-Grid Solar",
+      "description": "Connected directly to the electricity grid. Excess power is exported back and you earn credits. Best for areas with stable grid supply. No battery required.",
+      "pros": [
+        "Lowest cost — no batteries needed",
+        "Earn through net metering",
+        "Best ROI in 3–5 years",
+        "Eligible for PM Surya Ghar subsidy",
+        "Ideal for urban homes & offices"
+      ]
+    },
+    "offGrid": {
+      "badge": "Independent",
+      "title": "Off-Grid Solar",
+      "description": "Fully independent from the electricity grid. Powered by solar panels + battery bank. Perfect for remote areas, farms, and places with poor grid supply.",
+      "pros": [
+        "Complete energy independence",
+        "No electricity bills at all",
+        "Works in remote/rural areas",
+        "Reliable during grid failures",
+        "Supports agri & irrigation loads"
+      ]
+    },
+    "hybrid": {
+      "badge": "Best of Both",
+      "title": "Hybrid Solar",
+      "description": "Combines on-grid and off-grid benefits. Uses solar first, stores extra in batteries, draws from grid when needed. Maximum flexibility and reliability.",
+      "pros": [
+        "Works even during power cuts",
+        "Battery backup + grid export",
+        "Smart energy management",
+        "Future-ready with EV charging",
+        "Best for premium homes & SMEs"
+      ]
+    }
+  },
+  "schemes": {
+    "eyebrow": "Government Support",
+    "title": "Subsidies & Schemes",
+    "description": "The Government of India and state governments offer significant financial support for solar adoption. Here's what you can claim.",
+    "stateWiseTitle": "State-wise Subsidy at a Glance",
+    "stateWiseDesc": "Approximate additional state subsidies over and above central PM Surya Ghar subsidy (2024–25)"
+  },
+  "vendors": {
+    "eyebrow": "Trusted Network",
+    "title": "Verified Solar Vendors",
+    "description": "No middlemen. No inflated rates. Every vendor is background-verified, licensed, and rated by real customers.",
+    "vendorIntro": "The solar market is crowded — prices vary wildly and quality is inconsistent. Our model is different:",
+    "vendorBenefits": "fewer, better vendors who operate under our brand standards and quality benchmarks. You get our reputation on the line every time.",
+    "becomeVendor": "Become a Verified Vendor",
+    "badges": {
+      "verified": "MNRE Registered",
+      "verifiedDesc": "All vendors are MNRE empaneled installers",
+      "audited": "Quality Audited",
+      "auditedDesc": "Regular site audits & customer feedback reviews",
+      "pricing": "Transparent Pricing",
+      "pricingDesc": "Standardized quotes — no hidden charges",
+      "amc": "AMC Backed",
+      "amcDesc": "Mandatory 5-year annual maintenance contracts"
+    }
+  },
+  "visualizer": {
+    "eyebrow": "Rooftop Visualizer",
+    "title": "See Solar On Your Roof",
+    "description": "Upload your rooftop photo and drag solar panels to visualize how your installation will look. Get an instant count and output estimate.",
+    "uploadTitle": "Upload Your Rooftop Photo",
+    "uploadHint": "Click to upload or drag & drop your roof image",
+    "uploadHintSmall": "JPG, PNG supported · Max 10MB",
+    "panelOrientation": "Panel Orientation",
+    "landscape": "Landscape",
+    "portrait": "Portrait",
+    "panelType": "Panel Type",
+    "mono": "Mono",
+    "bifacial": "Bifacial",
+    "poly": "Poly",
+    "panelCount": "Panel Count",
+    "panelsPlaced": "Panels placed",
+    "addPanel": "+ Add Panel",
+    "clearAll": "Clear All",
+    "estimatedOutput": "Estimated Output",
+    "systemCapacity": "System Capacity",
+    "monthlyGeneration": "Monthly Generation",
+    "monthlySavings": "Monthly Savings",
+    "rooftopPreview": "Rooftop Preview",
+    "dragPanels": "Drag panels to position",
+    "uploadRoof": "Upload your roof photo for real visualization"
+  },
+  "howItWorks": {
+    "eyebrow": "Process",
+    "title": "How It Works",
+    "description": "From inquiry to energized solar system — a simple, transparent process backed by quality promise.",
+    "step1": {
+      "num": "01",
+      "title": "Calculate & Explore",
+      "desc": "Use our solar calculator to find your ideal system size. Explore panel types, installation methods, and available subsidies."
+    },
+    "step2": {
+      "num": "02",
+      "title": "Match with Vendor",
+      "desc": "We match you with verified vendors in your area. Receive transparent, comparable quotes — no haggling."
+    },
+    "step3": {
+      "num": "03",
+      "title": "Site Survey & Design",
+      "desc": "Your chosen vendor conducts a free site survey and prepares a customized design using our 3D rooftop visualizer."
+    },
+    "step4": {
+      "num": "04",
+      "title": "Install & Energize",
+      "desc": "Professional installation by MNRE-certified technicians. We handle subsidy paperwork and grid connection on your behalf."
+    }
+  },
+  "contact": {
+    "eyebrow": "Get Started",
+    "title": "Ready to Go Solar?",
+    "description": "Get a free consultation from SAFWE. Our solar experts will help you choose the right system, maximize your subsidy, and find the best vendor in your area.",
+    "callUs": "Call Us",
+    "emailUs": "Email Us",
+    "headquarters": "Headquarters",
+    "consultation": "Get Free Consultation",
+    "fullName": "Full Name",
+    "phoneNumber": "Phone Number",
+    "cityState": "City / State",
+    "monthlyBill": "Monthly Bill (₹)",
+    "interest": "Interest",
+    "requestConsultation": "Request Free Consultation"
   }
 }

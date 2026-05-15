@@ -6,6 +6,17 @@ import BenefitsSection from "@/components/benefits-section";
 import TrustedBrands from "@/components/trusted-brands";
 import Testimonials from "@/components/testimonials";
 import CtaBanner from "@/components/cta-banner";
+import SolarTypes from "@/components/solar-types";
+import GovernmentSchemes from "@/components/government-schemes";
+import Vendors from "@/components/verified-vendors";
+import RooftopVisualizer from "@/components/rooftop-visualizer";
+import HowItWorks from "@/components/how-it-works";
+import SolarDiscoveryFlow from "@/components/solar-discovery-flow";
+import DCRComparison from "@/components/dcr-comparison";
+import EducationEcosystem from "@/components/education-ecosystem";
+import TrustAndWarrantySection from "@/components/trust-warranty";
+import StickyLeadCTA from "@/components/sticky-lead-cta";
+import VendorAllocationSection from "@/components/vendor-allocation";
 import { useLocale } from "@/components/locale-provider";
 
 const topSolarProducts = [
@@ -134,7 +145,23 @@ export default function Home() {
       <BenefitsSection />
       <TrustedBrands />
       <CtaBanner />
+      
+      {/* Discovery & Education Flow */}
+      <SolarDiscoveryFlow />
+      <SolarTypes />
+      <DCRComparison />
+      <GovernmentSchemes />
+      <Vendors />
+      <EducationEcosystem />
+      <TrustAndWarrantySection />
+      <VendorAllocationSection />
+      <RooftopVisualizer />
+      <HowItWorks />
+      
       <Testimonials />
+      
+      {/* Sticky Lead CTA - appears on scroll */}
+      <StickyLeadCTA />
     </div>
   );
 }

@@ -14,14 +14,32 @@ const citySunFactor: Record<string, number> = {
   Pune: 1.0,
 };
 
+// State-wise subsidy data
+const stateSubsidies: Record<string, { central: number; state: number }> = {
+  Rajasthan: { central: 78000, state: 50000 },
+  Gujarat: { central: 78000, state: 40000 },
+  MP: { central: 78000, state: 30000 },
+  Maharashtra: { central: 78000, state: 20000 },
+  UP: { central: 78000, state: 20000 },
+  Delhi: { central: 78000, state: 10000 },
+  Karnataka: { central: 78000, state: 15000 },
+  TamilNadu: { central: 78000, state: 10000 },
+  Bihar: { central: 78000, state: 5000 },
+  WestBengal: { central: 78000, state: 5000 },
+  other: { central: 30000, state: 0 },
+};
+
 export default function CalculatorPage() {
   const { t } = useLocale();
   const [monthlyBill, setMonthlyBill] = useState(5000);
   const [roofSize, setRoofSize] = useState(600);
   const [city, setCity] = useState<keyof typeof citySunFactor>("Ahmedabad");
+  const [state, setState] = useState("Rajasthan");
   const [propertyType, setPropertyType] = useState<PropertyType>("residential");
 
   const result = useMemo(() => {
+    if (!monthlyBill) return null;
+
     const typeFactor = propertyType === "commercial" ? 1.2 : 1;
     const billBasedKw = (monthlyBill / 1000) * 1.15 * typeFactor;
     const roofBasedKw = roofSize / 100;
@@ -30,17 +48,42 @@ export default function CalculatorPage() {
     const panelCount = Math.ceil((recommendedKw * 1000) / 550);
     const annualSavings = recommendedKw * 18000 * citySunFactor[city];
     const investment = recommendedKw * 55000;
-    const subsidy = propertyType === "residential" ? investment * 0.12 : 0;
-    const netInvestment = investment - subsidy;
-    const roiYears = netInvestment / annualSavings;
+
+    // Calculate subsidy
+    const stateData = stateSubsidies[state] || stateSubsidies.other;
+    let totalSubsidy = 0;
+
+    if (propertyType === "residential") {
+      // Central subsidy (capped per kW size)
+      let centralSubsidy = 0;
+      if (recommendedKw <= 2) {
+        centralSubsidy = 30000;
+      } else if (recommendedKw <= 3) {
+        centralSubsidy = 60000;
+      } else {
+        centralSubsidy = Math.min(78000, recommendedKw * 26000);
+      }
+
+      // Add state subsidy
+      const stateSubsidy = Math.min(stateData.state, investment - centralSubsidy);
+      totalSubsidy = centralSubsidy + stateSubsidy;
+    }
+
+    const netInvestment = Math.max(0, investment - totalSubsidy);
+    const roiYears = netInvestment > 0 ? netInvestment / annualSavings : 0;
+    const savings25yr = annualSavings * 25 * 1.05;
 
     return {
       recommendedKw,
       panelCount,
       annualSavings,
       roiYears,
+      investment,
+      totalSubsidy,
+      netInvestment,
+      savings25yr,
     };
-  }, [city, monthlyBill, propertyType, roofSize]);
+  }, [city, monthlyBill, propertyType, roofSize, state]);
 
   return (
     <section className="mx-auto w-full max-w-6xl px-4 pb-16 md:px-8">
@@ -75,6 +118,21 @@ export default function CalculatorPage() {
             </label>
 
             <label className="block text-sm font-medium text-slate-700">
+              State
+              <select
+                value={state}
+                onChange={(event) => setState(event.target.value)}
+                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-amber-400"
+              >
+                {Object.keys(stateSubsidies).map((stateName) => (
+                  <option key={stateName} value={stateName}>
+                    {stateName === "other" ? "Other" : stateName}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block text-sm font-medium text-slate-700">
               {t("calculator.city")}
               <select
                 value={city}
@@ -103,10 +161,46 @@ export default function CalculatorPage() {
           </div>
 
           <div className="grid content-start gap-4">
-            <ResultCard title={t("calculator.recommendedCapacity")} value={`${result.recommendedKw.toFixed(1)} kW`} />
-            <ResultCard title={t("calculator.annualSavings")} value={`INR ${Math.round(result.annualSavings).toLocaleString("en-IN")}`} />
-            <ResultCard title={t("calculator.panelCount")} value={`${result.panelCount} panels`} />
-            <ResultCard title={t("calculator.expectedRoi")} value={`${result.roiYears.toFixed(1)} years`} />
+            {result ? (
+              <>
+                <ResultCard
+                  title={t("calculator.recommendedCapacity")}
+                  value={`${result.recommendedKw.toFixed(1)} kW`}
+                />
+                <ResultCard
+                  title={t("calculator.panelCount")}
+                  value={`${result.panelCount} panels`}
+                />
+                <ResultCard
+                  title="Est. System Cost"
+                  value={`₹${Math.round(result.investment).toLocaleString("en-IN")}`}
+                  accent
+                />
+                <ResultCard
+                  title="Govt. Subsidy"
+                  value={`₹${Math.round(result.totalSubsidy).toLocaleString("en-IN")}`}
+                  accent
+                />
+                <ResultCard
+                  title="Your Net Cost"
+                  value={`₹${Math.round(result.netInvestment).toLocaleString("en-IN")}`}
+                  accent
+                />
+                <ResultCard
+                  title={t("calculator.expectedRoi")}
+                  value={`${result.roiYears.toFixed(1)} years`}
+                />
+                <ResultCard
+                  title="25-Year Savings"
+                  value={`₹${Math.round(result.savings25yr).toLocaleString("en-IN")}`}
+                  highlight
+                />
+              </>
+            ) : (
+              <div className="rounded-2xl border-2 border-dashed border-slate-300 p-8 text-center">
+                <p className="text-slate-600">Enter details to see results</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -117,12 +211,22 @@ export default function CalculatorPage() {
 type ResultCardProps = {
   title: string;
   value: string;
+  accent?: boolean;
+  highlight?: boolean;
 };
 
-function ResultCard({ title, value }: ResultCardProps) {
+function ResultCard({ title, value, accent, highlight }: ResultCardProps) {
+  const bgClass = highlight
+    ? "border-emerald-200/70 bg-linear-to-br from-emerald-50 to-white"
+    : accent
+      ? "border-amber-200/50 bg-linear-to-br from-amber-25 to-white"
+      : "border-amber-200/70 bg-linear-to-br from-amber-50 to-white";
+
+  const titleClass = highlight ? "text-emerald-600" : "text-slate-600";
+
   return (
-    <div className="rounded-2xl border border-amber-200/70 bg-linear-to-br from-amber-50 to-white p-5 shadow-sm">
-      <p className="text-xs uppercase tracking-widest text-slate-500">{title}</p>
+    <div className={`rounded-2xl border ${bgClass} p-5 shadow-sm`}>
+      <p className={`text-xs uppercase tracking-widest ${titleClass}`}>{title}</p>
       <p className="mt-2 text-2xl font-semibold text-slate-900">{value}</p>
     </div>
   );
