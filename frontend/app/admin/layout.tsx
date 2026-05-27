@@ -15,6 +15,9 @@ interface SidebarLink {
 
 const sidebarLinks: SidebarLink[] = [
   { name: "Dashboard", href: "/admin/dashboard", icon: "📊" },
+  { name: "Notifications", href: "/admin/notifications", icon: "🔔" },
+  { name: "Vendors", href: "/admin/vendors", icon: "🏢" },
+  { name: "Leads", href: "/admin/leads", icon: "🧭" },
   { name: "Products", href: "/admin/products", icon: "📦" },
   { name: "Profile", href: "/admin/profile", icon: "👤" },
   { name: "Change Password", href: "/admin/change-password", icon: "🔐" },
@@ -29,28 +32,26 @@ export default function AdminLayout({
   const router = useRouter();
   const { isLoading, isAuthenticated, admin } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [redirecting, setRedirecting] = useState(false);
   const isAdminLoginPage = pathname === "/admin";
 
   useEffect(() => {
-    if (isAdminLoginPage || isLoading || isAuthenticated || redirecting) {
+    if (isAdminLoginPage || isLoading || isAuthenticated) {
       return;
     }
 
-    setRedirecting(true);
     router.replace("/admin");
-  }, [isAdminLoginPage, isLoading, isAuthenticated, redirecting, router]);
+  }, [isAdminLoginPage, isLoading, isAuthenticated, router]);
 
   if (isAdminLoginPage) {
     return <>{children}</>;
   }
 
-  if (isLoading || redirecting || !isAuthenticated) {
+  if (isLoading || !isAuthenticated) {
     return (
       <div className="flex h-screen items-center justify-center bg-app">
         <div className="text-center">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-amber-400 border-t-transparent"></div>
-          <p className="mt-4 text-app-fg">{redirecting ? "Redirecting..." : "Loading..."}</p>
+          <p className="mt-4 text-app-fg">Loading...</p>
         </div>
       </div>
     );

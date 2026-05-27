@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { apiClient } from "@/lib/api-client";
 import { getToken } from "@/lib/auth";
 
@@ -37,11 +36,7 @@ export default function AdminProductsPage() {
     image: "",
   });
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const fetchProducts = async () => {
+  async function fetchProducts() {
     const token = getToken();
     if (!token) {
       setError("Not authenticated");
@@ -58,7 +53,15 @@ export default function AdminProductsPage() {
     }
 
     setLoading(false);
-  };
+  }
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void fetchProducts();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

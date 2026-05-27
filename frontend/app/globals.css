@@ -24,7 +24,7 @@ body {
    Use a reasonable default offset that matches the navbar's height so that
    sections linked via #ids are fully visible below the header. */
 :root {
-  --app-header-offset: 72px;
+  --app-header-offset: 88px;
 }
 
 html {

@@ -15,16 +15,14 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
-    if (isLoading || !isAuthenticated || redirecting) {
+    if (isLoading || !isAuthenticated) {
       return;
     }
 
-    setRedirecting(true);
     router.replace("/admin/dashboard");
-  }, [isLoading, isAuthenticated, redirecting, router]);
+  }, [isLoading, isAuthenticated, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,9 +37,14 @@ export default function AdminLoginPage() {
       return;
     }
 
+    if (!response.admin || typeof response.admin !== "object") {
+      setError("Invalid admin payload received");
+      setLoading(false);
+      return;
+    }
+
     setToken(response.token!);
-    setAdmin(response.admin);
-    setRedirecting(true);
+    setAdmin(response.admin as object);
     router.replace("/admin/dashboard");
   };
 
@@ -55,7 +58,7 @@ export default function AdminLoginPage() {
     );
   }
 
-  if (redirecting || isAuthenticated) {
+  if (isAuthenticated) {
     return (
       <section className="flex min-h-screen items-center justify-center px-4">
         <div className="rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm">

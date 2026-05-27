@@ -3,6 +3,10 @@ import { verifyToken } from "../utils/jwt";
 
 export interface AuthRequest extends Request {
   adminId?: string;
+  userId?: string;
+  vendorId?: string;
+  authRole?: string;
+  subjectType?: "admin" | "user" | "vendor";
   admin?: {
     id: string;
     email: string;
@@ -23,11 +27,24 @@ export const authMiddleware = (
     }
 
     const decoded = verifyToken(token);
-    req.adminId = decoded.adminId;
-    req.admin = {
-      id: decoded.adminId,
-      email: decoded.email,
-    };
+    req.authRole = decoded.role;
+    req.subjectType = decoded.subjectType;
+
+    if (decoded.adminId) {
+      req.adminId = decoded.adminId;
+      req.admin = {
+        id: decoded.adminId,
+        email: decoded.email,
+      };
+    }
+
+    if (decoded.userId) {
+      req.userId = decoded.userId;
+    }
+
+    if (decoded.vendorId) {
+      req.vendorId = decoded.vendorId;
+    }
 
     next();
   } catch (error) {

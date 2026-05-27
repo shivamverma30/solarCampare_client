@@ -1,105 +1,122 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import BrandMark from "@/components/brand-mark";
 import { useLocale } from "@/components/locale-provider";
+import { apiClient } from "@/lib/api-client";
+import { setSessionProfile, setToken } from "@/lib/auth";
 
 export default function SignupPage() {
+  const router = useRouter();
   const { t } = useLocale();
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    city: "",
+    state: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError("");
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    setLoading(true);
+    const response = await apiClient.auth.registerUser(
+      formData.fullName,
+      formData.email,
+      formData.password,
+      formData.phone || undefined,
+      formData.city || undefined,
+      formData.state || undefined
+    );
+
+    if (!response.success) {
+      setError(response.error || "Unable to create account");
+      setLoading(false);
+      return;
+    }
+
+    if (response.token) setToken(response.token);
+    if (response.user) setSessionProfile(response.user);
+    router.push("/");
+  };
 
   return (
     <section className="mx-auto w-full max-w-6xl px-4 pb-16 md:px-8">
       <div className="grid overflow-hidden rounded-3xl border border-slate-200 bg-white/90 shadow-xl lg:grid-cols-2">
         <div className="p-6 md:p-10">
-          <BrandMark
-            href="/"
-            compact
-            className="items-start"
-            titleClassName="text-slate-900"
-            taglineClassName="text-slate-500"
-          />
+          <BrandMark href="/" compact className="items-start" titleClassName="text-slate-900" taglineClassName="text-slate-500" />
           <p className="text-xs font-semibold uppercase tracking-[0.26em] text-amber-500">{t("auth.signup")}</p>
           <h1 className="mt-3 text-4xl text-slate-900">{t("auth.createAccountTitle")}</h1>
 
-          <form className="mt-8 space-y-4">
-            <label className="block text-sm font-medium text-slate-700">
-              {t("auth.fullName")}
-              <input
-                type="text"
-                placeholder={t("auth.namePlaceholder")}
-                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none placeholder:text-slate-500 focus:border-amber-400"
-              />
-            </label>
+          {error && <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 
-            <label className="block text-sm font-medium text-slate-700">
-              {t("auth.email")}
-              <input
-                type="email"
-                placeholder={t("auth.emailPlaceholder")}
-                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none placeholder:text-slate-500 focus:border-amber-400"
-              />
-            </label>
+          <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
+            <Input label={t("auth.fullName")} value={formData.fullName} onChange={(value) => setFormData({ ...formData, fullName: value })} placeholder={t("auth.namePlaceholder")} required />
+            <Input label={t("auth.email")} value={formData.email} onChange={(value) => setFormData({ ...formData, email: value })} placeholder={t("auth.emailPlaceholder")} required type="email" />
+            <Input label={t("auth.phone")} value={formData.phone} onChange={(value) => setFormData({ ...formData, phone: value })} placeholder={t("auth.phonePlaceholder")} type="tel" />
+            <div className="grid gap-4 md:grid-cols-2">
+              <Input label="City" value={formData.city} onChange={(value) => setFormData({ ...formData, city: value })} placeholder="City" />
+              <Input label="State" value={formData.state} onChange={(value) => setFormData({ ...formData, state: value })} placeholder="State" />
+            </div>
+            <Input label={t("auth.password")} value={formData.password} onChange={(value) => setFormData({ ...formData, password: value })} placeholder={t("auth.createPasswordPlaceholder")} required type="password" />
+            <Input label={t("auth.confirmPassword")} value={formData.confirmPassword} onChange={(value) => setFormData({ ...formData, confirmPassword: value })} placeholder={t("auth.confirmPasswordPlaceholder")} required type="password" />
 
-            <label className="block text-sm font-medium text-slate-700">
-              {t("auth.phone")}
-              <input
-                type="tel"
-                placeholder={t("auth.phonePlaceholder")}
-                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none placeholder:text-slate-500 focus:border-amber-400"
-              />
-            </label>
-
-            <label className="block text-sm font-medium text-slate-700">
-              {t("auth.password")}
-              <input
-                type="password"
-                placeholder={t("auth.createPasswordPlaceholder")}
-                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none placeholder:text-slate-500 focus:border-amber-400"
-              />
-            </label>
-
-            <label className="block text-sm font-medium text-slate-700">
-              {t("auth.confirmPassword")}
-              <input
-                type="password"
-                placeholder={t("auth.confirmPasswordPlaceholder")}
-                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none placeholder:text-slate-500 focus:border-amber-400"
-              />
-            </label>
-
-            <button
-              type="submit"
-              className="mt-2 w-full rounded-xl border border-amber-300/80 bg-amber-400 px-5 py-3 text-sm font-semibold text-black transition hover:bg-amber-300"
-            >
-              {t("buttons.signUp")}
+            <button type="submit" disabled={loading} className="mt-2 w-full rounded-xl border border-amber-300/80 bg-amber-400 px-5 py-3 text-sm font-semibold text-black transition hover:bg-amber-300 disabled:opacity-60">
+              {loading ? "Creating account..." : t("buttons.signUp")}
             </button>
           </form>
 
-          <p className="mt-5 text-sm text-slate-600">
-            {t("auth.alreadyHaveAccount")} {" "}
-            <Link href="/login" className="font-semibold text-amber-600 transition hover:text-amber-500">
-              {t("buttons.login")}
+          <div className="mt-5 flex flex-col gap-2 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+            <p>
+              {t("auth.alreadyHaveAccount")} <Link href="/login" className="font-semibold text-amber-600 transition hover:text-amber-500">{t("buttons.login")}</Link>
+            </p>
+            <Link href="/become-vendor" className="font-semibold text-slate-700 transition hover:text-slate-950">
+              Become a Vendor
             </Link>
-          </p>
+          </div>
         </div>
 
         <div className="relative hidden bg-linear-to-br from-slate-950 via-slate-900 to-amber-950 p-10 text-white lg:block">
           <p className="text-xs font-semibold uppercase tracking-[0.26em] text-amber-300">{t("auth.getStarted")}</p>
           <h2 className="mt-3 text-5xl">{t("auth.designJourney")}</h2>
-          <p className="mt-5 max-w-sm text-sm leading-7 text-white/80">
-            {t("auth.signupDescription")}
-          </p>
+          <p className="mt-5 max-w-sm text-sm leading-7 text-white/80">{t("auth.signupDescription")}</p>
           <div className="mt-10 rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur">
-            <p className="text-sm text-white/85">{t("auth.alreadyRegistered")}</p>
-            <Link
-              href="/login"
-              className="mt-3 inline-flex rounded-full border border-white/30 bg-white/10 px-5 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
-            >
-              {t("buttons.goToLogin")}
+            <p className="text-sm text-white/85">Need vendor onboarding?</p>
+            <Link href="/become-vendor" className="mt-3 inline-flex rounded-full border border-white/30 bg-white/10 px-5 py-2 text-sm font-semibold text-white transition hover:bg-white/20">
+              Become a Vendor
             </Link>
           </div>
         </div>
       </div>
     </section>
+  );
+}
+
+function Input({ label, value, onChange, placeholder, type = "text", required = false }: { label: string; value: string; onChange: (value: string) => void; placeholder: string; type?: string; required?: boolean; }) {
+  return (
+    <label className="block text-sm font-medium text-slate-700">
+      {label}
+      <input
+        type={type}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        required={required}
+        className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none placeholder:text-slate-500 focus:border-amber-400"
+      />
+    </label>
   );
 }

@@ -279,7 +279,6 @@ export default function RooftopVisualizer() {
               {/* Panels */}
               <div className="absolute inset-0">
                 {panels.map((panel) => {
-                  const isLandscape = orientation === "landscape";
                   return (
                     <div
                       key={panel.id}

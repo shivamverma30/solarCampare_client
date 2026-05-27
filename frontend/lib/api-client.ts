@@ -1,5 +1,7 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 
+type JsonObject = Record<string, unknown>;
+
 interface ApiResponse<T> {
   success: boolean;
   message?: string;
@@ -11,6 +13,19 @@ interface ApiResponse<T> {
   count?: number;
   products?: T[];
   stats?: T;
+  user?: T;
+  users?: T[];
+  vendor?: T;
+  vendors?: T[];
+  lead?: T;
+  leads?: T[];
+  inquiry?: T;
+  history?: T;
+  quoteRequest?: T;
+  notifications?: T[];
+  unreadCount?: number;
+  uploadAsset?: T;
+  uploadAssets?: T[];
 }
 
 export const apiClient = {
@@ -19,7 +34,7 @@ export const apiClient = {
     options: RequestInit = {},
     token?: string
   ): Promise<ApiResponse<T>> {
-    const headers: any = {
+    const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
 
@@ -108,10 +123,50 @@ export const apiClient = {
         token
       );
     },
+
+    async registerUser(fullName: string, email: string, password: string, phone?: string, city?: string, state?: string) {
+      return apiClient.request(
+        "/auth/user/register",
+        {
+          method: "POST",
+          body: JSON.stringify({ fullName, email, password, phone, city, state }),
+        }
+      );
+    },
+
+    async loginUser(email: string, password: string) {
+      return apiClient.request(
+        "/auth/user/login",
+        {
+          method: "POST",
+          body: JSON.stringify({ email, password }),
+        }
+      );
+    },
+
+    async registerVendor(payload: JsonObject) {
+      return apiClient.request(
+        "/auth/vendor/register",
+        {
+          method: "POST",
+          body: JSON.stringify(payload),
+        }
+      );
+    },
+
+    async loginVendor(email: string, password: string) {
+      return apiClient.request(
+        "/auth/vendor/login",
+        {
+          method: "POST",
+          body: JSON.stringify({ email, password }),
+        }
+      );
+    },
   },
 
   products: {
-    async create(token: string, product: any) {
+    async create(token: string, product: JsonObject) {
       return apiClient.request(
         "/products",
         {
@@ -134,7 +189,7 @@ export const apiClient = {
       return apiClient.request(`/products/${id}`, {}, token);
     },
 
-    async update(token: string, id: string, product: any) {
+    async update(token: string, id: string, product: JsonObject) {
       return apiClient.request(
         `/products/${id}`,
         {
@@ -153,6 +208,235 @@ export const apiClient = {
         },
         token
       );
+    },
+  },
+
+  vendors: {
+    async getPublic() {
+      return apiClient.request("/vendors");
+    },
+
+    async getAdmin(token: string) {
+      return apiClient.request("/vendors/admin/all", {}, token);
+    },
+
+    async approve(token: string, id: string, note?: string) {
+      return apiClient.request(
+        `/vendors/${id}/approve`,
+        {
+          method: "POST",
+          body: JSON.stringify({ note }),
+        },
+        token
+      );
+    },
+
+    async reject(token: string, id: string, reason?: string) {
+      return apiClient.request(
+        `/vendors/${id}/reject`,
+        {
+          method: "POST",
+          body: JSON.stringify({ reason }),
+        },
+        token
+      );
+    },
+  },
+
+  leads: {
+    async submitInquiry(payload: JsonObject) {
+      return apiClient.request(
+        "/leads/inquiry",
+        {
+          method: "POST",
+          body: JSON.stringify(payload),
+        }
+      );
+    },
+
+    async submitVendorLead(payload: JsonObject) {
+      return apiClient.request(
+        "/leads/vendor",
+        {
+          method: "POST",
+          body: JSON.stringify(payload),
+        }
+      );
+    },
+
+    async getAdmin(token: string) {
+      return apiClient.request("/leads/admin", {}, token);
+    },
+
+    async updateStatus(token: string, id: string, status: string, note?: string) {
+      return apiClient.request(
+        `/leads/${id}/status`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ status, note }),
+        },
+        token
+      );
+    },
+
+    async assign(token: string, id: string, assignedAdminId?: string, note?: string) {
+      return apiClient.request(
+        `/leads/${id}/assign`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ assignedAdminId, note }),
+        },
+        token
+      );
+    },
+
+    async addCommissionNote(token: string, id: string, note: string, amount?: number) {
+      return apiClient.request(
+        `/leads/${id}/commission`,
+        {
+          method: "POST",
+          body: JSON.stringify({ note, amount }),
+        },
+        token
+      );
+    },
+  },
+
+  calculators: {
+    async saveHistory(token: string, calculatorType: string, inputs: JsonObject, outputs: JsonObject) {
+      return apiClient.request(
+        "/calculators/history",
+        {
+          method: "POST",
+          body: JSON.stringify({ calculatorType, inputs, outputs }),
+        },
+        token
+      );
+    },
+
+    async listHistory(token: string) {
+      return apiClient.request("/calculators/history", {}, token);
+    },
+  },
+
+  quotes: {
+    async createQuote(payload: JsonObject) {
+      return apiClient.request(
+        "/quotes/request",
+        {
+          method: "POST",
+          body: JSON.stringify(payload),
+        }
+      );
+    },
+
+    async listQuotes(token: string) {
+      return apiClient.request("/quotes/admin", {}, token);
+    },
+  },
+
+  notifications: {
+    async list(token: string) {
+      return apiClient.request("/notifications", {}, token);
+    },
+
+    async unreadCount(token: string) {
+      return apiClient.request("/notifications/unread-count", {}, token);
+    },
+
+    async markRead(token: string, id: string) {
+      return apiClient.request(
+        `/notifications/${id}/read`,
+        {
+          method: "PATCH",
+        },
+        token
+      );
+    },
+
+    async markAllRead(token: string) {
+      return apiClient.request(
+        "/notifications/read-all",
+        {
+          method: "PATCH",
+        },
+        token
+      );
+    },
+  },
+
+  uploads: {
+    async createMetadata(token: string, payload: JsonObject) {
+      return apiClient.request(
+        "/uploads/metadata",
+        {
+          method: "POST",
+          body: JSON.stringify(payload),
+        },
+        token
+      );
+    },
+
+    async uploadFile(token: string, formData: FormData) {
+      return fetch(`${API_URL}/uploads/file`, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        body: formData,
+      }).then(async (response) => {
+        const data = (await response.json().catch(() => ({}))) as Record<string, unknown>;
+        return {
+          success: response.ok,
+          ...data,
+        } as ApiResponse<unknown>;
+      });
+    },
+  },
+
+  authExtras: {
+    async requestVerification(email: string, accountType: string) {
+      return apiClient.request(
+        "/auth/verify-email/request",
+        {
+          method: "POST",
+          body: JSON.stringify({ email, accountType }),
+        }
+      );
+    },
+
+    async confirmVerification(token: string) {
+      return apiClient.request(
+        "/auth/verify-email/confirm",
+        {
+          method: "POST",
+          body: JSON.stringify({ token }),
+        }
+      );
+    },
+
+    async requestPasswordReset(email: string, accountType: string) {
+      return apiClient.request(
+        "/auth/forgot-password",
+        {
+          method: "POST",
+          body: JSON.stringify({ email, accountType }),
+        }
+      );
+    },
+
+    async resetPassword(token: string, newPassword: string) {
+      return apiClient.request(
+        "/auth/reset-password",
+        {
+          method: "POST",
+          body: JSON.stringify({ token, newPassword }),
+        }
+      );
+    },
+  },
+
+  dashboard: {
+    async getSuperAdminStats(token: string) {
+      return apiClient.request("/dashboard/superadmin/stats", {}, token);
     },
   },
 };

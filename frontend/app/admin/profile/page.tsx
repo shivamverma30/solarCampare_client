@@ -23,11 +23,7 @@ export default function AdminProfilePage() {
     email: "",
   });
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
-
-  const fetchProfile = async () => {
+  async function fetchProfile() {
     const token = getToken();
     if (!token) {
       setError("Not authenticated");
@@ -49,7 +45,15 @@ export default function AdminProfilePage() {
     }
 
     setLoading(false);
-  };
+  }
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void fetchProfile();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +74,7 @@ export default function AdminProfilePage() {
     } else {
       const updatedAdmin = (response.admin as AdminProfile) || profile;
       setProfile(updatedAdmin);
-      setAdmin(updatedAdmin);
+      setAdmin(updatedAdmin as object);
       setSuccess("Profile updated successfully!");
       setEditing(false);
 
