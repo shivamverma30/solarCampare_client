@@ -44,18 +44,18 @@ export default function HeroLocal() {
             <div className="rounded-[28px] bg-[rgba(255,255,255,0.14)] backdrop-blur-[20px] border border-white/20 p-4 shadow-[0_10px_30px_rgba(2,6,23,0.12)] ring-1 ring-white/10 md:p-6">
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="text-center">
-                  <p className="text-4xl font-extrabold text-slate-900">12,000+</p>
-                  <p className="mt-1 text-sm text-slate-700">{t("home.statSystems")}</p>
+                  <p className="text-4xl font-extrabold text-white">12,000+</p>
+                  <p className="mt-1 text-sm text-white/70">{t("home.statSystems")}</p>
                 </div>
 
                 <div className="text-center">
-                  <p className="text-4xl font-extrabold text-slate-900">INR 18Cr+</p>
-                  <p className="mt-1 text-sm text-slate-700">{t("home.statSavings")}</p>
+                  <p className="text-4xl font-extrabold text-white">INR 18Cr+</p>
+                  <p className="mt-1 text-sm text-white/70">{t("home.statSavings")}</p>
                 </div>
 
                 <div className="text-center">
-                  <p className="text-4xl font-extrabold text-slate-900">4.9/5</p>
-                  <p className="mt-1 text-sm text-slate-700">{t("home.statRating")}</p>
+                  <p className="text-4xl font-extrabold text-white">4.9/5</p>
+                  <p className="mt-1 text-sm text-white/70">{t("home.statRating")}</p>
                 </div>
               </div>
             </div>
