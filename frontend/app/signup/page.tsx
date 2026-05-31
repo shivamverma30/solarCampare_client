@@ -6,7 +6,7 @@ import { useState } from "react";
 import BrandMark from "@/components/brand-mark";
 import { useLocale } from "@/components/locale-provider";
 import { apiClient } from "@/lib/api-client";
-import { setSessionProfile, setToken } from "@/lib/auth";
+import { setSessionProfile, setSessionRole, setToken, setUser } from "@/lib/auth";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -17,11 +17,15 @@ export default function SignupPage() {
     phone: "",
     city: "",
     state: "",
+    pincode: "",
     password: "",
     confirmPassword: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [verificationToken, setVerificationToken] = useState<string | null>(null);
+  const [otp, setOtp] = useState("");
+  const [resendLoading, setResendLoading] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -39,18 +43,30 @@ export default function SignupPage() {
       formData.password,
       formData.phone || undefined,
       formData.city || undefined,
-      formData.state || undefined
+      formData.state || undefined,
+      formData.pincode || undefined
     );
-
     if (!response.success) {
       setError(response.error || "Unable to create account");
       setLoading(false);
       return;
     }
 
-    if (response.token) setToken(response.token);
-    if (response.user) setSessionProfile(response.user);
-    router.push("/");
+    // If backend returned a token but no user, it means OTP flow started
+    if (response.token && !response.user) {
+      setVerificationToken(response.token);
+      setLoading(false);
+      return;
+    }
+
+    if (response.user) {
+      if (response.token) setToken(response.token);
+      setSessionRole("USER");
+      setSessionProfile(response.user);
+      setUser(response.user);
+      router.push("/user/dashboard");
+      return;
+    }
   };
 
   return (
@@ -64,19 +80,69 @@ export default function SignupPage() {
           {error && <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 
           <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
-            <Input label={t("auth.fullName")} value={formData.fullName} onChange={(value) => setFormData({ ...formData, fullName: value })} placeholder={t("auth.namePlaceholder")} required />
-            <Input label={t("auth.email")} value={formData.email} onChange={(value) => setFormData({ ...formData, email: value })} placeholder={t("auth.emailPlaceholder")} required type="email" />
-            <Input label={t("auth.phone")} value={formData.phone} onChange={(value) => setFormData({ ...formData, phone: value })} placeholder={t("auth.phonePlaceholder")} type="tel" />
-            <div className="grid gap-4 md:grid-cols-2">
-              <Input label="City" value={formData.city} onChange={(value) => setFormData({ ...formData, city: value })} placeholder="City" />
-              <Input label="State" value={formData.state} onChange={(value) => setFormData({ ...formData, state: value })} placeholder="State" />
-            </div>
-            <Input label={t("auth.password")} value={formData.password} onChange={(value) => setFormData({ ...formData, password: value })} placeholder={t("auth.createPasswordPlaceholder")} required type="password" />
-            <Input label={t("auth.confirmPassword")} value={formData.confirmPassword} onChange={(value) => setFormData({ ...formData, confirmPassword: value })} placeholder={t("auth.confirmPasswordPlaceholder")} required type="password" />
+            {verificationToken ? (
+              <div className="space-y-4">
+                <p className="text-sm text-slate-600">Enter the 6-digit verification code sent to your email.</p>
+                <Input label="Verification code" value={otp} onChange={(value) => setOtp(value)} placeholder="123456" required />
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      setLoading(true);
+                      const res = await apiClient.authExtras.confirmVerification(verificationToken, otp);
+                      setLoading(false);
+                      if (!res.success) {
+                        setError(res.error || "Invalid code");
+                        return;
+                      }
+                      if (res.user) {
+                        if (res.token) setToken(res.token);
+                        setSessionRole("USER");
+                        setSessionProfile(res.user);
+                        setUser(res.user);
+                        router.push("/user/dashboard");
+                        return;
+                      }
+                      router.push("/login");
+                    }}
+                    className="rounded-xl border border-amber-300/80 bg-amber-400 px-5 py-3 text-sm font-semibold text-black"
+                  >
+                    {loading ? "Verifying..." : "Verify"}
+                  </button>
 
-            <button type="submit" disabled={loading} className="mt-2 w-full rounded-xl border border-amber-300/80 bg-amber-400 px-5 py-3 text-sm font-semibold text-black transition hover:bg-amber-300 disabled:opacity-60">
-              {loading ? "Creating account..." : t("buttons.signUp")}
-            </button>
+                  <button
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      if (!verificationToken) return;
+                      setResendLoading(true);
+                      const r = await apiClient.authExtras.resendVerification(verificationToken);
+                      setResendLoading(false);
+                      if (!r.success) setError(r.error || "Unable to resend");
+                    }}
+                    className="text-sm text-slate-600 underline"
+                  >
+                    {resendLoading ? "Resending..." : "Resend code"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <Input label={t("auth.fullName")} value={formData.fullName} onChange={(value) => setFormData({ ...formData, fullName: value })} placeholder={t("auth.namePlaceholder")} required />
+                <Input label={t("auth.email")} value={formData.email} onChange={(value) => setFormData({ ...formData, email: value })} placeholder={t("auth.emailPlaceholder")} required type="email" />
+                <Input label={t("auth.phone")} value={formData.phone} onChange={(value) => setFormData({ ...formData, phone: value })} placeholder={t("auth.phonePlaceholder")} type="tel" />
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Input label="City" value={formData.city} onChange={(value) => setFormData({ ...formData, city: value })} placeholder="City" />
+                  <Input label="State" value={formData.state} onChange={(value) => setFormData({ ...formData, state: value })} placeholder="State" />
+                </div>
+                <Input label="PIN Code" value={formData.pincode} onChange={(value) => setFormData({ ...formData, pincode: value })} placeholder="PIN code" />
+                <Input label={t("auth.password")} value={formData.password} onChange={(value) => setFormData({ ...formData, password: value })} placeholder={t("auth.createPasswordPlaceholder")} required type="password" />
+                <Input label={t("auth.confirmPassword")} value={formData.confirmPassword} onChange={(value) => setFormData({ ...formData, confirmPassword: value })} placeholder={t("auth.confirmPasswordPlaceholder")} required type="password" />
+
+                <button type="submit" disabled={loading} className="mt-2 w-full rounded-xl border border-amber-300/80 bg-amber-400 px-5 py-3 text-sm font-semibold text-black transition hover:bg-amber-300 disabled:opacity-60">
+                  {loading ? "Creating account..." : t("buttons.signUp")}
+                </button>
+              </>
+            )}
           </form>
 
           <div className="mt-5 flex flex-col gap-2 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">

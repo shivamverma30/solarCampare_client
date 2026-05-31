@@ -1,13 +1,17 @@
 import { Response } from "express";
 import prisma from "../lib/prisma";
 import { AuthRequest } from "../middleware/auth";
-import { createAuditLog, createNotification, safeEmailDispatch } from "../lib/workflow";
+import { createAuditLog, createNotification, safeEmailDispatch, sendTransactionalEmail, vendorApprovalTemplate, vendorRejectionTemplate } from "../lib/workflow";
 
 const vendorSafeSelect = {
   id: true,
   companyName: true,
   ownerName: true,
   serviceArea: true,
+  city: true,
+  state: true,
+  pincode: true,
+  logoUrl: true,
   businessType: true,
   experience: true,
   services: true,
@@ -149,6 +153,53 @@ export const listAdminVendors = async (_req: AuthRequest, res: Response): Promis
   }
 };
 
+export const addAdminNoteToVendor = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.adminId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const { id } = req.params;
+    const { note } = req.body as { note?: string };
+
+    if (!note) {
+      res.status(400).json({ error: "Note is required" });
+      return;
+    }
+
+    const vendor = await prisma.vendor.findUnique({ where: { id } });
+    if (!vendor) {
+      res.status(404).json({ error: "Vendor not found" });
+      return;
+    }
+
+    const created = await prisma.adminInternalNote.create({
+      data: {
+        entityType: "VENDOR",
+        entityId: id,
+        note,
+        createdByAdminId: req.adminId,
+      },
+    });
+
+    await createAuditLog(prisma, {
+      actorType: "admin",
+      actorId: req.adminId,
+      action: "vendor.internal_note.added",
+      entityType: "VENDOR",
+      entityId: id,
+      metadata: { note },
+      createdByAdminId: req.adminId,
+    });
+
+    res.status(201).json({ success: true, note: created });
+  } catch (error) {
+    console.error("Add admin note error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 export const getVendorById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
@@ -226,6 +277,17 @@ export const approveVendor = async (req: AuthRequest, res: Response): Promise<vo
       vendorId: vendor.id,
       metadata: { vendorId: vendor.id, status: updated.status },
     });
+    // send email to vendor
+    try {
+      await sendTransactionalEmail({
+        to: vendor.email,
+        subject: "Your vendor application has been approved",
+        body: `Congratulations ${vendor.companyName}, your vendor application is approved.`,
+        html: vendorApprovalTemplate(vendor.companyName),
+      });
+    } catch (err) {
+      console.error("Failed to send vendor approval email:", err);
+    }
 
     await safeEmailDispatch(
       "Vendor approved",
@@ -295,6 +357,18 @@ export const rejectVendor = async (req: AuthRequest, res: Response): Promise<voi
       metadata: { vendorId: vendor.id, reason },
     });
 
+    // send email to vendor with rejection reason
+    try {
+      await sendTransactionalEmail({
+        to: vendor.email,
+        subject: "Your vendor application update",
+        body: `We're sorry — your vendor application has been rejected.${reason ? ` Reason: ${reason}` : ""}`,
+        html: vendorRejectionTemplate(vendor.companyName, reason),
+      });
+    } catch (err) {
+      console.error("Failed to send vendor rejection email:", err);
+    }
+
     await safeEmailDispatch(
       "Vendor rejected",
       `${vendor.companyName} (${vendor.email}) was rejected by superadmin.`
@@ -313,6 +387,207 @@ export const rejectVendor = async (req: AuthRequest, res: Response): Promise<voi
     res.status(200).json({ success: true, vendor: updated });
   } catch (error) {
     console.error("Reject vendor error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getMyVendorProfile = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.vendorId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const vendor = await prisma.vendor.findUnique({
+      where: { id: req.vendorId },
+      include: {
+        documents: true,
+        serviceAreas: {
+          orderBy: [{ isPrimary: "desc" }, { coverageRank: "asc" }, { createdAt: "desc" }],
+        },
+      },
+    });
+
+    if (!vendor) {
+      res.status(404).json({ error: "Vendor not found" });
+      return;
+    }
+
+    res.status(200).json({ success: true, vendor });
+  } catch (error) {
+    console.error("Get my vendor profile error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const updateMyVendorProfile = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.vendorId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const {
+      ownerName,
+      companyName,
+      phone,
+      address,
+      city,
+      state,
+      pincode,
+      serviceArea,
+      businessType,
+      experience,
+      services,
+      logoUrl,
+      avatarUrl,
+    } = req.body;
+
+    const vendor = await prisma.vendor.update({
+      where: { id: req.vendorId },
+      data: {
+        ...(ownerName !== undefined && { ownerName }),
+        ...(companyName !== undefined && { companyName }),
+        ...(phone !== undefined && { phone }),
+        ...(address !== undefined && { address }),
+        ...(city !== undefined && { city }),
+        ...(state !== undefined && { state }),
+        ...(pincode !== undefined && { pincode }),
+        ...(serviceArea !== undefined && { serviceArea }),
+        ...(businessType !== undefined && { businessType }),
+        ...(experience !== undefined && { experience: Number(experience) }),
+        ...(services !== undefined && { services }),
+        ...(logoUrl !== undefined && { logoUrl }),
+        ...(avatarUrl !== undefined && { avatarUrl }),
+      },
+    });
+
+    res.status(200).json({ success: true, message: "Profile updated successfully", vendor });
+  } catch (error) {
+    console.error("Update my vendor profile error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const listMyServiceAreas = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.vendorId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const serviceAreas = await prisma.vendorServiceArea.findMany({
+      where: { vendorId: req.vendorId },
+      orderBy: [{ isPrimary: "desc" }, { coverageRank: "asc" }, { createdAt: "desc" }],
+    });
+
+    res.status(200).json({ success: true, serviceAreas });
+  } catch (error) {
+    console.error("List service areas error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const addMyServiceArea = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.vendorId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const { pincode, city, state, district, isPrimary, coverageRank } = req.body;
+
+    if (!pincode) {
+      res.status(400).json({ error: "pincode is required" });
+      return;
+    }
+
+    if (isPrimary) {
+      await prisma.vendorServiceArea.updateMany({
+        where: { vendorId: req.vendorId, isPrimary: true },
+        data: { isPrimary: false },
+      });
+    }
+
+    const serviceArea = await prisma.vendorServiceArea.create({
+      data: {
+        vendorId: req.vendorId,
+        pincode: String(pincode),
+        city: city ? String(city) : null,
+        state: state ? String(state) : null,
+        district: district ? String(district) : null,
+        isPrimary: Boolean(isPrimary),
+        coverageRank: coverageRank !== undefined ? Number(coverageRank) : 0,
+      },
+    });
+
+    res.status(201).json({ success: true, serviceArea });
+  } catch (error) {
+    console.error("Add service area error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const updateMyServiceArea = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.vendorId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const { id } = req.params;
+    const { pincode, city, state, district, isPrimary, coverageRank } = req.body;
+
+    const existing = await prisma.vendorServiceArea.findFirst({
+      where: { id, vendorId: req.vendorId },
+    });
+
+    if (!existing) {
+      res.status(404).json({ error: "Service area not found" });
+      return;
+    }
+
+    if (isPrimary) {
+      await prisma.vendorServiceArea.updateMany({
+        where: { vendorId: req.vendorId, isPrimary: true, id: { not: id } },
+        data: { isPrimary: false },
+      });
+    }
+
+    const serviceArea = await prisma.vendorServiceArea.update({
+      where: { id },
+      data: {
+        ...(pincode !== undefined && { pincode: String(pincode) }),
+        ...(city !== undefined && { city: city ? String(city) : null }),
+        ...(state !== undefined && { state: state ? String(state) : null }),
+        ...(district !== undefined && { district: district ? String(district) : null }),
+        ...(isPrimary !== undefined && { isPrimary: Boolean(isPrimary) }),
+        ...(coverageRank !== undefined && { coverageRank: Number(coverageRank) }),
+      },
+    });
+
+    res.status(200).json({ success: true, serviceArea });
+  } catch (error) {
+    console.error("Update service area error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getAdminNotesForVendor = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    const vendor = await prisma.vendor.findUnique({ where: { id } });
+    if (!vendor) {
+      res.status(404).json({ error: "Vendor not found" });
+      return;
+    }
+
+    const notes = await prisma.adminInternalNote.findMany({ where: { entityType: "VENDOR", entityId: id }, orderBy: { createdAt: "desc" }, include: { createdByAdmin: { select: { id: true, name: true, email: true } } } });
+
+    res.status(200).json({ success: true, notes });
+  } catch (error) {
+    console.error("Get admin notes error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

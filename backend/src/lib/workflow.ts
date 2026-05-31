@@ -1,5 +1,5 @@
-import nodemailer from "nodemailer";
 import type { Prisma, PrismaClient, NotificationAudience, NotificationType, AuditEntityType } from "@prisma/client";
+import emailService from "./email";
 
 type JsonValue = Prisma.InputJsonValue;
 
@@ -55,81 +55,36 @@ export async function createNotification(
   });
 }
 
-function buildEmailHtml(subject: string, body: string): string {
-  return `
-    <div style="font-family: Arial, sans-serif; background: #f8fafc; padding: 24px; color: #0f172a;">
-      <div style="max-width: 640px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 24px; padding: 28px;">
-        <div style="font-size: 12px; letter-spacing: 0.24em; text-transform: uppercase; color: #b45309; font-weight: 700;">Solar Compare by SAFWE ENERGY</div>
-        <h1 style="margin: 16px 0 12px; font-size: 28px; line-height: 1.2;">${subject}</h1>
-        <p style="font-size: 15px; line-height: 1.8; color: #334155; white-space: pre-line;">${body}</p>
-      </div>
-    </div>
-  `;
-}
+export async function sendTransactionalEmail(input: { to: string; subject: string; body: string; html?: string; type?: string; meta?: Record<string, unknown> }): Promise<void> {
+  try {
+    const html = input.html ?? input.body;
 
-export async function sendTransactionalEmail(input: {
-  to: string;
-  subject: string;
-  body: string;
-  html?: string;
-}): Promise<void> {
-  const smtpHost = process.env.SMTP_HOST;
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPass = process.env.SMTP_PASS;
-  const adminEmail = process.env.ADMIN_EMAIL || smtpUser;
-
-  if (!smtpHost || !smtpUser || !smtpPass || (!input.to && !adminEmail)) {
-    console.info(`[email] to=${input.to} subject=${input.subject}: ${input.body}`);
-    return;
+    await emailService.sendEmail({ to: input.to, subject: input.subject, text: input.body, html });
+  } catch (err) {
+    console.error("sendTransactionalEmail error:", err);
   }
-
-  const transporter = nodemailer.createTransport({
-    host: smtpHost,
-    port: Number(process.env.SMTP_PORT || 587),
-    secure: String(process.env.SMTP_SECURE || "false") === "true",
-    auth: {
-      user: smtpUser,
-      pass: smtpPass,
-    },
-  });
-
-  const message = {
-    from: process.env.SMTP_FROM || smtpUser,
-    to: input.to || adminEmail,
-    subject: input.subject,
-    text: input.body,
-    html: input.html || buildEmailHtml(input.subject, input.body),
-  };
-
-  const maxAttempts = 3;
-  let lastError: unknown;
-
-  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-    try {
-      await transporter.sendMail(message);
-      return;
-    } catch (error) {
-      lastError = error;
-      if (attempt === maxAttempts) {
-        break;
-      }
-    }
-  }
-
-  console.error("Transactional email failed:", lastError);
 }
 
 export async function safeEmailDispatch(subject: string, body: string): Promise<void> {
   const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
-
   if (!adminEmail) {
     console.info(`[email] ${subject}: ${body}`);
     return;
   }
 
-  await sendTransactionalEmail({
-    to: adminEmail,
-    subject,
-    body,
-  });
+  try {
+    const html = emailService.adminNotificationTemplate(subject, body);
+    await emailService.sendEmail({ to: adminEmail, subject, text: body, html });
+  } catch (err) {
+    console.error("safeEmailDispatch error:", err);
+  }
 }
+
+export const verificationTemplate = emailService.verificationTemplate;
+export const resetTemplate = emailService.resetTemplate;
+export const welcomeTemplate = emailService.welcomeTemplate;
+export const otpTemplate = (name: string, otp: string, mins = 10) => emailService.otpTemplate(name, otp, mins);
+export const vendorApprovalTemplate = emailService.vendorApprovalTemplate;
+export const vendorRejectionTemplate = emailService.vendorRejectionTemplate;
+export const adminNotificationTemplate = emailService.adminNotificationTemplate;
+export const quoteNotificationTemplate = emailService.quoteNotificationTemplate;

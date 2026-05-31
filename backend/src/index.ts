@@ -3,6 +3,10 @@ import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
 
+// validate environment early
+import {getEnv} from "./lib/env";
+getEnv();
+
 dotenv.config();
 
 const app = express();

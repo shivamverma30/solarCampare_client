@@ -257,3 +257,25 @@ export const addCommissionNote = async (req: AuthRequest, res: Response): Promis
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+export const listVendorLeads = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.vendorId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const leads = await prisma.vendorLead.findMany({
+      where: { vendorId: req.vendorId },
+      orderBy: { createdAt: "desc" },
+      include: {
+        statusLogs: true,
+      },
+    });
+
+    res.status(200).json({ success: true, leads });
+  } catch (error) {
+    console.error("List vendor leads error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};

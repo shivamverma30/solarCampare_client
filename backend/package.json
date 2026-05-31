@@ -11,9 +11,13 @@
     "prisma:init": "npx prisma init",
     "prisma:generate": "npx prisma generate",
     "prisma:migrate": "npx prisma migrate dev",
-    "prisma:seed": "tsx scripts/seed.ts",
+    "prisma:seed": "tsx prisma/seed.ts",
     "db:push": "npx prisma db push",
     "db:reset": "npx prisma migrate reset"
+    ,"test:integration": "NODE_ENV=test tsx tests/integration.ts"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.0.0",

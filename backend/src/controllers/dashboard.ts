@@ -75,3 +75,124 @@ export const getSuperAdminStats = async (_req: AuthRequest, res: Response): Prom
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+export const getVendorStats = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.vendorId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const [vendor, leadCount, quoteRequests, productsCount, unreadNotifications] = await Promise.all([
+      prisma.vendor.findUnique({
+        where: { id: req.vendorId },
+        select: {
+          id: true,
+          companyName: true,
+          ownerName: true,
+          status: true,
+          pincode: true,
+          city: true,
+          state: true,
+          serviceAreas: true,
+        },
+      }),
+      prisma.vendorLead.count({ where: { vendorId: req.vendorId } }),
+      prisma.quoteRequest.count({ where: { vendorId: req.vendorId } }),
+      prisma.product.count({ where: { vendorId: req.vendorId } }),
+      prisma.notification.count({ where: { audience: "VENDOR", OR: [{ vendorId: req.vendorId }, { vendorId: null }] } }),
+    ]);
+
+    if (!vendor) {
+      res.status(404).json({ error: "Vendor not found" });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      stats: {
+        vendor,
+        leadCount,
+        quoteRequests,
+        productsCount,
+        unreadNotifications,
+      },
+    });
+  } catch (error) {
+    console.error("Get vendor stats error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getUserStats = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.userId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        pincode: true,
+        city: true,
+        state: true,
+      },
+    });
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    const [historyCount, quoteCount, notificationCount, nearbyVendors] = await Promise.all([
+      prisma.calculatorHistory.count({ where: { userId: req.userId } }),
+      prisma.quoteRequest.count({ where: { userId: req.userId } }),
+      prisma.notification.count({ where: { audience: "USER", OR: [{ userId: req.userId }, { userId: null }] } }),
+      user.pincode
+        ? prisma.vendor.findMany({
+            where: {
+              status: "APPROVED",
+              OR: [
+                { pincode: user.pincode },
+                { serviceAreas: { some: { pincode: user.pincode } } },
+                ...(user.city ? [{ city: user.city }, { serviceAreas: { some: { city: user.city } } }] : []),
+                ...(user.state ? [{ state: user.state }, { serviceAreas: { some: { state: user.state } } }] : []),
+              ],
+            },
+            take: 12,
+            orderBy: { createdAt: "desc" },
+            select: {
+              id: true,
+              companyName: true,
+              ownerName: true,
+              serviceArea: true,
+              city: true,
+              state: true,
+              pincode: true,
+              logoUrl: true,
+              experience: true,
+              businessType: true,
+            },
+          })
+        : Promise.resolve([]),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      stats: {
+        user,
+        historyCount,
+        quoteCount,
+        notificationCount,
+        nearbyVendors,
+      },
+    });
+  } catch (error) {
+    console.error("Get user stats error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};

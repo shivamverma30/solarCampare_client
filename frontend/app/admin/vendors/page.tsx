@@ -24,6 +24,10 @@ export default function AdminVendorsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [notesMap, setNotesMap] = useState<Record<string, any[]>>({});
+  const [newNote, setNewNote] = useState<Record<string, string>>({});
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -115,8 +119,37 @@ export default function AdminVendorsPage() {
                 <InfoRow label="Experience" value={`${vendor.experience} years`} />
                 <InfoRow label="Phone" value={vendor.phone} />
                 <InfoRow label="Email" value={vendor.email} />
+                <InfoRow label="Address" value={(vendor as any).address || "-"} />
+                <InfoRow label="Pincode" value={(vendor as any).pincode || "-"} />
+                <InfoRow label="Registered" value={new Date(vendor.createdAt).toLocaleString()} />
               </div>
 
+              {/* Documents */}
+              {vendor.documents && vendor.documents.length ? (
+                <div className="mt-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Documents</p>
+                  <ul className="mt-2 text-sm text-slate-700">
+                    {vendor.documents.map((d: any) => (
+                      <li key={d.id} className="mt-1">{d.documentName} • {d.fileType}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
+              <div className="mt-4">
+                <button className="text-sm text-amber-600 underline" onClick={async () => {
+                  const id = vendor.id;
+                  const token = getToken();
+                  if (!token) { setError("Not authenticated"); return; }
+                  // open modal and fetch notes
+                  setModalOpen(true);
+                  setExpandedId(id);
+                  if (!notesMap[id]) {
+                    const res = await apiClient.vendors.getNotes(token, id);
+                    if (res.success) setNotesMap((m) => ({ ...m, [id]: res.notes || [] }));
+                  }
+                }}>{"View details & notes"}</button>
+              </div>
               <div className="mt-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Services</p>
                 <p className="mt-2 text-sm text-slate-700">{vendor.services.join(", ") || "Not specified"}</p>
@@ -125,6 +158,72 @@ export default function AdminVendorsPage() {
               {vendor.rejectionReason ? (
                 <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
                   Rejection reason: {vendor.rejectionReason}
+                </div>
+              ) : null}
+
+              {/* Modal for vendor details & notes */}
+              {modalOpen && expandedId === vendor.id ? (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/40" onClick={() => { setModalOpen(false); setExpandedId(null); }} />
+                  <div className="relative max-h-[80vh] w-full max-w-3xl overflow-auto rounded-2xl bg-white p-6 shadow-lg">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-xl font-semibold text-slate-950">{vendor.companyName}</p>
+                        <p className="mt-1 text-sm text-slate-600">{vendor.ownerName} • {vendor.businessType}</p>
+                      </div>
+                      <button onClick={() => { setModalOpen(false); setExpandedId(null); }} className="text-sm text-slate-500">Close</button>
+                    </div>
+
+                    <div className="mt-4 grid gap-3 md:grid-cols-2 text-sm text-slate-600">
+                      <InfoRow label="Service area" value={vendor.serviceArea} />
+                      <InfoRow label="Experience" value={`${vendor.experience} years`} />
+                      <InfoRow label="Phone" value={vendor.phone} />
+                      <InfoRow label="Email" value={vendor.email} />
+                      <InfoRow label="Address" value={(vendor as any).address || "-"} />
+                      <InfoRow label="Pincode" value={(vendor as any).pincode || "-"} />
+                      <InfoRow label="Registered" value={new Date(vendor.createdAt).toLocaleString()} />
+                    </div>
+
+                    {vendor.documents && vendor.documents.length ? (
+                      <div className="mt-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Documents</p>
+                        <ul className="mt-2 text-sm text-slate-700">
+                          {vendor.documents.map((d: any) => (
+                            <li key={d.id} className="mt-1">{d.documentName} • {d.fileType}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+
+                    <div className="mt-6">
+                      <p className="text-sm font-semibold">Internal notes</p>
+                      {(notesMap[vendor.id] || []).map((n: any) => (
+                        <div key={n.id} className="mt-2 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+                          <div className="text-sm text-slate-700">{n.note}</div>
+                          <div className="mt-1 text-xs text-slate-500">By {n.createdByAdmin?.name || 'Admin'} • {new Date(n.createdAt).toLocaleString()}</div>
+                        </div>
+                      ))}
+
+                      <div className="mt-4">
+                        <textarea value={newNote[vendor.id] || ""} onChange={(e) => setNewNote((s) => ({ ...s, [vendor.id]: e.target.value }))} placeholder="Add internal note" className="w-full rounded-xl border border-slate-300 px-4 py-3" />
+                        <div className="mt-2">
+                          <button onClick={async () => {
+                            const token = getToken();
+                            if (!token) { setError("Not authenticated"); return; }
+                            const note = (newNote[vendor.id] || "").trim();
+                            if (!note) return;
+                            const res = await apiClient.vendors.addNote(token, vendor.id, note);
+                            if (res.success) {
+                              setNotesMap((m) => ({ ...m, [vendor.id]: [res.note, ...(m[vendor.id] || [])] }));
+                              setNewNote((s) => ({ ...s, [vendor.id]: "" }));
+                            } else {
+                              setError(res.error || "Failed to add note");
+                            }
+                          }} className="rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold">Add note</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ) : null}
 

@@ -4,7 +4,7 @@ import prisma from "../lib/prisma";
 import { hashPassword, comparePassword } from "../utils/password";
 import { generateToken } from "../utils/jwt";
 import { AuthRequest } from "../middleware/auth";
-import { createAuditLog, createNotification, safeEmailDispatch, sendTransactionalEmail } from "../lib/workflow";
+import { createAuditLog, createNotification, safeEmailDispatch, sendTransactionalEmail, welcomeTemplate, otpTemplate } from "../lib/workflow";
 
 const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
 
@@ -236,7 +236,8 @@ export const login = async (req: AuthRequest, res: Response): Promise<void> => {
 
 export const registerUser = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { fullName, email, password, phone, city, state } = req.body;
+    // New OTP-first registration flow: store registration payload in an EmailVerificationToken
+    const { fullName, email, password, phone, city, state, pincode } = req.body;
 
     if (!fullName || !email || !password) {
       res.status(400).json({ error: "Full name, email, and password are required" });
@@ -250,63 +251,66 @@ export const registerUser = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
+    // Hash the password for temporary storage
     const hashedPassword = await hashPassword(password);
 
-    const user = await prisma.user.create({
+    // Generate 6-digit OTP
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
+    const hashedOtp = await hashPassword(otp);
+
+    const token = createOneTimeToken();
+
+    // Create verification record with payload (password is stored hashed)
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 10); // 10 minutes
+
+    await prisma.emailVerificationToken.create({
       data: {
-        fullName,
+        token,
         email,
-        password: hashedPassword,
-        phone,
-        city,
-        state,
+        purpose: "EMAIL_VERIFICATION",
+        otpHash: hashedOtp,
+        payload: {
+          fullName,
+          email,
+          password: hashedPassword,
+          phone,
+          city,
+          state,
+          pincode,
+        },
+        expiresAt,
       },
     });
 
-    const verificationToken = await issueVerificationToken({
-      email: user.email,
-      accountType: "user",
-      userId: user.id,
-    });
-
+    // Notify admin and send OTP email
     await createNotification(prisma, {
       audience: "ADMIN",
       type: "USER_SIGNUP",
-      title: "New user registration",
-      body: `${user.fullName} has registered with ${user.email}.`,
-      metadata: { userId: user.id, email: user.email },
+      title: "New user registration (OTP)",
+      body: `${fullName} has initiated registration with ${email}.`,
+      metadata: { email },
     });
 
-    await safeEmailDispatch(
-      "New user registration",
-      `User ${user.fullName} (${user.email}) has created an account.`
-    );
+    await safeEmailDispatch("New user registration", `User ${fullName} (${email}) started registration.`);
 
-    await sendVerificationEmail(user.email, user.fullName, verificationToken, "user");
+    await sendTransactionalEmail({
+      to: email,
+      subject: "Verify Your Email Address",
+      body: `Your verification code is ${otp}. It expires in 10 minutes.`,
+      html: otpTemplate(fullName, otp, 10),
+    });
 
     await createAuditLog(prisma, {
-      actorType: "user",
-      actorId: user.id,
-      action: "user.registered",
+      actorType: "system",
+      action: "email_otp.issued",
       entityType: "USER",
-      entityId: user.id,
-      metadata: { email: user.email },
+      entityId: null,
+      metadata: { email },
     });
 
-    res.status(201).json({
-      success: true,
-      message: "User registered successfully",
-      token: buildUserToken(user),
-      user: {
-        id: user.id,
-        fullName: user.fullName,
-        email: user.email,
-        phone: user.phone,
-        city: user.city,
-        state: user.state,
-        status: user.status,
-      },
-    });
+    const respPayload: any = { success: true, message: "Verification code sent", token };
+    if (process.env.NODE_ENV === "test") respPayload.debugOtp = otp;
+    res.status(200).json(respPayload);
   } catch (error) {
     console.error("Register user error:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -347,6 +351,8 @@ export const loginUser = async (req: AuthRequest, res: Response): Promise<void> 
         phone: user.phone,
         city: user.city,
         state: user.state,
+        pincode: user.pincode,
+        avatarUrl: user.avatarUrl,
         status: user.status,
       },
     });
@@ -359,6 +365,8 @@ export const loginUser = async (req: AuthRequest, res: Response): Promise<void> 
 export const registerVendor = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const {
+      fullName,
+      businessName,
       companyName,
       ownerName,
       email,
@@ -366,6 +374,10 @@ export const registerVendor = async (req: AuthRequest, res: Response): Promise<v
       gst,
       serviceArea,
       address,
+      city,
+      state,
+      pincode,
+      logoUrl,
       businessType,
       experience,
       services = [],
@@ -373,7 +385,10 @@ export const registerVendor = async (req: AuthRequest, res: Response): Promise<v
       documents = [],
     } = req.body;
 
-    if (!companyName || !ownerName || !email || !phone || !serviceArea || !address || !businessType || experience === undefined || !password) {
+    const normalizedCompanyName = String(businessName || companyName || "").trim();
+    const normalizedOwnerName = String(fullName || ownerName || "").trim();
+
+    if (!normalizedCompanyName || !normalizedOwnerName || !email || !phone || !serviceArea || !address || !city || !state || !pincode || !businessType || experience === undefined || !password) {
       res.status(400).json({ error: "Missing required vendor fields" });
       return;
     }
@@ -385,93 +400,81 @@ export const registerVendor = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
+    // New OTP-first vendor registration: store vendor payload in verification token
     const hashedPassword = await hashPassword(password);
 
-    const vendor = await prisma.vendor.create({
-      data: {
-        companyName,
-        ownerName,
-        email,
-        phone,
-        gst,
-        serviceArea,
-        address,
-        businessType,
-        experience: Number(experience),
-        services,
-        password: hashedPassword,
-        status: "PENDING",
-        documents: documents.length
-          ? {
-              create: documents.map((document: { documentName: string; fileUrl: string; fileType: string }) => ({
-                documentName: document.documentName,
-                fileUrl: document.fileUrl,
-                fileType: document.fileType,
-              })),
-            }
-          : undefined,
-      },
-      include: {
-        documents: true,
-      },
-    });
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
+    const hashedOtp = await hashPassword(otp);
 
-    const verificationToken = await issueVerificationToken({
-      email: vendor.email,
-      accountType: "vendor",
-      vendorId: vendor.id,
+    const token = createOneTimeToken();
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 10); // 10 minutes
+
+    await prisma.emailVerificationToken.create({
+      data: {
+        token,
+        email,
+        purpose: "EMAIL_VERIFICATION",
+        otpHash: hashedOtp,
+        payload: {
+          companyName: normalizedCompanyName,
+          ownerName: normalizedOwnerName,
+          email,
+          phone,
+          gst,
+          serviceArea,
+          address,
+          city,
+          state,
+          pincode,
+          logoUrl,
+          avatarUrl: logoUrl,
+          businessType,
+          experience: Number(experience),
+          services,
+          password: hashedPassword,
+          documents,
+        },
+        expiresAt,
+      },
     });
 
     await prisma.vendorStatusLog.create({
       data: {
-        vendorId: vendor.id,
+        vendorId: "",
         previousStatus: "PENDING",
         newStatus: "PENDING",
-        note: "Vendor application submitted",
+        note: "Vendor application initiated (OTP)",
       },
-    });
+    }).catch(() => {}); // best-effort; will be created again when vendor created
 
     await createNotification(prisma, {
       audience: "ADMIN",
       type: "VENDOR_SIGNUP",
-      title: "New vendor application",
-      body: `${vendor.companyName} has submitted a vendor application and is pending review.`,
-      metadata: { vendorId: vendor.id, email: vendor.email, status: vendor.status },
+      title: "New vendor application (OTP)",
+      body: `${normalizedCompanyName} has started vendor registration.`,
+      metadata: { email, companyName: normalizedCompanyName },
     });
 
-    await safeEmailDispatch(
-      "New vendor application",
-      `${vendor.companyName} (${vendor.email}) submitted a vendor application.`
-    );
+    await safeEmailDispatch("New vendor application", `${normalizedCompanyName} (${email}) started registration.`);
 
-    await sendVerificationEmail(vendor.email, vendor.ownerName, verificationToken, "vendor");
+    await sendTransactionalEmail({
+      to: email,
+      subject: "Verify Your Email Address",
+      body: `Your verification code is ${otp}. It expires in 10 minutes.`,
+      html: otpTemplate(normalizedOwnerName, otp, 10),
+    });
 
     await createAuditLog(prisma, {
-      actorType: "vendor",
-      actorId: vendor.id,
-      action: "vendor.registered",
+      actorType: "system",
+      action: "email_otp.issued",
       entityType: "VENDOR",
-      entityId: vendor.id,
-      metadata: { email: vendor.email, status: vendor.status },
+      entityId: null,
+      metadata: { email, companyName: normalizedCompanyName },
     });
 
-    res.status(201).json({
-      success: true,
-      message: "Vendor application submitted successfully",
-      token: buildVendorToken(vendor),
-      vendor: {
-        id: vendor.id,
-        companyName: vendor.companyName,
-        ownerName: vendor.ownerName,
-        email: vendor.email,
-        phone: vendor.phone,
-        serviceArea: vendor.serviceArea,
-        businessType: vendor.businessType,
-        experience: vendor.experience,
-        services: vendor.services,
-        status: vendor.status,
-      },
-    });
+    const vendorResp: any = { success: true, message: "Verification code sent", token };
+    if (process.env.NODE_ENV === "test") vendorResp.debugOtp = otp;
+    res.status(200).json(vendorResp);
   } catch (error) {
     console.error("Register vendor error:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -489,8 +492,24 @@ export const loginVendor = async (req: AuthRequest, res: Response): Promise<void
 
     const vendor = await prisma.vendor.findUnique({ where: { email } });
 
-    if (!vendor || vendor.status === "REJECTED") {
+    if (!vendor) {
       res.status(401).json({ error: "Invalid credentials" });
+      return;
+    }
+
+    if (vendor.status === "PENDING") {
+      res.status(403).json({
+        error: "Your account is under admin review.",
+        status: vendor.status,
+      });
+      return;
+    }
+
+    if (vendor.status === "REJECTED") {
+      res.status(403).json({
+        error: vendor.rejectionReason || "Your vendor application has been rejected.",
+        status: vendor.status,
+      });
       return;
     }
 
@@ -503,7 +522,7 @@ export const loginVendor = async (req: AuthRequest, res: Response): Promise<void
 
     res.status(200).json({
       success: true,
-      message: vendor.status === "APPROVED" ? "Login successful" : "Login successful. Vendor pending approval.",
+      message: "Login successful",
       token: buildVendorToken(vendor),
       vendor: {
         id: vendor.id,
@@ -512,6 +531,11 @@ export const loginVendor = async (req: AuthRequest, res: Response): Promise<void
         email: vendor.email,
         phone: vendor.phone,
         serviceArea: vendor.serviceArea,
+        city: vendor.city,
+        state: vendor.state,
+        pincode: vendor.pincode,
+        logoUrl: vendor.logoUrl,
+        avatarUrl: vendor.avatarUrl,
         businessType: vendor.businessType,
         experience: vendor.experience,
         services: vendor.services,
@@ -526,29 +550,90 @@ export const loginVendor = async (req: AuthRequest, res: Response): Promise<void
 
 export const getProfile = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.adminId) {
-      res.status(401).json({ error: "Unauthorized" });
+    if (req.adminId) {
+      const admin = await prisma.admin.findUnique({
+        where: { id: req.adminId },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          avatarUrl: true,
+          role: true,
+          status: true,
+          createdAt: true,
+        },
+      });
+
+      if (!admin) {
+        res.status(404).json({ error: "Admin not found" });
+        return;
+      }
+
+      res.status(200).json(admin);
       return;
     }
 
-    const admin = await prisma.admin.findUnique({
-      where: { id: req.adminId },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        status: true,
-        createdAt: true,
-      },
-    });
+    if (req.userId) {
+      const user = await prisma.user.findUnique({
+        where: { id: req.userId },
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          phone: true,
+          city: true,
+          state: true,
+          pincode: true,
+          avatarUrl: true,
+          status: true,
+          createdAt: true,
+        },
+      });
 
-    if (!admin) {
-      res.status(404).json({ error: "Admin not found" });
+      if (!user) {
+        res.status(404).json({ error: "User not found" });
+        return;
+      }
+
+      res.status(200).json(user);
       return;
     }
 
-    res.status(200).json(admin);
+    if (req.vendorId) {
+      const vendor = await prisma.vendor.findUnique({
+        where: { id: req.vendorId },
+        select: {
+          id: true,
+          companyName: true,
+          ownerName: true,
+          email: true,
+          phone: true,
+          address: true,
+          city: true,
+          state: true,
+          pincode: true,
+          logoUrl: true,
+          avatarUrl: true,
+          serviceArea: true,
+          businessType: true,
+          experience: true,
+          services: true,
+          status: true,
+          rejectionReason: true,
+          createdAt: true,
+        },
+      });
+
+      if (!vendor) {
+        res.status(404).json({ error: "Vendor not found" });
+        return;
+      }
+
+      res.status(200).json(vendor);
+      return;
+    }
+
+    res.status(401).json({ error: "Unauthorized" });
   } catch (error) {
     console.error("Get profile error:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -557,32 +642,133 @@ export const getProfile = async (req: AuthRequest, res: Response): Promise<void>
 
 export const updateProfile = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.adminId) {
-      res.status(401).json({ error: "Unauthorized" });
+    if (req.adminId) {
+      const { name, email, avatarUrl } = req.body;
+
+      const admin = await prisma.admin.update({
+        where: { id: req.adminId },
+        data: {
+          ...(name && { name }),
+          ...(email && { email }),
+          ...(avatarUrl !== undefined && { avatarUrl }),
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          avatarUrl: true,
+          role: true,
+        },
+      });
+
+      res.status(200).json({
+        success: true,
+        message: "Profile updated successfully",
+        admin,
+      });
       return;
     }
 
-    const { name, email } = req.body;
+    if (req.userId) {
+      const { fullName, email, phone, city, state, pincode, avatarUrl } = req.body;
 
-    const admin = await prisma.admin.update({
-      where: { id: req.adminId },
-      data: {
-        ...(name && { name }),
-        ...(email && { email }),
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-      },
-    });
+      const user = await prisma.user.update({
+        where: { id: req.userId },
+        data: {
+          ...(fullName && { fullName }),
+          ...(email && { email }),
+          ...(phone !== undefined && { phone }),
+          ...(city !== undefined && { city }),
+          ...(state !== undefined && { state }),
+          ...(pincode !== undefined && { pincode }),
+          ...(avatarUrl !== undefined && { avatarUrl }),
+        },
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          phone: true,
+          city: true,
+          state: true,
+          pincode: true,
+          avatarUrl: true,
+          status: true,
+        },
+      });
 
-    res.status(200).json({
-      success: true,
-      message: "Profile updated successfully",
-      admin,
-    });
+      res.status(200).json({
+        success: true,
+        message: "Profile updated successfully",
+        user,
+      });
+      return;
+    }
+
+    if (req.vendorId) {
+      const {
+        ownerName,
+        companyName,
+        email,
+        phone,
+        address,
+        city,
+        state,
+        pincode,
+        serviceArea,
+        businessType,
+        experience,
+        services,
+        logoUrl,
+        avatarUrl,
+      } = req.body;
+
+      const vendor = await prisma.vendor.update({
+        where: { id: req.vendorId },
+        data: {
+          ...(ownerName && { ownerName }),
+          ...(companyName && { companyName }),
+          ...(email && { email }),
+          ...(phone !== undefined && { phone }),
+          ...(address !== undefined && { address }),
+          ...(city !== undefined && { city }),
+          ...(state !== undefined && { state }),
+          ...(pincode !== undefined && { pincode }),
+          ...(serviceArea !== undefined && { serviceArea }),
+          ...(businessType !== undefined && { businessType }),
+          ...(experience !== undefined && { experience: Number(experience) }),
+          ...(services !== undefined && { services }),
+          ...(logoUrl !== undefined && { logoUrl }),
+          ...(avatarUrl !== undefined && { avatarUrl }),
+        },
+        select: {
+          id: true,
+          companyName: true,
+          ownerName: true,
+          email: true,
+          phone: true,
+          address: true,
+          city: true,
+          state: true,
+          pincode: true,
+          serviceArea: true,
+          businessType: true,
+          experience: true,
+          services: true,
+          logoUrl: true,
+          avatarUrl: true,
+          status: true,
+        },
+      });
+
+      res.status(200).json({
+        success: true,
+        message: "Profile updated successfully",
+        vendor,
+      });
+      return;
+    }
+
+    res.status(401).json({ error: "Unauthorized" });
   } catch (error) {
     console.error("Update profile error:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -591,11 +777,6 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
 
 export const changePassword = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.adminId) {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
-    }
-
     const { currentPassword, newPassword } = req.body;
 
     if (!currentPassword || !newPassword) {
@@ -603,33 +784,92 @@ export const changePassword = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
-    const admin = await prisma.admin.findUnique({ where: { id: req.adminId } });
-
-    if (!admin) {
-      res.status(404).json({ error: "Admin not found" });
-      return;
-    }
-
-    const isPasswordValid = await comparePassword(currentPassword, admin.password);
-
-    if (!isPasswordValid) {
-      res.status(401).json({ error: "Current password is incorrect" });
-      return;
-    }
-
     const hashedPassword = await hashPassword(newPassword);
 
-    await prisma.admin.update({
-      where: { id: req.adminId },
-      data: {
-        password: hashedPassword,
-      },
-    });
+    if (req.adminId) {
+      const admin = await prisma.admin.findUnique({ where: { id: req.adminId } });
 
-    res.status(200).json({
-      success: true,
-      message: "Password changed successfully",
-    });
+      if (!admin) {
+        res.status(404).json({ error: "Admin not found" });
+        return;
+      }
+
+      const isPasswordValid = await comparePassword(currentPassword, admin.password);
+
+      if (!isPasswordValid) {
+        res.status(401).json({ error: "Current password is incorrect" });
+        return;
+      }
+
+      await prisma.admin.update({ where: { id: req.adminId }, data: { password: hashedPassword } });
+
+      await sendTransactionalEmail({
+        to: admin.email,
+        subject: "Password changed successfully",
+        body: `Hi ${admin.name}, your account password was changed successfully.`,
+      });
+
+      res.status(200).json({ success: true, message: "Password changed successfully" });
+      return;
+    }
+
+    if (req.userId) {
+      const user = await prisma.user.findUnique({ where: { id: req.userId } });
+
+      if (!user) {
+        res.status(404).json({ error: "User not found" });
+        return;
+      }
+
+      const isPasswordValid = await comparePassword(currentPassword, user.password);
+
+      if (!isPasswordValid) {
+        res.status(401).json({ error: "Current password is incorrect" });
+        return;
+      }
+
+      await prisma.user.update({ where: { id: req.userId }, data: { password: hashedPassword } });
+
+      await sendTransactionalEmail({
+        to: user.email,
+        subject: "Password changed successfully",
+        body: `Hi ${user.fullName}, your account password was changed successfully.`,
+      });
+
+      res.status(200).json({ success: true, message: "Password changed successfully" });
+      return;
+    }
+
+    if (req.vendorId) {
+      const vendor = await prisma.vendor.findUnique({ where: { id: req.vendorId } });
+
+      if (!vendor) {
+        res.status(404).json({ error: "Vendor not found" });
+        return;
+      }
+
+      const isPasswordValid = await comparePassword(currentPassword, vendor.password);
+
+      if (!isPasswordValid) {
+        res.status(401).json({ error: "Current password is incorrect" });
+        return;
+      }
+
+      await prisma.vendor.update({ where: { id: req.vendorId }, data: { password: hashedPassword } });
+
+      await sendTransactionalEmail({
+        to: vendor.email,
+        subject: "Password changed successfully",
+        body: `Hi ${vendor.ownerName}, your account password was changed successfully.`,
+      });
+
+      res.status(200).json({ success: true, message: "Password changed successfully" });
+      return;
+    }
+
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+
   } catch (error) {
     console.error("Change password error:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -702,8 +942,175 @@ export const confirmEmailVerification = async (req: AuthRequest, res: Response):
       return;
     }
 
+    // If this is an OTP-based pending registration (payload + otpHash present)
+    if (verificationRecord.otpHash && verificationRecord.payload) {
+      if ((verificationRecord.attempts || 0) >= 5) {
+        res.status(429).json({ error: "Too many invalid attempts. Please request a new code." });
+        return;
+      }
+      const { otp } = req.body as { otp?: string };
+      if (!otp) {
+        res.status(400).json({ error: "OTP code is required" });
+        return;
+      }
+
+      const isOtpValid = await comparePassword(otp, verificationRecord.otpHash);
+
+      if (!isOtpValid) {
+        // increment attempts
+        await prisma.emailVerificationToken.update({ where: { token }, data: { attempts: { increment: 1 } } });
+        res.status(400).json({ error: "Invalid OTP" });
+        return;
+      }
+
+      // Create user or vendor depending on payload shape
+      const payload: any = verificationRecord.payload as any;
+
+      if (payload.fullName) {
+        // User registration
+        // Check again for existing user
+        const exists = await prisma.user.findUnique({ where: { email: verificationRecord.email } });
+        if (exists) {
+          await prisma.emailVerificationToken.delete({ where: { token } }).catch(() => {});
+          res.status(409).json({ error: "User already exists" });
+          return;
+        }
+
+        const user = await prisma.user.create({
+          data: {
+            fullName: payload.fullName,
+            email: payload.email,
+            password: payload.password,
+            phone: payload.phone,
+            city: payload.city,
+            state: payload.state,
+            pincode: payload.pincode,
+            emailVerifiedAt: new Date(),
+          },
+        });
+
+        await createAuditLog(prisma, {
+          actorType: "user",
+          actorId: user.id,
+          action: "user.registered",
+          entityType: "USER",
+          entityId: user.id,
+          metadata: { email: user.email },
+        });
+
+        await createNotification(prisma, {
+          audience: "ADMIN",
+          type: "USER_SIGNUP",
+          title: "New user registered",
+          body: `${user.fullName} has completed registration.`,
+          metadata: { userId: user.id, email: user.email },
+        });
+
+        // send welcome email
+        try {
+          await sendTransactionalEmail({
+            to: user.email,
+            subject: "Welcome to Solar Compare",
+            body: `Welcome! Your email has been verified.`,
+            html: welcomeTemplate(user.fullName || "User"),
+          });
+        } catch (err) {
+          console.error("Failed to send welcome email:", err);
+        }
+
+        await prisma.emailVerificationToken.delete({ where: { token } }).catch(() => {});
+
+        res.status(201).json({ success: true, message: "User registered and verified", user: { id: user.id, email: user.email, fullName: user.fullName } });
+        return;
+      }
+
+      if (payload.companyName) {
+        // Vendor registration
+        const exists = await prisma.vendor.findUnique({ where: { email: verificationRecord.email } });
+        if (exists) {
+          await prisma.emailVerificationToken.delete({ where: { token } }).catch(() => {});
+          res.status(409).json({ error: "Vendor already exists" });
+          return;
+        }
+
+        const vendor = await prisma.vendor.create({
+          data: {
+            companyName: payload.companyName,
+            ownerName: payload.ownerName,
+            email: payload.email,
+            phone: payload.phone,
+            gst: payload.gst,
+            serviceArea: payload.serviceArea,
+            address: payload.address,
+            city: payload.city,
+            state: payload.state,
+            pincode: payload.pincode,
+            logoUrl: payload.logoUrl,
+            avatarUrl: payload.avatarUrl,
+            businessType: payload.businessType,
+            experience: payload.experience ? Number(payload.experience) : 0,
+            services: payload.services || [],
+            password: payload.password,
+            status: "PENDING",
+            documents: payload.documents && payload.documents.length ? {
+              create: payload.documents.map((d: any) => ({ documentName: d.documentName, fileUrl: d.fileUrl, fileType: d.fileType }))
+            } : undefined,
+            emailVerifiedAt: new Date(),
+          },
+        });
+
+        await prisma.vendorStatusLog.create({
+          data: {
+            vendorId: vendor.id,
+            previousStatus: "PENDING",
+            newStatus: "PENDING",
+            note: "Vendor application submitted",
+          },
+        }).catch(() => {});
+
+        await createNotification(prisma, {
+          audience: "ADMIN",
+          type: "VENDOR_SIGNUP",
+          title: "New vendor application",
+          body: `${vendor.companyName} has submitted a vendor application and is pending review.`,
+          metadata: { vendorId: vendor.id, email: vendor.email, status: vendor.status },
+        });
+
+        await safeEmailDispatch("New vendor application", `${vendor.companyName} (${vendor.email}) submitted a vendor application.`);
+
+        await createAuditLog(prisma, {
+          actorType: "vendor",
+          actorId: vendor.id,
+          action: "vendor.registered",
+          entityType: "VENDOR",
+          entityId: vendor.id,
+          metadata: { email: vendor.email, status: vendor.status },
+        });
+
+        await prisma.emailVerificationToken.delete({ where: { token } }).catch(() => {});
+
+        res.status(201).json({ success: true, message: "Vendor registered and pending approval", vendor: { id: vendor.id, companyName: vendor.companyName, status: vendor.status } });
+        return;
+      }
+
+      res.status(400).json({ error: "Invalid verification payload" });
+      return;
+    }
+
+    // Existing link-based verification for previously-created accounts
     if (verificationRecord.userId) {
       await prisma.user.update({ where: { id: verificationRecord.userId }, data: { emailVerifiedAt: new Date() } });
+      // send welcome email after successful verification
+      try {
+        await sendTransactionalEmail({
+          to: verificationRecord.email,
+          subject: "Welcome to Solar Compare",
+          body: `Welcome! Your email has been verified.`,
+          html: welcomeTemplate((await prisma.user.findUnique({ where: { id: verificationRecord.userId } }))?.fullName || "User"),
+        });
+      } catch (err) {
+        console.error("Failed to send welcome email:", err);
+      }
     }
 
     if (verificationRecord.vendorId) {
@@ -811,6 +1218,58 @@ export const resetPassword = async (req: AuthRequest, res: Response): Promise<vo
     res.status(200).json({ success: true, message: "Password reset successfully" });
   } catch (error) {
     console.error("Reset password error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const resendVerificationOtp = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { token } = req.body as { token?: string };
+
+    if (!token) {
+      res.status(400).json({ error: "Token is required" });
+      return;
+    }
+
+    const record = await prisma.emailVerificationToken.findUnique({ where: { token } });
+
+    if (!record || record.usedAt || record.expiresAt < new Date()) {
+      res.status(400).json({ error: "Invalid or expired token" });
+      return;
+    }
+
+    if ((record.resendCount || 0) >= 3) {
+      res.status(429).json({ error: "Resend limit reached" });
+      return;
+    }
+
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
+    const hashedOtp = await hashPassword(otp);
+
+    await prisma.emailVerificationToken.update({
+      where: { token },
+      data: { otpHash: hashedOtp, resendCount: { increment: 1 }, expiresAt: new Date(Date.now() + 1000 * 60 * 10) },
+    });
+
+    // Send OTP email
+    await sendTransactionalEmail({
+      to: record.email,
+      subject: "Verify Your Email Address",
+      body: `Your verification code is ${otp}. It expires in 10 minutes.`,
+      html: otpTemplate(record.payload?.fullName || record.payload?.ownerName || record.email, otp, 10),
+    });
+
+    await createAuditLog(prisma, {
+      actorType: "system",
+      action: "email_otp.resent",
+      entityType: record.vendorId ? "VENDOR" : "USER",
+      entityId: record.vendorId || record.userId || null,
+      metadata: { email: record.email },
+    });
+
+    res.status(200).json({ success: true, message: "Verification code resent" });
+  } catch (error) {
+    console.error("Resend verification error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

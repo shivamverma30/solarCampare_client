@@ -1,15 +1,22 @@
 import { Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { AuthRequest } from "../middleware/auth";
+import prisma from "../lib/prisma";
 
-const prisma = new PrismaClient();
+function resolveProductOwnerFilter(req: AuthRequest): Prisma.ProductWhereInput | null {
+  if (req.vendorId) return { vendorId: req.vendorId };
+  if (req.adminId) return { adminId: req.adminId };
+  return null;
+}
 
 export const createProduct = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
   try {
-    if (!req.adminId) {
+    const ownerFilter = resolveProductOwnerFilter(req);
+
+    if (!ownerFilter) {
       res.status(401).json({ error: "Unauthorized" });
       return;
     }
@@ -32,7 +39,7 @@ export const createProduct = async (
         wattage: parseInt(wattage),
         description,
         image,
-        adminId: req.adminId,
+        ...(req.vendorId ? { vendorId: req.vendorId } : { adminId: req.adminId }),
       },
     });
 
@@ -49,13 +56,15 @@ export const createProduct = async (
 
 export const getProducts = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.adminId) {
+    const ownerFilter = resolveProductOwnerFilter(req);
+
+    if (!ownerFilter) {
       res.status(401).json({ error: "Unauthorized" });
       return;
     }
 
     const products = await prisma.product.findMany({
-      where: { adminId: req.adminId },
+      where: ownerFilter,
       orderBy: { createdAt: "desc" },
     });
 
@@ -72,7 +81,9 @@ export const getProducts = async (req: AuthRequest, res: Response): Promise<void
 
 export const getProduct = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.adminId) {
+    const ownerFilter = resolveProductOwnerFilter(req);
+
+    if (!ownerFilter) {
       res.status(401).json({ error: "Unauthorized" });
       return;
     }
@@ -80,7 +91,7 @@ export const getProduct = async (req: AuthRequest, res: Response): Promise<void>
     const { id } = req.params;
 
     const product = await prisma.product.findFirst({
-      where: { id, adminId: req.adminId },
+      where: { id, ...ownerFilter },
     });
 
     if (!product) {
@@ -100,7 +111,9 @@ export const updateProduct = async (
   res: Response
 ): Promise<void> => {
   try {
-    if (!req.adminId) {
+    const ownerFilter = resolveProductOwnerFilter(req);
+
+    if (!ownerFilter) {
       res.status(401).json({ error: "Unauthorized" });
       return;
     }
@@ -110,7 +123,7 @@ export const updateProduct = async (
       req.body;
 
     const product = await prisma.product.findFirst({
-      where: { id, adminId: req.adminId },
+      where: { id, ...ownerFilter },
     });
 
     if (!product) {
@@ -148,7 +161,9 @@ export const deleteProduct = async (
   res: Response
 ): Promise<void> => {
   try {
-    if (!req.adminId) {
+    const ownerFilter = resolveProductOwnerFilter(req);
+
+    if (!ownerFilter) {
       res.status(401).json({ error: "Unauthorized" });
       return;
     }
@@ -156,7 +171,7 @@ export const deleteProduct = async (
     const { id } = req.params;
 
     const product = await prisma.product.findFirst({
-      where: { id, adminId: req.adminId },
+      where: { id, ...ownerFilter },
     });
 
     if (!product) {
@@ -183,17 +198,19 @@ export const getDashboardStats = async (
   res: Response
 ): Promise<void> => {
   try {
-    if (!req.adminId) {
+    const ownerFilter = resolveProductOwnerFilter(req);
+
+    if (!ownerFilter) {
       res.status(401).json({ error: "Unauthorized" });
       return;
     }
 
     const totalProducts = await prisma.product.count({
-      where: { adminId: req.adminId },
+      where: ownerFilter,
     });
 
     const recentProducts = await prisma.product.findMany({
-      where: { adminId: req.adminId },
+      where: ownerFilter,
       orderBy: { createdAt: "desc" },
       take: 5,
     });

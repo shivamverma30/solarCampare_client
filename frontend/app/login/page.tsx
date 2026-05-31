@@ -6,7 +6,7 @@ import { useState } from "react";
 import BrandMark from "@/components/brand-mark";
 import { useLocale } from "@/components/locale-provider";
 import { apiClient } from "@/lib/api-client";
-import { setSessionProfile, setToken } from "@/lib/auth";
+import { setSessionProfile, setSessionRole, setToken, setUser, setVendor } from "@/lib/auth";
 
 type LoginRole = "user" | "vendor";
 
@@ -35,8 +35,23 @@ export default function LoginPage() {
     }
 
     if (response.token) setToken(response.token);
-    if (role === "vendor" && response.vendor) setSessionProfile(response.vendor);
-    if (role === "user" && response.user) setSessionProfile(response.user);
+
+    if (role === "vendor" && response.vendor) {
+      setSessionRole("VENDOR");
+      setSessionProfile(response.vendor);
+      setVendor(response.vendor);
+      router.push("/vendor/dashboard");
+      return;
+    }
+
+    if (role === "user" && response.user) {
+      setSessionRole("USER");
+      setSessionProfile(response.user);
+      setUser(response.user);
+      router.push("/user/dashboard");
+      return;
+    }
+
     router.push("/");
   };
 

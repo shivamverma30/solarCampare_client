@@ -11,6 +11,7 @@ import {
   changePassword,
   requestEmailVerification,
   confirmEmailVerification,
+  resendVerificationOtp,
   requestPasswordReset,
   resetPassword,
 } from "../controllers/auth";
@@ -26,6 +27,7 @@ router.post("/vendor/register", registerVendor);
 router.post("/vendor/login", loginVendor);
 router.post("/verify-email/request", requestEmailVerification);
 router.post("/verify-email/confirm", confirmEmailVerification);
+router.post("/verify-email/resend", resendVerificationOtp);
 router.post("/forgot-password", requestPasswordReset);
 router.post("/reset-password", resetPassword);
 router.get("/profile", authMiddleware, getProfile);

@@ -97,8 +97,10 @@ enum AuditEntityType {
 model Admin {
   id        String     @id @default(cuid())
   email     String     @unique
+  singletonKey String  @unique @default("SOLE_ADMIN")
   password  String
   name      String
+  avatarUrl String?
   role      AdminRole  @default(SUPERADMIN)
   status    AccountStatus @default(ACTIVE)
   emailVerifiedAt DateTime?
@@ -132,11 +134,15 @@ model Product {
   wattage     Int        // in watts
   description String
   image       String?
-  adminId     String
-  admin       Admin      @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  adminId     String?
+  vendorId    String?
+  admin       Admin?     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  vendor      Vendor?    @relation("VendorProducts", fields: [vendorId], references: [id], onDelete: Cascade)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
+  @@index([adminId])
+  @@index([vendorId])
   @@map("products")
 }
 
@@ -145,6 +151,8 @@ model User {
   fullName         String
   email            String              @unique
   phone            String?
+  pincode          String?
+  avatarUrl        String?
   password         String
   city             String?
   state            String?
@@ -174,6 +182,11 @@ model Vendor {
   gst              String?
   serviceArea      String
   address          String
+  city             String?
+  state            String?
+  pincode          String?
+  logoUrl          String?
+  avatarUrl        String?
   businessType     String
   experience       Int
   services         String[]            @default([])
@@ -198,6 +211,7 @@ model Vendor {
   emailVerificationTokens EmailVerificationToken[]
   passwordResetTokens PasswordResetToken[]
   uploads          UploadAsset[]
+  products         Product[]           @relation("VendorProducts")
   approvedByAdmin  Admin?              @relation("VendorApprovedBy", fields: [approvedByAdminId], references: [id], onDelete: SetNull)
   rejectedByAdmin  Admin?              @relation("VendorRejectedBy", fields: [rejectedByAdminId], references: [id], onDelete: SetNull)
 
@@ -398,6 +412,10 @@ model EmailVerificationToken {
   userId      String?
   vendorId    String?
   adminId     String?
+  otpHash     String?
+  payload     Json?
+  attempts    Int                 @default(0)
+  resendCount Int                 @default(0)
   expiresAt   DateTime
   usedAt      DateTime?
   createdAt   DateTime            @default(now())

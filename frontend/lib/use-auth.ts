@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getToken } from "@/lib/auth";
+import { getAdmin, getSessionProfile, getSessionRole, getToken, getUser, getVendor, type AuthRole } from "@/lib/auth";
 
 type AuthAdmin = {
   id?: string;
@@ -9,30 +9,48 @@ type AuthAdmin = {
   email?: string;
 };
 
+type AuthProfile = {
+  id?: string;
+  name?: string;
+  fullName?: string;
+  ownerName?: string;
+  companyName?: string;
+  email?: string;
+  status?: string;
+};
+
 export const useAuth = () => {
-  const [isLoading, setIsLoading] = useState<boolean>(() => typeof window === "undefined");
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return Boolean(getToken());
-  });
-  const [admin, setAdmin] = useState<AuthAdmin | null>(() => {
-    if (typeof window === "undefined") return null;
-    const adminData = localStorage.getItem("admin");
-    return adminData ? (JSON.parse(adminData) as AuthAdmin) : null;
-  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [admin, setAdmin] = useState<AuthAdmin | null>(null);
+  const [profile, setProfile] = useState<AuthProfile | null>(null);
+  const [role, setRole] = useState<AuthRole | null>(null);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    setIsAuthenticated(Boolean(getToken()));
 
-    const timer = window.setTimeout(() => {
-      const adminData = localStorage.getItem("admin");
-      setIsAuthenticated(Boolean(getToken()));
-      setAdmin(adminData ? (JSON.parse(adminData) as AuthAdmin) : null);
-      setIsLoading(false);
-    }, 0);
+    const detectedRole = getSessionRole();
+    setRole(detectedRole);
 
-    return () => window.clearTimeout(timer);
+    if (detectedRole === "SUPERADMIN" || detectedRole === "ADMIN") {
+      const adminProfile = (getAdmin() || getSessionProfile()) as AuthProfile | null;
+      setAdmin(adminProfile as AuthAdmin | null);
+      setProfile(adminProfile);
+    } else if (detectedRole === "USER") {
+      const userProfile = (getUser() || getSessionProfile()) as AuthProfile | null;
+      setAdmin(null);
+      setProfile(userProfile);
+    } else if (detectedRole === "VENDOR") {
+      const vendorProfile = (getVendor() || getSessionProfile()) as AuthProfile | null;
+      setAdmin(null);
+      setProfile(vendorProfile);
+    } else {
+      setAdmin(getAdmin() as AuthAdmin | null);
+      setProfile((getSessionProfile() || getAdmin()) as AuthProfile | null);
+    }
+
+    setIsLoading(false);
   }, []);
 
-  return { isLoading, isAuthenticated, admin };
+  return { isLoading, isAuthenticated, admin, profile, role };
 };

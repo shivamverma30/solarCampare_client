@@ -18,7 +18,6 @@ const sidebarLinks: SidebarLink[] = [
   { name: "Notifications", href: "/admin/notifications", icon: "🔔" },
   { name: "Vendors", href: "/admin/vendors", icon: "🏢" },
   { name: "Leads", href: "/admin/leads", icon: "🧭" },
-  { name: "Products", href: "/admin/products", icon: "📦" },
   { name: "Profile", href: "/admin/profile", icon: "👤" },
   { name: "Change Password", href: "/admin/change-password", icon: "🔐" },
 ];
@@ -30,23 +29,29 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { isLoading, isAuthenticated, admin } = useAuth();
+  const { isLoading, isAuthenticated, admin, role } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isAdminLoginPage = pathname === "/admin";
 
   useEffect(() => {
-    if (isAdminLoginPage || isLoading || isAuthenticated) {
+    if (isAdminLoginPage || isLoading) {
       return;
     }
 
-    router.replace("/admin");
-  }, [isAdminLoginPage, isLoading, isAuthenticated, router]);
+    const isAdminRole = role === "SUPERADMIN" || role === "ADMIN";
+
+    if (!isAuthenticated || !isAdminRole) {
+      router.replace("/admin");
+    }
+  }, [isAdminLoginPage, isLoading, isAuthenticated, role, router, pathname]);
 
   if (isAdminLoginPage) {
     return <>{children}</>;
   }
 
-  if (isLoading || !isAuthenticated) {
+  const isAdminRole = role === "SUPERADMIN" || role === "ADMIN";
+
+  if (isLoading || !isAuthenticated || !isAdminRole) {
     return (
       <div className="flex h-screen items-center justify-center bg-app">
         <div className="text-center">

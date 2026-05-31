@@ -5,12 +5,6 @@ import Link from "next/link";
 import { apiClient } from "@/lib/api-client";
 import { getToken } from "@/lib/auth";
 
-interface ProductStats {
-  totalProducts: number;
-  totalCategories: number;
-  recentActivity: Array<{ id: string; title: string; brand: string; wattage: number; createdAt: string }>;
-}
-
 interface SuperAdminStats {
   totalUsers: number;
   totalVendors: number;
@@ -50,7 +44,6 @@ interface StatCard {
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<SuperAdminStats | null>(null);
-  const [productStats, setProductStats] = useState<ProductStats | null>(null);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -65,9 +58,8 @@ export default function AdminDashboard() {
         return;
       }
 
-      const [superAdminResponse, productResponse, notificationsResponse, unreadResponse] = await Promise.all([
+      const [superAdminResponse, notificationsResponse, unreadResponse] = await Promise.all([
         apiClient.dashboard.getSuperAdminStats(token),
-        apiClient.products.getStats(token),
         apiClient.notifications.list(token),
         apiClient.notifications.unreadCount(token),
       ]);
@@ -76,10 +68,6 @@ export default function AdminDashboard() {
         setError(superAdminResponse.error || "Failed to fetch dashboard stats");
       } else {
         setStats(superAdminResponse.stats as SuperAdminStats);
-      }
-
-      if (productResponse.success) {
-        setProductStats(productResponse.stats as ProductStats);
       }
 
       if (Array.isArray((notificationsResponse as { notifications?: NotificationItem[] }).notifications)) {
@@ -124,11 +112,6 @@ export default function AdminDashboard() {
         description: "Logged estimate sessions",
       },
       {
-        title: "Product Catalog",
-        value: String(productStats?.totalProducts || 0),
-        description: "Existing product records",
-      },
-      {
         title: "Quote Requests",
         value: String(stats?.quoteRequests || 0),
         description: "Calculator-to-sales handoffs",
@@ -139,7 +122,7 @@ export default function AdminDashboard() {
         description: "Mapped vendor coverage zones",
       },
     ],
-    [productStats?.totalProducts, stats]
+    [stats]
   );
 
   return (
@@ -150,7 +133,7 @@ export default function AdminDashboard() {
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-600">Superadmin</p>
             <h1 className="mt-3 text-3xl text-slate-950 md:text-5xl">Operations dashboard</h1>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 md:text-base">
-              A central view for vendor approval, lead mediation, customer registration, calculator usage, quote capture, and the existing product catalog.
+              A central view for vendor approval, lead mediation, customer registration, calculator usage, and quote capture.
             </p>
           </div>
 
@@ -299,7 +282,6 @@ export default function AdminDashboard() {
               <div className="mt-5 grid gap-3">
                 <ActionLink href="/admin/vendors" label="Review vendors" description="Approve or reject pending applications." />
                 <ActionLink href="/admin/leads" label="Work leads" description="Track contact and assignment states." />
-                <ActionLink href="/admin/products" label="Manage products" description="Keep the catalog aligned with sales." />
                 <ActionLink href="/admin/notifications" label="Clear notifications" description="Open the alert center and mark items read." />
               </div>
             </section>
@@ -343,33 +325,6 @@ export default function AdminDashboard() {
             </section>
           </div>
 
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_20px_50px_rgba(15,23,42,0.06)]">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Existing catalog</p>
-                <h2 className="mt-2 text-2xl text-slate-950">Recent products</h2>
-              </div>
-              <Link href="/admin/products" className="text-sm font-semibold text-amber-700 hover:text-amber-600">
-                View all →
-              </Link>
-            </div>
-
-            <div className="mt-5 space-y-3">
-              {productStats?.recentActivity?.map((product) => (
-                <div key={product.id} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-slate-950">{product.title}</p>
-                      <p className="text-sm text-slate-600">{product.brand} • {product.wattage}W</p>
-                    </div>
-                    <span className="text-xs font-semibold text-slate-500">
-                      {new Date(product.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
         </>
       )}
     </div>

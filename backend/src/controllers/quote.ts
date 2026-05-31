@@ -91,3 +91,53 @@ export const listQuoteRequests = async (_req: AuthRequest, res: Response): Promi
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+export const listMyVendorQuoteRequests = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.vendorId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const quoteRequests = await prisma.quoteRequest.findMany({
+      where: { vendorId: req.vendorId },
+      orderBy: { createdAt: "desc" },
+      include: { uploads: true },
+    });
+
+    res.status(200).json({ success: true, quoteRequests });
+  } catch (error) {
+    console.error("List vendor quote requests error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const listMyUserQuoteRequests = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.userId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const quoteRequests = await prisma.quoteRequest.findMany({
+      where: { userId: req.userId },
+      orderBy: { createdAt: "desc" },
+      include: {
+        vendor: {
+          select: {
+            id: true,
+            companyName: true,
+            serviceArea: true,
+            status: true,
+          },
+        },
+        uploads: true,
+      },
+    });
+
+    res.status(200).json({ success: true, quoteRequests });
+  } catch (error) {
+    console.error("List user quote requests error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};

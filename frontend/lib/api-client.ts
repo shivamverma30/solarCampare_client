@@ -98,12 +98,16 @@ export const apiClient = {
       return apiClient.request("/auth/profile", {}, token);
     },
 
-    async updateProfile(token: string, name: string, email: string) {
+    async updateProfile(token: string, payloadOrName: JsonObject | string, email?: string) {
+      const payload = typeof payloadOrName === "string"
+        ? { name: payloadOrName, email }
+        : payloadOrName;
+
       return apiClient.request(
         "/auth/profile",
         {
           method: "PUT",
-          body: JSON.stringify({ name, email }),
+          body: JSON.stringify(payload),
         },
         token
       );
@@ -124,12 +128,12 @@ export const apiClient = {
       );
     },
 
-    async registerUser(fullName: string, email: string, password: string, phone?: string, city?: string, state?: string) {
+    async registerUser(fullName: string, email: string, password: string, phone?: string, city?: string, state?: string, pincode?: string) {
       return apiClient.request(
         "/auth/user/register",
         {
           method: "POST",
-          body: JSON.stringify({ fullName, email, password, phone, city, state }),
+          body: JSON.stringify({ fullName, email, password, phone, city, state, pincode }),
         }
       );
     },
@@ -241,6 +245,61 @@ export const apiClient = {
         token
       );
     },
+
+    async getMyProfile(token: string) {
+      return apiClient.request("/vendors/me/profile", {}, token);
+    },
+
+    async updateMyProfile(token: string, payload: JsonObject) {
+      return apiClient.request(
+        "/vendors/me/profile",
+        {
+          method: "PUT",
+          body: JSON.stringify(payload),
+        },
+        token
+      );
+    },
+      async getNotes(token: string, id: string) {
+        return apiClient.request(`/vendors/${id}/notes`, {}, token);
+      },
+      async addNote(token: string, id: string, note: string) {
+        return apiClient.request(`/vendors/${id}/notes`, { method: "POST", body: JSON.stringify({ note }) }, token);
+      },
+
+    async listMyServiceAreas(token: string) {
+      return apiClient.request("/vendors/me/service-areas", {}, token);
+    },
+
+    async addMyServiceArea(token: string, payload: JsonObject) {
+      return apiClient.request(
+        "/vendors/me/service-areas",
+        {
+          method: "POST",
+          body: JSON.stringify(payload),
+        },
+        token
+      );
+    },
+
+    async updateMyServiceArea(token: string, id: string, payload: JsonObject) {
+      return apiClient.request(
+        `/vendors/me/service-areas/${id}`,
+        {
+          method: "PUT",
+          body: JSON.stringify(payload),
+        },
+        token
+      );
+    },
+
+    async matchByPincode(params: { pincode?: string; city?: string; state?: string }) {
+      const search = new URLSearchParams();
+      if (params.pincode) search.set("pincode", params.pincode);
+      if (params.city) search.set("city", params.city);
+      if (params.state) search.set("state", params.state);
+      return apiClient.request(`/vendors/match?${search.toString()}`);
+    },
   },
 
   leads: {
@@ -300,6 +359,10 @@ export const apiClient = {
         token
       );
     },
+
+    async getVendorLeads(token: string) {
+      return apiClient.request("/leads/vendor/me", {}, token);
+    },
   },
 
   calculators: {
@@ -332,6 +395,14 @@ export const apiClient = {
 
     async listQuotes(token: string) {
       return apiClient.request("/quotes/admin", {}, token);
+    },
+
+    async listVendorQuotes(token: string) {
+      return apiClient.request("/quotes/vendor/me", {}, token);
+    },
+
+    async listUserQuotes(token: string) {
+      return apiClient.request("/quotes/user/me", {}, token);
     },
   },
 
@@ -403,9 +474,18 @@ export const apiClient = {
       );
     },
 
-    async confirmVerification(token: string) {
+    async confirmVerification(token: string, otp?: string) {
       return apiClient.request(
         "/auth/verify-email/confirm",
+        {
+          method: "POST",
+          body: JSON.stringify(otp ? { token, otp } : { token }),
+        }
+      );
+    },
+    async resendVerification(token: string) {
+      return apiClient.request(
+        "/auth/verify-email/resend",
         {
           method: "POST",
           body: JSON.stringify({ token }),
@@ -437,6 +517,14 @@ export const apiClient = {
   dashboard: {
     async getSuperAdminStats(token: string) {
       return apiClient.request("/dashboard/superadmin/stats", {}, token);
+    },
+
+    async getVendorStats(token: string) {
+      return apiClient.request("/dashboard/vendor/stats", {}, token);
+    },
+
+    async getUserStats(token: string) {
+      return apiClient.request("/dashboard/user/stats", {}, token);
     },
   },
 };

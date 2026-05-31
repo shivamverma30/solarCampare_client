@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import BrandMark from "@/components/brand-mark";
 import { apiClient } from "@/lib/api-client";
-import { setAdmin, setToken } from "@/lib/auth";
+import { setAdmin, setSessionProfile, setSessionRole, setToken, type StoredProfile } from "@/lib/auth";
 import { useAuth } from "@/lib/use-auth";
 
 export default function AdminLoginPage() {
@@ -29,23 +29,29 @@ export default function AdminLoginPage() {
     setError("");
     setLoading(true);
 
-    const response = await apiClient.auth.login(email, password);
+    try {
+      const response = await apiClient.auth.login(email, password);
 
-    if (!response.success) {
-      setError(response.error || "Invalid email or password");
+      if (!response.success) {
+        setError(response.error || "Invalid email or password");
+        return;
+      }
+
+      if (!response.admin || typeof response.admin !== "object") {
+        setError("Invalid admin payload received");
+        return;
+      }
+
+      setToken(response.token!);
+      setAdmin(response.admin as StoredProfile);
+      setSessionRole("SUPERADMIN");
+      setSessionProfile(response.admin as StoredProfile);
+      router.replace("/admin/dashboard");
+    } catch {
+      setError("Unable to sign in right now. Please try again.");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    if (!response.admin || typeof response.admin !== "object") {
-      setError("Invalid admin payload received");
-      setLoading(false);
-      return;
-    }
-
-    setToken(response.token!);
-    setAdmin(response.admin as object);
-    router.replace("/admin/dashboard");
   };
 
   if (isLoading) {

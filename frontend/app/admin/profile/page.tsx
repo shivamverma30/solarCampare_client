@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { apiClient } from "@/lib/api-client";
-import { getToken, setAdmin } from "@/lib/auth";
+import { getToken, setAdmin, type StoredProfile } from "@/lib/auth";
 
-interface AdminProfile {
+interface AdminProfile extends StoredProfile {
   id: string;
   email: string;
   name: string;
@@ -36,7 +36,7 @@ export default function AdminProfilePage() {
     if (!response.success) {
       setError(response.error || "Failed to fetch profile");
     } else {
-      const profileData = response.data as AdminProfile;
+      const profileData = response as unknown as AdminProfile;
       setProfile(profileData);
       setFormData({
         name: profileData?.name || "",
@@ -74,7 +74,7 @@ export default function AdminProfilePage() {
     } else {
       const updatedAdmin = (response.admin as AdminProfile) || profile;
       setProfile(updatedAdmin);
-      setAdmin(updatedAdmin as object);
+      setAdmin(updatedAdmin as StoredProfile);
       setSuccess("Profile updated successfully!");
       setEditing(false);
 
