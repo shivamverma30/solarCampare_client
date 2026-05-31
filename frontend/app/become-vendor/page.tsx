@@ -185,6 +185,8 @@ export default function BecomeVendorPage() {
               <button type="submit" disabled={loading} className="md:col-span-2 mt-2 w-full rounded-xl border border-amber-300/80 bg-amber-400 px-5 py-3 text-sm font-semibold text-black transition hover:bg-amber-300 disabled:opacity-60">
                 {loading ? "Submitting application..." : "Submit Vendor Application"}
               </button>
+                </>
+              )}
             </form>
           </div>
         </div>

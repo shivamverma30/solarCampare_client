@@ -5,6 +5,7 @@ type EnvConfig = {
   JWT_SECRET: string;
   JWT_EXPIRES_IN: string;
   FRONTEND_URL: string;
+  EMAIL_LOGO_URL?: string;
   SMTP_HOST?: string;
   SMTP_PORT?: string;
   SMTP_USER?: string;
@@ -25,6 +26,7 @@ export function getEnv(): EnvConfig {
     JWT_SECRET: process.env.JWT_SECRET || "",
     JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "",
     FRONTEND_URL: process.env.FRONTEND_URL || "",
+    EMAIL_LOGO_URL: process.env.EMAIL_LOGO_URL,
     SMTP_HOST: process.env.SMTP_HOST,
     SMTP_PORT: process.env.SMTP_PORT,
     SMTP_USER: process.env.SMTP_USER,
