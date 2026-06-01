@@ -434,6 +434,15 @@ export const apiClient = {
         token
       );
     },
+    async delete(token: string, id: string) {
+      return apiClient.request(
+        `/notifications/${id}`,
+        {
+          method: "DELETE",
+        },
+        token
+      );
+    },
   },
 
   uploads: {

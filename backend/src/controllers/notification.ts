@@ -179,3 +179,56 @@ export const getNotificationUnreadCount = async (req: AuthRequest, res: Response
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+export const deleteNotification = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const recipient = getAudienceFromRequest(req);
+
+    if (!recipient) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const { id } = req.params;
+    const notification = await prisma.notification.findUnique({ where: { id } });
+
+    if (!notification) {
+      res.status(404).json({ error: "Notification not found" });
+      return;
+    }
+
+    // Only allow deletion for ADMIN audience by SUPERADMIN role
+    if (notification.audience === "ADMIN") {
+      if (req.authRole !== "SUPERADMIN") {
+        res.status(403).json({ error: "Forbidden" });
+        return;
+      }
+    }
+
+    // Vendors may delete notifications addressed to their vendorId or broadcast vendor notifications (vendorId null)
+    if (notification.audience === "VENDOR") {
+      if (!req.vendorId) {
+        res.status(403).json({ error: "Forbidden" });
+        return;
+      }
+
+      if (notification.vendorId && notification.vendorId !== req.vendorId) {
+        res.status(403).json({ error: "Forbidden" });
+        return;
+      }
+    }
+
+    // Users are not allowed to delete notifications via this endpoint
+    if (notification.audience === "USER") {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
+
+    await prisma.notification.delete({ where: { id } });
+
+    res.status(200).json({ success: true, message: "Notification deleted" });
+  } catch (error) {
+    console.error("Delete notification error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};

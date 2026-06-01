@@ -101,4 +101,5 @@ export const chatbotQuestions = [
   "What subsidy is available for residential rooftop solar?",
   "Which panel brand gives better long-term ROI?",
   "Can I run AC and heavy appliances on solar?",
+  "How much can I save with solar?",
 ];

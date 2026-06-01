@@ -73,6 +73,25 @@ export default function AdminNotificationsPage() {
     setSavingId(null);
   };
 
+  const handleDelete = async (id: string) => {
+    const token = getToken();
+    if (!token) {
+      setError("Not authenticated");
+      return;
+    }
+
+    if (!confirm("Delete this notification? This action cannot be undone.")) return;
+
+    setSavingId(id);
+    const response = await apiClient.notifications.delete(token, id);
+    if (response.success) {
+      await loadNotifications();
+    } else {
+      setError(response.error || "Unable to delete notification");
+    }
+    setSavingId(null);
+  };
+
   const handleMarkAllRead = async () => {
     const token = getToken();
     if (!token) {
@@ -168,6 +187,14 @@ export default function AdminNotificationsPage() {
                       {savingId === notification.id ? "Saving..." : "Mark read"}
                     </button>
                   ) : null}
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(notification.id)}
+                    disabled={savingId === notification.id}
+                    className="inline-flex h-10 items-center rounded-full border border-red-200 bg-white px-4 text-sm font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-50 disabled:opacity-60"
+                  >
+                    {savingId === notification.id ? "Deleting..." : "Delete"}
+                  </button>
                 </div>
               </div>
             </article>
