@@ -152,16 +152,13 @@ export default function ChatbotPopup() {
 
   return (
     <div className="fixed bottom-22 right-4 z-50 flex flex-col items-end gap-3 sm:bottom-24 sm:right-6">
-      <div
-        aria-hidden={!open}
-        className={`h-[min(78vh,660px)] w-[min(430px,calc(100vw-1rem))] overflow-hidden rounded-3xl border border-emerald-200/50 bg-white/95 shadow-[0_20px_50px_rgba(2,40,25,0.2)] ring-1 ring-white/70 backdrop-blur-xl transition-all duration-300 ease-out sm:h-[min(76vh,640px)] ${
-          open
-            ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
-            : "pointer-events-none translate-y-3 scale-[0.98] opacity-0"
-        }`}
-      >
-        <div className="flex h-full flex-col">
-          <div className="flex items-center justify-between border-b border-slate-200/80 bg-linear-to-r from-emerald-50/80 via-white to-white px-4 py-3.5 sm:px-5">
+      {open ? (
+        <div
+          aria-hidden={!open}
+          className="pointer-events-auto h-[min(78vh,660px)] w-[min(430px,calc(100vw-1rem))] overflow-hidden rounded-3xl border border-emerald-200/50 bg-white/95 shadow-[0_20px_50px_rgba(2,40,25,0.2)] ring-1 ring-white/70 backdrop-blur-xl transition-all duration-300 ease-out sm:h-[min(76vh,640px)] translate-y-0 scale-100 opacity-100"
+        >
+          <div className="flex h-full flex-col">
+            <div className="flex items-center justify-between border-b border-slate-200/80 bg-linear-to-r from-emerald-50/80 via-white to-white px-4 py-3.5 sm:px-5">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <div className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600/12 text-emerald-700 ring-1 ring-emerald-500/20">
@@ -367,16 +364,17 @@ export default function ChatbotPopup() {
                 </button>
               </div>
             </div>
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
 
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         aria-label={t("chatbot.toggleLabel")}
         aria-expanded={open}
-        className="inline-flex h-14 items-center gap-2 rounded-full border border-emerald-300/30 bg-[#1f8f4d]/40 px-4 text-sm font-semibold tracking-wide text-white backdrop-blur-xl shadow-[0_14px_34px_rgba(10,80,46,0.42)] ring-1 ring-white/20 transition duration-300 hover:-translate-y-1 hover:scale-105 hover:bg-[#1f8f4d]/52 hover:shadow-[0_18px_42px_rgba(10,80,46,0.52)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+        className="pointer-events-auto inline-flex h-14 items-center gap-2 rounded-full border border-emerald-300/30 bg-[#1f8f4d]/40 px-4 text-sm font-semibold tracking-wide text-white backdrop-blur-xl shadow-[0_14px_34px_rgba(10,80,46,0.42)] ring-1 ring-white/20 transition duration-300 hover:-translate-y-1 hover:scale-105 hover:bg-[#1f8f4d]/52 hover:shadow-[0_18px_42px_rgba(10,80,46,0.52)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
       >
         <svg viewBox="0 0 24 24" aria-hidden className="h-5 w-5 fill-current">
           <path d="M4 4h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-5 4v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />

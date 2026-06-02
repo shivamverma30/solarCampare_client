@@ -1,6 +1,6 @@
 export default function FloatingWhatsApp() {
   const phone = "7652002886";
-  const message = `Hello SAFWE Energy Team,
+  const message = `Hello Solar Compare Team,
 
 I would like to know more about your solar solutions, pricing, installation process and available government subsidies.
 
@@ -14,8 +14,8 @@ Thank you.`;
       href={href}
       target="_blank"
       rel="noreferrer"
-      aria-label="Chat with SAFWE on WhatsApp"
-      title="Chat with SAFWE on WhatsApp"
+      aria-label="Chat with Solar Compare on WhatsApp"
+      title="Chat with Solar Compare on WhatsApp"
       className="fixed bottom-6 right-6 z-40 inline-flex h-14 w-14 items-center justify-center rounded-full border border-emerald-300/30 bg-[#1f8f4d]/40 text-white backdrop-blur-xl shadow-[0_14px_34px_rgba(10,80,46,0.42)] ring-1 ring-white/20 transition duration-300 hover:-translate-y-1 hover:scale-105 hover:bg-[#1f8f4d]/52 hover:shadow-[0_18px_42px_rgba(10,80,46,0.52)]"
     >
       <span className="sr-only">Open WhatsApp chat</span>
