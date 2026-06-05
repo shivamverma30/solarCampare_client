@@ -77,6 +77,7 @@ export const listNotifications = async (req: AuthRequest, res: Response): Promis
 
     const payload = notifications.map((notification) => ({
       ...notification,
+      description: notification.body,
       isRead: Boolean(notification.readAt || notification.readStates.length > 0),
     }));
 

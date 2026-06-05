@@ -2,6 +2,7 @@ import { Response } from "express";
 import prisma from "../lib/prisma";
 import { AuthRequest } from "../middleware/auth";
 import { createAuditLog, createNotification, safeEmailDispatch, sendTransactionalEmail, vendorApprovalTemplate, vendorRejectionTemplate } from "../lib/workflow";
+import { notificationTemplates } from "../lib/notification-templates";
 
 const vendorSafeSelect = {
   id: true,
@@ -15,6 +16,10 @@ const vendorSafeSelect = {
   businessType: true,
   experience: true,
   services: true,
+  certifications: true,
+  installationCount: true,
+  warrantySupport: true,
+  responseTimeHours: true,
   status: true,
   createdAt: true,
 } as const;
@@ -271,11 +276,12 @@ export const approveVendor = async (req: AuthRequest, res: Response): Promise<vo
 
     await createNotification(prisma, {
       audience: "VENDOR",
-      type: "VENDOR_APPROVED",
-      title: "Vendor approved",
-      body: `Your vendor account ${vendor.companyName} has been approved.`,
+      type: notificationTemplates.vendorApproved({ companyName: vendor.companyName }).type,
+      priority: notificationTemplates.vendorApproved({ companyName: vendor.companyName }).priority,
+      title: notificationTemplates.vendorApproved({ companyName: vendor.companyName }).title,
+      body: notificationTemplates.vendorApproved({ companyName: vendor.companyName }).body,
       vendorId: vendor.id,
-      metadata: { vendorId: vendor.id, status: updated.status },
+      metadata: { vendorId: vendor.id, status: updated.status, companyName: vendor.companyName },
     });
     // send email to vendor
     try {
@@ -350,11 +356,12 @@ export const rejectVendor = async (req: AuthRequest, res: Response): Promise<voi
 
     await createNotification(prisma, {
       audience: "VENDOR",
-      type: "VENDOR_REJECTED",
-      title: "Vendor application update",
-      body: `Your vendor account ${vendor.companyName} has been rejected.`,
+      type: notificationTemplates.vendorRejected({ companyName: vendor.companyName, reason }).type,
+      priority: notificationTemplates.vendorRejected({ companyName: vendor.companyName, reason }).priority,
+      title: notificationTemplates.vendorRejected({ companyName: vendor.companyName, reason }).title,
+      body: notificationTemplates.vendorRejected({ companyName: vendor.companyName, reason }).body,
       vendorId: vendor.id,
-      metadata: { vendorId: vendor.id, reason },
+      metadata: { vendorId: vendor.id, reason, companyName: vendor.companyName },
     });
 
     // send email to vendor with rejection reason

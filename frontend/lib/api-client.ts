@@ -11,6 +11,8 @@ interface ApiResponse<T> {
   admin?: T;
   product?: T;
   count?: number;
+  page?: number;
+  pageSize?: number;
   products?: T[];
   stats?: T;
   user?: T;
@@ -22,6 +24,8 @@ interface ApiResponse<T> {
   inquiry?: T;
   history?: T;
   quoteRequest?: T;
+  note?: T;
+  notes?: T[];
   notifications?: T[];
   unreadCount?: number;
   uploadAsset?: T;
@@ -166,6 +170,18 @@ export const apiClient = {
           body: JSON.stringify({ email, password }),
         }
       );
+    },
+
+    async listUsers(token: string, params: { search?: string; status?: string; city?: string; state?: string; page?: number; pageSize?: number } = {}) {
+      const search = new URLSearchParams();
+      if (params.search) search.set("search", params.search);
+      if (params.status) search.set("status", params.status);
+      if (params.city) search.set("city", params.city);
+      if (params.state) search.set("state", params.state);
+      if (params.page) search.set("page", String(params.page));
+      if (params.pageSize) search.set("pageSize", String(params.pageSize));
+
+      return apiClient.request(`/auth/admin/users?${search.toString()}`, {}, token);
     },
   },
 
@@ -320,6 +336,27 @@ export const apiClient = {
           method: "POST",
           body: JSON.stringify(payload),
         }
+      );
+    },
+
+    async requestConsultation(token: string, vendorId: string) {
+      return apiClient.request(
+        "/leads/consultation",
+        {
+          method: "POST",
+          body: JSON.stringify({ vendorId }),
+        },
+        token
+      );
+    },
+
+    async delete(token: string, id: string) {
+      return apiClient.request(
+        `/leads/${id}`,
+        {
+          method: "DELETE",
+        },
+        token
       );
     },
 

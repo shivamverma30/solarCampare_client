@@ -17,6 +17,7 @@ type Vendor = {
   status: string;
   rejectionReason?: string | null;
   createdAt: string;
+  documents?: Array<{ id: string; documentName: string; fileType: string }>;
 };
 
 export default function AdminVendorsPage() {

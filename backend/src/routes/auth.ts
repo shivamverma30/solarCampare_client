@@ -14,8 +14,10 @@ import {
   resendVerificationOtp,
   requestPasswordReset,
   resetPassword,
+  listAdminUsers,
 } from "../controllers/auth";
 import { authMiddleware } from "../middleware/auth";
+import { requireRoles } from "../middleware/role";
 
 const router = Router();
 
@@ -33,5 +35,6 @@ router.post("/reset-password", resetPassword);
 router.get("/profile", authMiddleware, getProfile);
 router.put("/profile", authMiddleware, updateProfile);
 router.post("/change-password", authMiddleware, changePassword);
+router.get("/admin/users", authMiddleware, requireRoles(["SUPERADMIN", "ADMIN"]), listAdminUsers);
 
 export default router;

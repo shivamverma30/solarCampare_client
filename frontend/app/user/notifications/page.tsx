@@ -8,6 +8,7 @@ type NotificationItem = {
   id: string;
   title: string;
   body?: string;
+  description?: string;
   createdAt: string;
   isRead: boolean;
 };
@@ -35,7 +36,7 @@ export default function UserNotificationsPage() {
         {notifications.map((item) => (
           <article key={item.id} className={`rounded-xl border px-4 py-3 ${item.isRead ? "border-slate-200 bg-white" : "border-amber-200 bg-amber-50"}`}>
             <p className="font-semibold text-slate-900">{item.title}</p>
-            <p className="mt-1 text-sm text-slate-600">{item.body || "No details"}</p>
+            <p className="mt-1 text-sm text-slate-600">{item.description || item.body || "No details"}</p>
             <p className="mt-1 text-xs text-slate-500">{new Date(item.createdAt).toLocaleString()}</p>
           </article>
         ))}

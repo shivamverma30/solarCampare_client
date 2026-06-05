@@ -33,6 +33,7 @@ export async function createNotification(
   input: {
     audience: NotificationAudience;
     type: NotificationType;
+    priority?: "LOW" | "MEDIUM" | "HIGH";
     title: string;
     body: string;
     adminId?: string;
@@ -45,6 +46,7 @@ export async function createNotification(
     data: {
       audience: input.audience,
       type: input.type,
+      priority: input.priority || "MEDIUM",
       title: input.title,
       body: input.body,
       adminId: input.adminId,

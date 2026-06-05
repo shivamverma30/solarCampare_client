@@ -38,6 +38,23 @@ function formatTime(value: number): string {
   });
 }
 
+function sanitizeReply(text: string): string {
+  const trimmed = text.trim();
+
+  if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+    try {
+      const parsed = JSON.parse(trimmed) as { reply?: unknown };
+      if (typeof parsed.reply === "string" && parsed.reply.trim()) {
+        return parsed.reply.trim();
+      }
+    } catch {
+      return "I can help with solar sizing, savings, subsidies, and vendor selection. Ask me anything about your solar plan.";
+    }
+  }
+
+  return trimmed || "I can help with solar sizing, savings, subsidies, and vendor selection. Ask me anything about your solar plan.";
+}
+
 export default function ChatbotPopup() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -114,7 +131,7 @@ export default function ChatbotPopup() {
     const data = response.data;
     setConversationId(data.conversationId);
     window.localStorage.setItem("solar-ai-conversation-id", data.conversationId);
-    setMessages((current) => [...current, createMessage("assistant", data.reply)]);
+    setMessages((current) => [...current, createMessage("assistant", sanitizeReply(data.reply))]);
     setAssistantState(data);
     setIsSending(false);
   };

@@ -2,6 +2,7 @@ import { Response } from "express";
 import prisma from "../lib/prisma";
 import { AuthRequest } from "../middleware/auth";
 import { createAuditLog, createNotification, safeEmailDispatch } from "../lib/workflow";
+import { notificationTemplates } from "../lib/notification-templates";
 
 export const submitVendorLead = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -128,6 +129,53 @@ export const listLeads = async (_req: AuthRequest, res: Response): Promise<void>
     res.status(200).json({ success: true, leads });
   } catch (error) {
     console.error("List leads error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const deleteLead = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.adminId && !req.vendorId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const { id } = req.params;
+    const lead = await prisma.vendorLead.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        vendorId: true,
+      },
+    });
+
+    if (!lead) {
+      res.status(404).json({ error: "Lead not found" });
+      return;
+    }
+
+    if (req.authRole === "VENDOR" && req.vendorId !== lead.vendorId) {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
+
+    await createAuditLog(prisma, {
+      actorType: req.subjectType || "admin",
+      actorId: req.adminId || req.vendorId,
+      action: "lead.deleted",
+      entityType: "LEAD",
+      entityId: lead.id,
+      metadata: { leadId: lead.id, vendorId: lead.vendorId },
+      createdByAdminId: req.adminId,
+    });
+
+    await prisma.vendorLead.delete({
+      where: { id },
+    });
+
+    res.status(200).json({ success: true, message: "Lead deleted successfully" });
+  } catch (error) {
+    console.error("Delete lead error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -276,6 +324,104 @@ export const listVendorLeads = async (req: AuthRequest, res: Response): Promise<
     res.status(200).json({ success: true, leads });
   } catch (error) {
     console.error("List vendor leads error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const requestConsultation = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.userId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const { vendorId } = req.body as { vendorId?: string };
+    if (!vendorId) {
+      res.status(400).json({ error: "vendorId is required" });
+      return;
+    }
+
+    const [user, vendor] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: req.userId },
+        select: { id: true, fullName: true, email: true, phone: true, city: true, state: true, pincode: true },
+      }),
+      prisma.vendor.findUnique({
+        where: { id: vendorId },
+        select: { id: true, companyName: true, ownerName: true, email: true, phone: true, status: true },
+      }),
+    ]);
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    if (!vendor || vendor.status !== "APPROVED") {
+      res.status(404).json({ error: "Vendor not available" });
+      return;
+    }
+
+    const lead = await prisma.vendorLead.create({
+      data: {
+        userId: user.id,
+        vendorId: vendor.id,
+        userName: user.fullName,
+        userEmail: user.email,
+        userPhone: user.phone,
+        serviceRequirement: "Consultation Request",
+        location: [user.city, user.state, user.pincode].filter(Boolean).join(", ") || "Not provided",
+        notes: "Requested via vendor consultation flow",
+      },
+    });
+
+    const notification = notificationTemplates.consultationRequest({
+      userName: user.fullName,
+      userEmail: user.email,
+      userPhone: user.phone,
+      vendorName: vendor.ownerName,
+      businessName: vendor.companyName,
+      vendorEmail: vendor.email,
+      vendorPhone: vendor.phone,
+      timestamp: new Date(),
+      status: "NEW",
+    });
+
+    await createNotification(prisma, {
+      audience: "ADMIN",
+      type: notification.admin.type,
+      priority: notification.admin.priority,
+      title: notification.admin.title,
+      body: notification.admin.body,
+      vendorId: vendor.id,
+      userId: user.id,
+      metadata: {
+        ...(notification.admin.metadata as Record<string, unknown>),
+        leadId: lead.id,
+      },
+    });
+
+    await createNotification(prisma, {
+      audience: "VENDOR",
+      type: notification.vendor.type,
+      priority: notification.vendor.priority,
+      title: notification.vendor.title,
+      body: notification.vendor.body,
+      vendorId: vendor.id,
+      metadata: {
+        ...(notification.vendor.metadata as Record<string, unknown>),
+        leadId: lead.id,
+      },
+    });
+
+    await safeEmailDispatch(
+      "New consultation request",
+      `${user.fullName} requested a consultation with ${vendor.companyName}.`
+    );
+
+    res.status(201).json({ success: true, lead });
+  } catch (error) {
+    console.error("Request consultation error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

@@ -62,6 +62,24 @@ export default function AdminLeadsPage() {
     setBusyId(null);
   };
 
+  const deleteLead = async (id: string) => {
+    const token = getToken();
+    if (!token || busyId) return;
+
+    if (!window.confirm("Delete this lead? This action cannot be undone.")) return;
+
+    setBusyId(id);
+    const response = await apiClient.leads.delete(token, id);
+
+    if (response.success) {
+      setLeads((current) => current.filter((lead) => lead.id !== id));
+    } else {
+      setError(response.error || "Failed to delete lead");
+    }
+
+    setBusyId(null);
+  };
+
   return (
     <div className="space-y-8">
       <div>
@@ -83,7 +101,7 @@ export default function AdminLeadsPage() {
       ) : (
         <div className="space-y-4">
           {leads.map((lead) => (
-            <article key={lead.id} className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+            <article key={lead.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_20px_50px_rgba(15,23,42,0.06)]">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
                   <p className="text-xl font-semibold text-slate-950">{lead.userName}</p>
@@ -94,6 +112,14 @@ export default function AdminLeadsPage() {
 
                 <div className="flex flex-col items-start gap-3 lg:items-end">
                   <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{lead.status}</span>
+                  <button
+                    type="button"
+                    onClick={() => void deleteLead(lead.id)}
+                    disabled={busyId === lead.id}
+                    className="rounded-full border border-rose-200 bg-white px-3 py-2 text-xs font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {busyId === lead.id ? "Deleting..." : "Delete"}
+                  </button>
                   <div className="flex flex-wrap gap-2">
                     {leadStatuses.map((status) => (
                       <button

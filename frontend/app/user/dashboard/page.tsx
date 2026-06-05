@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { apiClient } from "@/lib/api-client";
 import { getToken } from "@/lib/auth";
 
@@ -15,16 +15,38 @@ type UserStats = {
     ownerName: string;
     businessType: string;
     experience: number;
+    services: string[];
+    certifications: string[];
+    installationCount: number;
+    warrantySupport: boolean;
+    responseTimeHours?: number | null;
     city?: string | null;
     state?: string | null;
     pincode?: string | null;
   }>;
+  recentCalculatorHistory?: Array<{ id: string; calculatorType: string; createdAt: string }>;
+  recentQuoteRequests?: Array<{ id: string; fullName: string; monthlyBill?: number | null; roofSize?: number | null; status: string; createdAt: string }>;
+  recentNotifications?: Array<{ id: string; title: string; description?: string; createdAt: string; isRead: boolean; priority?: string }>;
 };
 
 export default function UserDashboardPage() {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [savedVendorIds, setSavedVendorIds] = useState<string[]>([]);
+  const [consultationToast, setConsultationToast] = useState("");
+  const [requestingVendorId, setRequestingVendorId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem("solar-saved-vendors");
+    if (saved) {
+      try {
+        setSavedVendorIds(JSON.parse(saved));
+      } catch {
+        setSavedVendorIds([]);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const run = async () => {
@@ -43,8 +65,46 @@ export default function UserDashboardPage() {
     void run();
   }, []);
 
+  const savedVendors = useMemo(
+    () => stats?.nearbyVendors.filter((vendor) => savedVendorIds.includes(vendor.id)) || [],
+    [savedVendorIds, stats?.nearbyVendors]
+  );
+
+  const toggleSavedVendor = (vendorId: string) => {
+    setSavedVendorIds((current) => {
+      const next = current.includes(vendorId) ? current.filter((id) => id !== vendorId) : [...current, vendorId];
+      window.localStorage.setItem("solar-saved-vendors", JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const requestConsultation = async (vendorId: string) => {
+    const token = getToken();
+    if (!token || requestingVendorId) return;
+
+    setRequestingVendorId(vendorId);
+    setError("");
+
+    const response = await apiClient.leads.requestConsultation(token, vendorId);
+
+    if (response.success) {
+      setConsultationToast("✅ Consultation request sent successfully.");
+      window.setTimeout(() => setConsultationToast(""), 3000);
+    } else {
+      setError(response.error || "Failed to send consultation request");
+    }
+
+    setRequestingVendorId(null);
+  };
+
   return (
     <div className="space-y-6">
+      {consultationToast ? (
+        <div className="fixed right-4 top-4 z-50 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-lg shadow-emerald-950/10 md:right-6 md:top-6">
+          {consultationToast}
+        </div>
+      ) : null}
+
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_20px_50px_rgba(15,23,42,0.06)] md:p-8">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
@@ -79,6 +139,68 @@ export default function UserDashboardPage() {
         </div>
       )}
 
+      <div className="grid gap-4 lg:grid-cols-2">
+        <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_20px_50px_rgba(15,23,42,0.06)] md:p-6">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-semibold text-slate-950">Saved Vendors</h2>
+              <p className="mt-1 text-sm text-slate-600">Keep the vendors you want to revisit.</p>
+            </div>
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{savedVendors.length}</span>
+          </div>
+
+          <div className="mt-4 space-y-3">
+            {savedVendors.length ? savedVendors.map((vendor) => (
+              <article key={vendor.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-slate-950">{vendor.companyName}</p>
+                    <p className="text-sm text-slate-600">{vendor.businessType} • {vendor.experience} years</p>
+                  </div>
+                  <button type="button" onClick={() => void requestConsultation(vendor.id)} disabled={Boolean(requestingVendorId)} className="rounded-full bg-slate-950 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60">
+                    {requestingVendorId === vendor.id ? "Sending..." : "Request Consultation"}
+                  </button>
+                </div>
+              </article>
+            )) : (
+              <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-sm text-slate-600">
+                Save vendors from the nearby list to keep them here.
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_20px_50px_rgba(15,23,42,0.06)] md:p-6">
+          <div>
+            <h2 className="text-xl font-semibold text-slate-950">Recent Activity</h2>
+            <p className="mt-1 text-sm text-slate-600">Your latest calculators, quote requests, and notifications.</p>
+          </div>
+
+          <div className="mt-4 space-y-3">
+            {(stats?.recentNotifications || []).slice(0, 3).map((notification) => (
+              <div key={notification.id} className={`rounded-2xl border px-4 py-3 ${notification.isRead ? "border-slate-200 bg-slate-50" : "border-amber-200 bg-amber-50"}`}>
+                <p className="font-semibold text-slate-950">{notification.title}</p>
+                <p className="mt-1 text-sm text-slate-600">{notification.description || "Notification"}</p>
+              </div>
+            ))}
+
+            {(stats?.recentQuoteRequests || []).slice(0, 3).map((quoteRequest) => (
+              <div key={quoteRequest.id} className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                <p className="font-semibold text-slate-950">Quote Request</p>
+                <p className="mt-1 text-sm text-slate-600">{quoteRequest.fullName} • {quoteRequest.status}</p>
+              </div>
+            ))}
+
+            {(stats?.recentCalculatorHistory || []).slice(0, 3).map((item) => (
+              <div key={item.id} className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                <p className="font-semibold text-slate-950">{item.calculatorType} Calculator</p>
+                <p className="mt-1 text-sm text-slate-600">{new Date(item.createdAt).toLocaleString()}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+
       <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_20px_50px_rgba(15,23,42,0.06)] md:p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -98,20 +220,31 @@ export default function UserDashboardPage() {
           ) : stats?.nearbyVendors?.length ? (
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
               {stats.nearbyVendors.map((vendor, index) => (
-                <article key={vendor.id} className={`grid gap-3 px-4 py-4 sm:grid-cols-[1.2fr_0.9fr_0.7fr] sm:items-center ${index !== stats.nearbyVendors.length - 1 ? "border-b border-slate-200" : ""}`}>
+                <article key={vendor.id} className={`grid gap-3 px-4 py-4 sm:grid-cols-[1.2fr_0.9fr_0.9fr_0.7fr] sm:items-center ${index !== stats.nearbyVendors.length - 1 ? "border-b border-slate-200" : ""}`}>
                   <div>
                     <p className="font-semibold text-slate-950">{vendor.companyName}</p>
                     <p className="mt-1 text-sm text-slate-600">{vendor.ownerName}</p>
+                    <p className="mt-2 text-xs text-slate-500">{vendor.services.slice(0, 3).join(", ") || "Services not listed"}</p>
                   </div>
                   <div className="text-sm text-slate-600">
                     <p>{vendor.businessType}</p>
                     <p className="mt-1 text-xs text-slate-500">{vendor.experience} years experience</p>
+                    <p className="mt-1 text-xs text-slate-500">Installs: {vendor.installationCount}</p>
                   </div>
-                  <div className="sm:text-right">
+                  <div className="text-sm text-slate-600">
                     <span className="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
                       {vendor.city || "-"}, {vendor.state || "-"}
                     </span>
-                    <p className="mt-2 text-xs text-slate-500">Pincode {vendor.pincode || "-"}</p>
+                    <p className="mt-2 text-xs text-slate-500">Warranty support: {vendor.warrantySupport ? "Yes" : "No"}</p>
+                    <p className="mt-1 text-xs text-slate-500">Response: {vendor.responseTimeHours ? `${vendor.responseTimeHours} hrs` : "-"}</p>
+                  </div>
+                  <div className="flex flex-col gap-2 sm:items-end">
+                    <button type="button" onClick={() => toggleSavedVendor(vendor.id)} className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+                      {savedVendorIds.includes(vendor.id) ? "Saved" : "Save Vendor"}
+                    </button>
+                    <button type="button" onClick={() => void requestConsultation(vendor.id)} disabled={Boolean(requestingVendorId)} className="rounded-full bg-slate-950 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60">
+                      {requestingVendorId === vendor.id ? "Sending..." : "Request Consultation"}
+                    </button>
                   </div>
                 </article>
               ))}

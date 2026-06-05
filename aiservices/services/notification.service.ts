@@ -4,6 +4,8 @@ import { query } from "../utils/db.js";
 export async function createAdminNotification(input: {
   title: string;
   body: string;
+  type?: string;
+  priority?: string;
   metadata: Record<string, unknown>;
 }) {
   const id = randomUUID();
@@ -14,6 +16,7 @@ export async function createAdminNotification(input: {
         "id",
         "audience",
         "type",
+        "priority",
         "title",
         "body",
         "metadata",
@@ -22,9 +25,9 @@ export async function createAdminNotification(input: {
         "vendorId",
         "readAt",
         "createdAt"
-      ) VALUES ($1, $2, $3, $4, $5, $6::jsonb, NULL, NULL, NULL, NULL, NOW())
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, NULL, NULL, NULL, NULL, NOW())
     `,
-    [id, "ADMIN", "LEAD_CREATED", input.title, input.body, JSON.stringify(input.metadata)]
+    [id, "ADMIN", input.type || "AI_CHAT_LEAD", input.priority || "HIGH", input.title, input.body, JSON.stringify(input.metadata)]
   );
 
   return id;

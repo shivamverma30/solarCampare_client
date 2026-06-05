@@ -1,7 +1,7 @@
 import { getEnv } from "../config/env.js";
 import { AI_CONFIDENCE_THRESHOLD } from "../constants/assistant.constants.js";
 import type { AiChatResponse, AiLeadInput, AiLeadResponse, AiMessageInput, CtaSuggestion } from "../types/ai.types.js";
-import { buildConversationSnippet, clampText, normalizeText } from "../utils/text.js";
+import { buildConversationSnippet, clampText, limitSentences, normalizeText } from "../utils/text.js";
 import { query } from "../utils/db.js";
 import { geminiProvider } from "../providers/gemini.provider.js";
 import { createAdminNotification } from "./notification.service.js";
@@ -173,11 +173,12 @@ export const aiChatService = {
 
     const shouldEscalate = providerReply.shouldEscalate || providerReply.confidence < AI_CONFIDENCE_THRESHOLD;
     const ctaSuggestions = sanitizeSuggestions(providerReply.ctaSuggestions);
+    const shortReply = limitSentences(providerReply.reply, 4);
 
     await persistMessage({
       conversationId,
       role: "assistant",
-      message: providerReply.reply,
+      message: shortReply,
       confidence: providerReply.confidence,
     });
 
@@ -196,7 +197,7 @@ export const aiChatService = {
         buildConversationSnippet([
           ...recentMessages,
           { role: "user", message: cleanMessage },
-          { role: "assistant", message: providerReply.reply },
+          { role: "assistant", message: shortReply },
         ]),
         providerReply.confidence,
         shouldEscalate ? "NEEDS_EXPERT" : "ACTIVE",
@@ -205,7 +206,7 @@ export const aiChatService = {
 
     return {
       conversationId,
-      reply: providerReply.reply,
+      reply: shortReply,
       confidence: providerReply.confidence,
       shouldEscalate,
       ctaSuggestions: ctaSuggestions.length ? ctaSuggestions : ["CALCULATOR", "COMPARE_PANELS"],
@@ -222,13 +223,6 @@ export const aiChatService = {
   async captureLead(input: AiLeadInput): Promise<AiLeadResponse> {
     const conversationId = await getOrCreateLeadConversation(input);
     const leadId = createId();
-    const leadNotification = buildLeadNotificationTemplate({
-      name: input.name,
-      phone: input.phone,
-      city: input.city,
-      question: input.question,
-    });
-
     const snippetResult = conversationId
       ? await query<{ conversation_snippet: string | null }>(
           `SELECT conversation_snippet FROM ai_chat_conversations WHERE id = $1 LIMIT 1`,
@@ -237,6 +231,17 @@ export const aiChatService = {
       : { rows: [] as { conversation_snippet: string | null }[] };
 
     const conversationSnippet = snippetResult.rows[0]?.conversation_snippet || null;
+    const summary = conversationSnippet || clampText(input.question);
+    const timestamp = new Date().toISOString();
+    const leadNotification = buildLeadNotificationTemplate({
+      name: input.name,
+      email: input.email,
+      phone: input.phone,
+      city: input.city,
+      question: input.question,
+      summary,
+      timestamp,
+    });
 
     await query(
       `
@@ -263,7 +268,17 @@ export const aiChatService = {
         input.city,
         input.question,
         conversationSnippet,
-        JSON.stringify({ source: "AI_CHAT_ASSISTANT", model: getEnv().AI_MODEL }),
+        JSON.stringify({
+          source: "AI_CHAT_ASSISTANT",
+          model: getEnv().AI_MODEL,
+          name: input.name,
+          email: input.email,
+          phone: input.phone,
+          city: input.city,
+          lastQuestion: input.question,
+          chatSummary: summary,
+          timestamp,
+        }),
       ]
     );
 
@@ -272,14 +287,19 @@ export const aiChatService = {
     await createAdminNotification({
       title: leadNotification.title,
       body: leadNotification.body,
+      type: leadNotification.type,
+      priority: leadNotification.priority,
       metadata: {
         leadId,
         conversationId,
         source: "AI Chat Assistant",
         name: input.name,
+        email: input.email,
         phone: input.phone,
         city: input.city,
         question: input.question,
+        summary,
+        timestamp,
       },
     });
 

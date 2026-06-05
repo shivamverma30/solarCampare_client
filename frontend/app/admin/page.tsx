@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import BrandMark from "@/components/brand-mark";
 import { apiClient } from "@/lib/api-client";
-import { setAdmin, setSessionProfile, setSessionRole, setToken, type StoredProfile } from "@/lib/auth";
+import { setAdminSession, type StoredProfile } from "@/lib/auth";
 import { useAuth } from "@/lib/use-auth";
 
 export default function AdminLoginPage() {
@@ -15,12 +15,14 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const redirectingRef = useRef(false);
 
   useEffect(() => {
-    if (isLoading || !isAuthenticated) {
+    if (isLoading || !isAuthenticated || redirectingRef.current) {
       return;
     }
 
+    redirectingRef.current = true;
     router.replace("/admin/dashboard");
   }, [isLoading, isAuthenticated, router]);
 
@@ -42,10 +44,10 @@ export default function AdminLoginPage() {
         return;
       }
 
-      setToken(response.token!);
-      setAdmin(response.admin as StoredProfile);
-      setSessionRole("SUPERADMIN");
-      setSessionProfile(response.admin as StoredProfile);
+      setAdminSession({
+        token: response.token!,
+        admin: response.admin as StoredProfile,
+      });
       router.replace("/admin/dashboard");
     } catch {
       setError("Unable to sign in right now. Please try again.");

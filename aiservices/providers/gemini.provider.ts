@@ -1,6 +1,6 @@
 import { getEnv } from "../config/env.js";
 import { AI_CTA_SUGGESTIONS, AI_DEFAULT_MODEL } from "../constants/assistant.constants.js";
-import { extractJsonObject, isLikelySalesLead, normalizeText } from "../utils/text.js";
+import { extractJsonObject, isLikelySalesLead, limitSentences, normalizeText } from "../utils/text.js";
 import type { AiProvider, ProviderMessage, ProviderReply } from "./ai-provider.js";
 
 type GeminiResponse = {
@@ -30,7 +30,8 @@ function buildRequestBody(systemPrompt: string, messages: ProviderMessage[]) {
               "confidence must be a number between 0 and 1.",
               "shouldEscalate must be true if the user is asking for pricing, a quotation, site survey, vendor-specific advice, or anything you cannot answer confidently.",
               `Allowed CTA suggestions are: ${AI_CTA_SUGGESTIONS.join(", ")}.`,
-              "Keep reply to 2-5 sentences. Stay concise, consultant-like, and solar focused.",
+              "Keep the reply to 3-4 sentences max. Start with the direct answer, stay friendly, and avoid marketing text.",
+              "Never include raw JSON in the reply field.",
               "Conversation history follows.",
               conversation,
             ].join("\n\n"),
@@ -49,7 +50,7 @@ function buildRequestBody(systemPrompt: string, messages: ProviderMessage[]) {
 
 function parseReply(rawText: string): ProviderReply {
   const jsonText = extractJsonObject(rawText);
-  const fallbackReply = normalizeText(rawText) || "I can help with solar sizing, savings, EMI, and panel comparisons. If you need a site-specific quote, share your details and I’ll connect you to an expert.";
+  const fallbackReply = "I can help with solar sizing, savings, EMI, and panel comparisons. If you need a site-specific quote, share your details and I’ll connect you to an expert.";
 
   if (!jsonText) {
     return {
@@ -62,7 +63,7 @@ function parseReply(rawText: string): ProviderReply {
 
   try {
     const parsed = JSON.parse(jsonText) as Partial<ProviderReply>;
-    const reply = normalizeText(String(parsed.reply || ""));
+    const reply = limitSentences(String(parsed.reply || ""), 4);
     const confidence = typeof parsed.confidence === "number" ? parsed.confidence : 0;
     const shouldEscalate = Boolean(parsed.shouldEscalate);
     const ctaSuggestions = Array.isArray(parsed.ctaSuggestions) ? parsed.ctaSuggestions.map(String) : [];

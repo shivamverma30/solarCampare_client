@@ -9,10 +9,17 @@ interface NotificationItem {
   id: string;
   title: string;
   message: string;
+  description?: string;
   type: string;
   priority: string;
   createdAt: string;
   isRead: boolean;
+  audience?: string;
+  metadata?: Record<string, unknown> | null;
+  adminId?: string | null;
+  userId?: string | null;
+  vendorId?: string | null;
+  readAt?: string | null;
 }
 
 export default function AdminNotificationsPage() {
@@ -22,6 +29,7 @@ export default function AdminNotificationsPage() {
   const [error, setError] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
   const [markingAll, setMarkingAll] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
 
   const loadNotifications = async () => {
     const token = getToken();
@@ -74,6 +82,8 @@ export default function AdminNotificationsPage() {
   };
 
   const handleDelete = async (id: string) => {
+
+      const closeModal = () => setSelectedNotification(null);
     const token = getToken();
     if (!token) {
       setError("Not authenticated");
@@ -156,6 +166,15 @@ export default function AdminNotificationsPage() {
           {notifications.map((notification) => (
             <article
               key={notification.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => setSelectedNotification(notification)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  setSelectedNotification(notification);
+                }
+              }}
               className={`rounded-3xl border p-5 shadow-sm transition ${notification.isRead ? "border-slate-200 bg-white" : "border-amber-200 bg-amber-50/70"}`}
             >
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -170,7 +189,7 @@ export default function AdminNotificationsPage() {
                     {notification.isRead ? <span className="text-xs font-semibold text-emerald-700">Read</span> : <span className="text-xs font-semibold text-amber-700">Unread</span>}
                   </div>
                   <h2 className="mt-3 text-xl font-semibold text-slate-950">{notification.title}</h2>
-                  <p className="mt-2 text-sm leading-7 text-slate-600">{notification.message}</p>
+                  <p className="mt-2 text-sm leading-7 text-slate-600">{notification.description || notification.message}</p>
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -180,7 +199,10 @@ export default function AdminNotificationsPage() {
                   {!notification.isRead ? (
                     <button
                       type="button"
-                      onClick={() => handleMarkRead(notification.id)}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void handleMarkRead(notification.id);
+                      }}
                       disabled={savingId === notification.id}
                       className="inline-flex h-10 items-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:opacity-60"
                     >
@@ -189,7 +211,10 @@ export default function AdminNotificationsPage() {
                   ) : null}
                   <button
                     type="button"
-                    onClick={() => handleDelete(notification.id)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      void handleDelete(notification.id);
+                    }}
                     disabled={savingId === notification.id}
                     className="inline-flex h-10 items-center rounded-full border border-red-200 bg-white px-4 text-sm font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-50 disabled:opacity-60"
                   >
@@ -207,6 +232,51 @@ export default function AdminNotificationsPage() {
           ) : null}
         </div>
       )}
+
+      {selectedNotification ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6 backdrop-blur-sm">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-4xl border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.22)]">
+            <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-5">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-600">Notification details</p>
+                <h3 className="mt-2 text-2xl font-semibold text-slate-950">{selectedNotification.title}</h3>
+              </div>
+              <button type="button" onClick={closeModal} className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
+                Close
+              </button>
+            </div>
+
+            <div className="max-h-[calc(90vh-92px)] overflow-y-auto px-6 py-5">
+              <div className="grid gap-4 md:grid-cols-2">
+                <DetailField label="Type" value={selectedNotification.type} />
+                <DetailField label="Priority" value={selectedNotification.priority} />
+                <DetailField label="Audience" value={selectedNotification.audience || "ADMIN"} />
+                <DetailField label="Status" value={selectedNotification.isRead ? "Read" : "Unread"} />
+                <DetailField label="Created" value={new Date(selectedNotification.createdAt).toLocaleString()} />
+                <DetailField label="Read at" value={selectedNotification.readAt ? new Date(selectedNotification.readAt).toLocaleString() : "Not read"} />
+              </div>
+
+              <div className="mt-5 space-y-4">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Message</p>
+                  <p className="mt-2 text-sm leading-7 text-slate-700">{selectedNotification.description || selectedNotification.message}</p>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Metadata</p>
+                  <pre className="mt-2 overflow-x-auto text-xs leading-6 text-slate-700">{JSON.stringify(selectedNotification.metadata || {}, null, 2)}</pre>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-3">
+                  <DetailField label="Admin ID" value={selectedNotification.adminId || "-"} />
+                  <DetailField label="User ID" value={selectedNotification.userId || "-"} />
+                  <DetailField label="Vendor ID" value={selectedNotification.vendorId || "-"} />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -216,6 +286,15 @@ function SummaryCard({ label, value, tone }: { label: string; value: string; ton
     <div className={`rounded-3xl border border-slate-200 px-5 py-4 shadow-sm ${tone}`}>
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</p>
       <p className="mt-2 text-3xl font-semibold text-slate-950">{value}</p>
+    </div>
+  );
+}
+
+function DetailField({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</p>
+      <p className="mt-2 text-sm font-medium text-slate-950 break-all">{value}</p>
     </div>
   );
 }

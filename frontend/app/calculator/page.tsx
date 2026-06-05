@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Download, Info, PieChart, ShieldCheck, Sparkles, TrendingUp, Wallet } from "lucide-react";
 import { useLocale } from "@/components/locale-provider";
 import { apiClient } from "@/lib/api-client";
@@ -31,6 +31,8 @@ export default function CalculatorPage() {
   const [city, setCity] = useState<SolarCity>(defaultInputs.city);
   const [state, setState] = useState<SolarState>(defaultInputs.state);
   const [propertyType, setPropertyType] = useState<PropertyType>(defaultInputs.propertyType);
+  const [electricityTariff, setElectricityTariff] = useState<number>(stateSubsidies[defaultInputs.state].tariff);
+  const [consumptionUnits, setConsumptionUnits] = useState<number | "">("");
   const [quoteName, setQuoteName] = useState("");
   const [quoteEmail, setQuoteEmail] = useState("");
   const [quotePhone, setQuotePhone] = useState("");
@@ -39,9 +41,13 @@ export default function CalculatorPage() {
   const [quoteSubmitting, setQuoteSubmitting] = useState(false);
   const [message, setMessage] = useState("");
 
+  useEffect(() => {
+    setElectricityTariff(stateSubsidies[state].tariff);
+  }, [state]);
+
   const result = useMemo(
-    () => calculateSolarEstimate({ monthlyBill, roofSize, city, state, propertyType }),
-    [city, monthlyBill, propertyType, roofSize, state]
+    () => calculateSolarEstimate({ monthlyBill, roofSize, city, state, propertyType, electricityTariff, consumptionUnits: consumptionUnits === "" ? undefined : consumptionUnits }),
+    [city, consumptionUnits, electricityTariff, monthlyBill, propertyType, roofSize, state]
   );
   const validationErrors = useMemo(
     () => validateSolarInputs({ monthlyBill, roofSize, city, state, propertyType }),
@@ -57,6 +63,7 @@ export default function CalculatorPage() {
     `Net cost: ${formatCurrency(result.netInvestment)}`,
     `Annual savings: ${formatCurrency(result.annualSavings)}`,
     `Payback period: ${result.roiYears.toFixed(1)} years`,
+    `CO2 savings: ${Math.round(result.co2SavingsKg).toLocaleString("en-IN")} kg`,
   ].join("\n");
 
   const handleCopySummary = async () => {
@@ -138,6 +145,12 @@ export default function CalculatorPage() {
         recommendedKw: result.recommendedKw,
         annualSavings: result.annualSavings,
         roiYears: result.roiYears,
+        roiPercent: result.roiPercent,
+        electricityTariff: result.electricityTariff,
+        consumptionUnitsMonthly: result.consumptionUnitsMonthly,
+        annualGenerationUnits: result.annualGenerationUnits,
+        co2SavingsKg: result.co2SavingsKg,
+        treesEquivalent: result.treesEquivalent,
       },
     });
 
@@ -150,7 +163,7 @@ export default function CalculatorPage() {
 
   return (
     <section className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8 md:py-12">
-      <div className="mb-8 flex flex-col gap-4 rounded-[2rem] border border-slate-200 bg-white/90 p-6 shadow-[0_24px_70px_rgba(15,23,42,0.08)] md:p-8 lg:flex-row lg:items-end lg:justify-between">
+      <div className="mb-8 flex flex-col gap-4 rounded-4xl border border-slate-200 bg-white/90 p-6 shadow-[0_24px_70px_rgba(15,23,42,0.08)] md:p-8 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-3xl">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-600">{t("calculator.eyebrow")}</p>
           <h1 className="mt-3 text-3xl text-slate-950 md:text-5xl">{t("calculator.title")}</h1>
@@ -201,7 +214,7 @@ export default function CalculatorPage() {
 
       <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
         <div className="space-y-6">
-          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_20px_50px_rgba(15,23,42,0.06)] md:p-8">
+          <div className="rounded-4xl border border-slate-200 bg-white p-6 shadow-[0_20px_50px_rgba(15,23,42,0.06)] md:p-8">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Project inputs</p>
@@ -287,12 +300,40 @@ export default function CalculatorPage() {
                   <option value="commercial">{t("calculator.commercial")}</option>
                 </select>
               </Field>
+
+              <Field label="Electricity Tariff" hint="State tariff averages help tune savings more precisely.">
+                <input
+                  type="number"
+                  min={1}
+                  step={0.1}
+                  value={electricityTariff}
+                  onChange={(event) => setElectricityTariff(Number(event.target.value))}
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:bg-white"
+                />
+              </Field>
+
+              <Field label="Estimated Monthly Consumption" hint="Override the bill-based consumption estimate if you know your units.">
+                <input
+                  type="number"
+                  min={0}
+                  value={consumptionUnits}
+                  onChange={(event) => setConsumptionUnits(event.target.value === "" ? "" : Number(event.target.value))}
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:bg-white"
+                />
+              </Field>
             </div>
 
             <div className="mt-6 grid gap-3 md:grid-cols-3">
               <InfoPill icon={<ShieldCheck className="h-4 w-4" />} label="Subsidy aware" value={formatCurrency(result.totalSubsidy)} />
               <InfoPill icon={<TrendingUp className="h-4 w-4" />} label="Projected payback" value={`${result.roiYears.toFixed(1)} years`} />
               <InfoPill icon={<Wallet className="h-4 w-4" />} label="Monthly savings" value={formatCurrency(result.monthlySavings)} />
+            </div>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <MiniMetric label="Tariff" value={`₹${result.electricityTariff.toFixed(1)}/kWh`} />
+              <MiniMetric label="Consumption" value={`${Math.round(result.consumptionUnitsMonthly).toLocaleString("en-IN")} units`} />
+              <MiniMetric label="Sun hours" value={`${result.sunHours.toFixed(1)} hrs/day`} />
+              <MiniMetric label="CO2 savings" value={`${Math.round(result.co2SavingsKg).toLocaleString("en-IN")} kg/yr`} />
             </div>
 
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -307,7 +348,7 @@ export default function CalculatorPage() {
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_20px_50px_rgba(15,23,42,0.06)] md:p-8">
+          <div className="rounded-4xl border border-slate-200 bg-white p-6 shadow-[0_20px_50px_rgba(15,23,42,0.06)] md:p-8">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Savings projection</p>
@@ -337,7 +378,7 @@ export default function CalculatorPage() {
         </div>
 
         <aside className="space-y-4 lg:sticky lg:top-28 lg:self-start">
-          <div className="rounded-[2rem] border border-slate-200 bg-slate-950 p-6 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)] md:p-8">
+          <div className="rounded-4xl border border-slate-200 bg-slate-950 p-6 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)] md:p-8">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/55">Calculated output</p>
@@ -368,6 +409,11 @@ export default function CalculatorPage() {
               </p>
             </div>
 
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <MetricCard title="Annual energy value" value={formatCurrency(result.annualEnergyValue)} />
+              <MetricCard title="ROI %" value={`${result.roiPercent.toFixed(1)}%`} />
+            </div>
+
             <form className="mt-6 space-y-3 rounded-3xl border border-white/10 bg-white/5 p-4" onSubmit={handleQuoteRequest}>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/55">Request a quote</p>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -384,9 +430,13 @@ export default function CalculatorPage() {
 
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-1">
             <ResultCard title="25-Year Savings" value={formatCurrency(result.savings25yr)} highlight />
+            <ResultCard title="10-Year Savings" value={formatCurrency(result.annualSavings10yr)} />
+            <ResultCard title="5-Year Savings" value={formatCurrency(result.annualSavings5yr)} />
             <ResultCard title="Payback Period" value={`${result.paybackMonths.toFixed(0)} months`} accent />
             <ResultCard title="Monthly Savings" value={formatCurrency(result.monthlySavings)} />
             <ResultCard title="Annual Savings" value={formatCurrency(result.annualSavings)} />
+            <ResultCard title="CO2 Savings" value={`${Math.round(result.co2SavingsKg).toLocaleString("en-IN")} kg/yr`} />
+            <ResultCard title="Trees Equivalent" value={`${Math.max(1, Math.round(result.treesEquivalent)).toLocaleString("en-IN")} trees`} />
           </div>
         </aside>
       </div>
@@ -423,6 +473,15 @@ function MetricCard({ title, value }: { title: string; value: string }) {
     <div className="rounded-2xl border border-white/10 bg-white/6 p-4">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/55">{title}</p>
       <p className="mt-2 text-lg font-semibold text-white">{value}</p>
+    </div>
+  );
+}
+
+function MiniMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">{label}</p>
+      <p className="mt-2 text-sm font-semibold text-slate-950">{value}</p>
     </div>
   );
 }

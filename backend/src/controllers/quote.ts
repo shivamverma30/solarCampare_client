@@ -2,6 +2,7 @@ import { Response } from "express";
 import prisma from "../lib/prisma";
 import { AuthRequest } from "../middleware/auth";
 import { createNotification, safeEmailDispatch } from "../lib/workflow";
+import { notificationTemplates } from "../lib/notification-templates";
 
 export const createQuoteRequest = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -43,16 +44,33 @@ export const createQuoteRequest = async (req: AuthRequest, res: Response): Promi
       },
     });
 
+    const notification = notificationTemplates.quoteRequest({
+      name: String(fullName),
+      email: String(email),
+      phone: phone ? String(phone) : null,
+      pincode: pincode ? String(pincode) : null,
+      monthlyBill: monthlyBill ? Number(monthlyBill) : null,
+      roofSize: roofSize ? Number(roofSize) : null,
+      recommendedCapacity: metadata && typeof metadata === "object" && metadata !== null && "recommendedKw" in metadata ? `${Number((metadata as Record<string, unknown>).recommendedKw || 0).toFixed(1)} kW` : undefined,
+      estimatedSavings: metadata && typeof metadata === "object" && metadata !== null && "annualSavings" in metadata ? `₹${Math.round(Number((metadata as Record<string, unknown>).annualSavings || 0)).toLocaleString("en-IN")}/yr` : undefined,
+      roi: metadata && typeof metadata === "object" && metadata !== null && "roiYears" in metadata ? `${Number((metadata as Record<string, unknown>).roiYears || 0).toFixed(1)} years` : undefined,
+      timestamp: new Date(),
+    });
+
     await createNotification(prisma, {
       audience: "ADMIN",
-      type: "QUOTE_REQUEST",
-      title: "New quote request",
-      body: `${fullName} submitted a quote request${pincode ? ` for PIN ${pincode}` : ""}.`,
+      type: notification.type,
+      priority: notification.priority,
+      title: notification.title,
+      body: notification.body,
       metadata: {
         quoteRequestId: quoteRequest.id,
         pincode: quoteRequest.pincode,
         city: quoteRequest.city,
         state: quoteRequest.state,
+        monthlyBill: quoteRequest.monthlyBill,
+        roofSize: quoteRequest.roofSize,
+        metadata: quoteRequest.metadata,
       },
     });
 

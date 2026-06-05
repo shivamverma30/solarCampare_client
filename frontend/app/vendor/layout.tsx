@@ -8,12 +8,12 @@ import { logout } from "@/lib/auth";
 import { useAuth } from "@/lib/use-auth";
 
 const links = [
-  { href: "/vendor/dashboard", label: "Dashboard" },
-  { href: "/vendor/products", label: "Products" },
-  { href: "/vendor/leads", label: "Leads" },
-  { href: "/vendor/notifications", label: "Notifications" },
-  { href: "/vendor/profile", label: "Profile" },
-  { href: "/vendor/change-password", label: "Change Password" },
+  { href: "/vendor/dashboard", label: "Dashboard", icon: "📊" },
+  { href: "/vendor/products", label: "Products", icon: "📦" },
+  { href: "/vendor/leads", label: "Leads", icon: "🧭" },
+  { href: "/vendor/notifications", label: "Notifications", icon: "🔔" },
+  { href: "/vendor/profile", label: "Profile", icon: "👤" },
+  { href: "/vendor/change-password", label: "Change Password", icon: "🔐" },
 ];
 
 export default function VendorLayout({ children }: { children: React.ReactNode }) {
@@ -38,8 +38,8 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
   }
 
   return (
-    <div className="flex min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(251,191,36,0.02),transparent_28%),linear-gradient(180deg,#f8fafc_0%,#eef2f7_100%)] text-slate-900 md:flex-row">
-      <aside className={`fixed inset-y-0 left-0 z-30 w-72 transform border-r border-slate-200 bg-white text-slate-900 shadow-[0_18px_50px_rgba(15,23,42,0.06)] backdrop-blur-xl md:static md:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}>
+    <div className="flex h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(251,191,36,0.02),transparent_28%),linear-gradient(180deg,#f8fafc_0%,#eef2f7_100%)] text-slate-900 md:flex-row">
+      <aside className={`fixed inset-y-0 left-0 z-30 w-72 transform overflow-y-auto border-r border-slate-200 bg-white text-slate-900 shadow-[0_18px_50px_rgba(15,23,42,0.06)] backdrop-blur-xl md:static md:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="flex h-full flex-col">
           <div className="border-b border-slate-200/80 p-6">
             <BrandMark href="/vendor/dashboard" compact className="items-start" titleClassName="text-slate-900" taglineClassName="text-slate-500" />
@@ -56,7 +56,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
                     isActive ? "bg-amber-50 text-amber-900 shadow-sm ring-1 ring-amber-200/80" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
-                  <span className="text-lg">•</span>
+                  <span className="text-lg">{link.icon}</span>
                   {link.label}
                 </Link>
               );
@@ -82,13 +82,13 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
         </div>
       </aside>
 
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 min-h-0 overflow-hidden">
         <div className="sticky top-0 z-20 border-b border-white/70 bg-white/85 p-4 backdrop-blur-xl md:hidden">
           <button type="button" onClick={() => setOpen((value) => !value)} className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm">
             {open ? "Close" : "Menu"}
           </button>
         </div>
-        <div className="p-5 md:p-8">{children}</div>
+        <div className="h-full overflow-y-auto p-5 md:p-8">{children}</div>
       </main>
 
       {open ? <div className="fixed inset-0 z-20 bg-black/50 md:hidden" onClick={() => setOpen(false)} /> : null}

@@ -5,6 +5,7 @@ import { hashPassword, comparePassword } from "../utils/password";
 import { generateToken } from "../utils/jwt";
 import { AuthRequest } from "../middleware/auth";
 import { createAuditLog, createNotification, safeEmailDispatch, sendTransactionalEmail, welcomeTemplate, otpTemplate } from "../lib/workflow";
+import { notificationTemplates } from "../lib/notification-templates";
 
 const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
 
@@ -217,6 +218,11 @@ export const login = async (req: AuthRequest, res: Response): Promise<void> => {
 
     const token = buildAdminToken(admin);
 
+    await prisma.admin.update({
+      where: { id: admin.id },
+      data: { lastLoginAt: new Date() },
+    });
+
     res.status(200).json({
       success: true,
       message: "Login successful",
@@ -283,12 +289,19 @@ export const registerUser = async (req: AuthRequest, res: Response): Promise<voi
     });
 
     // Notify admin and send OTP email
+    const userNotification = notificationTemplates.userRegistered({
+      name: fullName,
+      email,
+      timestamp: new Date(),
+    });
+
     await createNotification(prisma, {
       audience: "ADMIN",
-      type: "USER_SIGNUP",
-      title: "New user registration (OTP)",
-      body: `${fullName} has initiated registration with ${email}.`,
-      metadata: { email },
+      type: userNotification.type,
+      priority: userNotification.priority,
+      title: userNotification.title,
+      body: userNotification.body,
+      metadata: userNotification.metadata,
     });
 
     await safeEmailDispatch("New user registration", `User ${fullName} (${email}) started registration.`);
@@ -304,7 +317,7 @@ export const registerUser = async (req: AuthRequest, res: Response): Promise<voi
       actorType: "system",
       action: "email_otp.issued",
       entityType: "USER",
-      entityId: null,
+         entityId: undefined,
       metadata: { email },
     });
 
@@ -339,6 +352,11 @@ export const loginUser = async (req: AuthRequest, res: Response): Promise<void> 
       res.status(401).json({ error: "Invalid credentials" });
       return;
     }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() },
+    });
 
     res.status(200).json({
       success: true,
@@ -438,21 +456,20 @@ export const registerVendor = async (req: AuthRequest, res: Response): Promise<v
       },
     });
 
-    await prisma.vendorStatusLog.create({
-      data: {
-        vendorId: "",
-        previousStatus: "PENDING",
-        newStatus: "PENDING",
-        note: "Vendor application initiated (OTP)",
-      },
-    }).catch(() => {}); // best-effort; will be created again when vendor created
+    const vendorNotification = notificationTemplates.vendorRegistered({
+      name: normalizedOwnerName,
+      email,
+      companyName: normalizedCompanyName,
+      timestamp: new Date(),
+    });
 
     await createNotification(prisma, {
       audience: "ADMIN",
-      type: "VENDOR_SIGNUP",
-      title: "New vendor application (OTP)",
-      body: `${normalizedCompanyName} has started vendor registration.`,
-      metadata: { email, companyName: normalizedCompanyName },
+      type: vendorNotification.type,
+      priority: vendorNotification.priority,
+      title: vendorNotification.title,
+      body: vendorNotification.body,
+      metadata: vendorNotification.metadata,
     });
 
     await safeEmailDispatch("New vendor application", `${normalizedCompanyName} (${email}) started registration.`);
@@ -468,7 +485,7 @@ export const registerVendor = async (req: AuthRequest, res: Response): Promise<v
       actorType: "system",
       action: "email_otp.issued",
       entityType: "VENDOR",
-      entityId: null,
+         entityId: undefined,
       metadata: { email, companyName: normalizedCompanyName },
     });
 
@@ -520,6 +537,11 @@ export const loginVendor = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
+    await prisma.vendor.update({
+      where: { id: vendor.id },
+      data: { lastLoginAt: new Date() },
+    });
+
     res.status(200).json({
       success: true,
       message: "Login successful",
@@ -560,6 +582,7 @@ export const getProfile = async (req: AuthRequest, res: Response): Promise<void>
           avatarUrl: true,
           role: true,
           status: true,
+          lastLoginAt: true,
           createdAt: true,
         },
       });
@@ -586,6 +609,7 @@ export const getProfile = async (req: AuthRequest, res: Response): Promise<void>
           pincode: true,
           avatarUrl: true,
           status: true,
+          lastLoginAt: true,
           createdAt: true,
         },
       });
@@ -620,6 +644,7 @@ export const getProfile = async (req: AuthRequest, res: Response): Promise<void>
           services: true,
           status: true,
           rejectionReason: true,
+          lastLoginAt: true,
           createdAt: true,
         },
       });
@@ -636,6 +661,72 @@ export const getProfile = async (req: AuthRequest, res: Response): Promise<void>
     res.status(401).json({ error: "Unauthorized" });
   } catch (error) {
     console.error("Get profile error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const listAdminUsers = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.adminId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const search = String(req.query.search || "").trim();
+    const status = String(req.query.status || "").trim().toUpperCase();
+    const city = String(req.query.city || "").trim();
+    const state = String(req.query.state || "").trim();
+    const page = Math.max(1, Number(req.query.page || 1));
+    const pageSize = Math.min(50, Math.max(5, Number(req.query.pageSize || 10)));
+
+    const where = {
+      ...(status && status !== "ALL" ? { status: status as "ACTIVE" | "INACTIVE" } : {}),
+      ...(city ? { city: { contains: city, mode: "insensitive" as const } } : {}),
+      ...(state ? { state: { contains: state, mode: "insensitive" as const } } : {}),
+      ...(search
+        ? {
+            OR: [
+              { fullName: { contains: search, mode: "insensitive" as const } },
+              { email: { contains: search, mode: "insensitive" as const } },
+              { phone: { contains: search, mode: "insensitive" as const } },
+              { city: { contains: search, mode: "insensitive" as const } },
+              { state: { contains: search, mode: "insensitive" as const } },
+            ],
+          }
+        : {}),
+    };
+
+    const [total, users] = await Promise.all([
+      prisma.user.count({ where }),
+      prisma.user.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          phone: true,
+          city: true,
+          state: true,
+          pincode: true,
+          status: true,
+          createdAt: true,
+          lastLoginAt: true,
+        },
+      }),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      users,
+      count: total,
+      page,
+      pageSize,
+    });
+  } catch (error) {
+    console.error("List admin users error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -1252,18 +1343,21 @@ export const resendVerificationOtp = async (req: AuthRequest, res: Response): Pr
     });
 
     // Send OTP email
+    const payload = record.payload && typeof record.payload === "object" ? (record.payload as Record<string, unknown>) : null;
+    const recipientName = typeof payload?.fullName === "string" ? payload.fullName : typeof payload?.ownerName === "string" ? payload.ownerName : record.email;
+
     await sendTransactionalEmail({
       to: record.email,
       subject: "Verify Your Email Address",
       body: `Your verification code is ${otp}. It expires in 10 minutes.`,
-      html: otpTemplate(record.payload?.fullName || record.payload?.ownerName || record.email, otp, 10),
+      html: otpTemplate(recipientName, otp, 10),
     });
 
     await createAuditLog(prisma, {
       actorType: "system",
       action: "email_otp.resent",
       entityType: record.vendorId ? "VENDOR" : "USER",
-      entityId: record.vendorId || record.userId || null,
+      entityId: record.vendorId || record.userId || undefined,
       metadata: { email: record.email },
     });
 

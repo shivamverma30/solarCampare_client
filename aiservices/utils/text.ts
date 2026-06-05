@@ -4,6 +4,18 @@ export function normalizeText(value: string): string {
   return value.replace(/\s+/g, " ").trim();
 }
 
+export function limitSentences(value: string, maxSentences = 4): string {
+  const sentences = normalizeText(value)
+    .split(/(?<=[.!?])\s+/)
+    .filter(Boolean);
+
+  if (!sentences.length) {
+    return normalizeText(value);
+  }
+
+  return sentences.slice(0, maxSentences).join(" ");
+}
+
 export function clampText(value: string, maxLength = AI_CHAT_MAX_LENGTH): string {
   return value.slice(0, maxLength);
 }

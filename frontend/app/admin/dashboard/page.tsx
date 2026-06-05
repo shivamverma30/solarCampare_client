@@ -34,6 +34,12 @@ interface NotificationItem {
   priority: string;
   createdAt: string;
   isRead: boolean;
+  audience?: string;
+  metadata?: Record<string, unknown> | null;
+  adminId?: string | null;
+  userId?: string | null;
+  vendorId?: string | null;
+  readAt?: string | null;
 }
 
 interface StatCard {
@@ -48,40 +54,42 @@ export default function AdminDashboard() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
+  const [deletingLeadId, setDeletingLeadId] = useState<string | null>(null);
+
+  const loadDashboard = async () => {
+    const token = getToken();
+    if (!token) {
+      setError("Not authenticated");
+      setLoading(false);
+      return;
+    }
+
+    const [superAdminResponse, notificationsResponse, unreadResponse] = await Promise.all([
+      apiClient.dashboard.getSuperAdminStats(token),
+      apiClient.notifications.list(token),
+      apiClient.notifications.unreadCount(token),
+    ]);
+
+    if (!superAdminResponse.success) {
+      setError(superAdminResponse.error || "Failed to fetch dashboard stats");
+    } else {
+      setStats(superAdminResponse.stats as SuperAdminStats);
+    }
+
+    if (Array.isArray((notificationsResponse as { notifications?: NotificationItem[] }).notifications)) {
+      setNotifications((notificationsResponse as { notifications?: NotificationItem[] }).notifications || []);
+    }
+
+    if ((unreadResponse as { unreadCount?: number }).unreadCount !== undefined) {
+      setUnreadCount((unreadResponse as { unreadCount?: number }).unreadCount || 0);
+    }
+
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const fetchStats = async () => {
-      const token = getToken();
-      if (!token) {
-        setError("Not authenticated");
-        setLoading(false);
-        return;
-      }
-
-      const [superAdminResponse, notificationsResponse, unreadResponse] = await Promise.all([
-        apiClient.dashboard.getSuperAdminStats(token),
-        apiClient.notifications.list(token),
-        apiClient.notifications.unreadCount(token),
-      ]);
-
-      if (!superAdminResponse.success) {
-        setError(superAdminResponse.error || "Failed to fetch dashboard stats");
-      } else {
-        setStats(superAdminResponse.stats as SuperAdminStats);
-      }
-
-      if (Array.isArray((notificationsResponse as { notifications?: NotificationItem[] }).notifications)) {
-        setNotifications((notificationsResponse as { notifications?: NotificationItem[] }).notifications || []);
-      }
-
-      if ((unreadResponse as { unreadCount?: number }).unreadCount !== undefined) {
-        setUnreadCount((unreadResponse as { unreadCount?: number }).unreadCount || 0);
-      }
-
-      setLoading(false);
-    };
-
-    fetchStats();
+    void loadDashboard();
   }, []);
 
   const statCards: StatCard[] = useMemo(
@@ -124,6 +132,24 @@ export default function AdminDashboard() {
     ],
     [stats]
   );
+
+  const deleteLead = async (id: string) => {
+    const token = getToken();
+    if (!token || deletingLeadId) return;
+
+    if (!window.confirm("Delete this lead? This action cannot be undone.")) return;
+
+    setDeletingLeadId(id);
+    const response = await apiClient.leads.delete(token, id);
+
+    if (response.success) {
+      await loadDashboard();
+    } else {
+      setError(response.error || "Failed to delete lead");
+    }
+
+    setDeletingLeadId(null);
+  };
 
   return (
     <div className="space-y-8">
@@ -228,9 +254,19 @@ export default function AdminDashboard() {
                         <p className="font-semibold text-slate-950">{lead.userName}</p>
                         <p className="text-sm text-slate-600">{lead.userEmail}</p>
                       </div>
-                      <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
-                        {lead.status}
-                      </span>
+                      <div className="flex flex-col items-end gap-2">
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
+                          {lead.status}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => void deleteLead(lead.id)}
+                          disabled={deletingLeadId === lead.id}
+                          className="rounded-full border border-rose-200 bg-white px-3 py-2 text-[11px] font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {deletingLeadId === lead.id ? "Deleting..." : "Delete"}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -252,7 +288,19 @@ export default function AdminDashboard() {
 
               <div className="mt-5 space-y-3">
                 {notifications.slice(0, 4).map((notification) => (
-                  <div key={notification.id} className={`rounded-2xl border px-4 py-3 ${notification.isRead ? "border-slate-200 bg-slate-50" : "border-amber-200 bg-amber-50"}`}>
+                  <div
+                    key={notification.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setSelectedNotification(notification)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        setSelectedNotification(notification);
+                      }
+                    }}
+                    className={`rounded-2xl border px-4 py-3 transition hover:shadow-sm ${notification.isRead ? "border-slate-200 bg-slate-50" : "border-amber-200 bg-amber-50"}`}
+                  >
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="font-semibold text-slate-950">{notification.title}</p>
@@ -325,6 +373,45 @@ export default function AdminDashboard() {
             </section>
           </div>
 
+
+          {selectedNotification ? (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6 backdrop-blur-sm">
+              <div className="max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-4xl border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.22)]">
+                <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-5">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-600">Notification details</p>
+                    <h3 className="mt-2 text-2xl font-semibold text-slate-950">{selectedNotification.title}</h3>
+                  </div>
+                  <button type="button" onClick={() => setSelectedNotification(null)} className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
+                    Close
+                  </button>
+                </div>
+
+                <div className="max-h-[calc(90vh-92px)] overflow-y-auto px-6 py-5">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <DetailField label="Type" value={selectedNotification.type} />
+                    <DetailField label="Priority" value={selectedNotification.priority} />
+                    <DetailField label="Audience" value={selectedNotification.audience || "ADMIN"} />
+                    <DetailField label="Status" value={selectedNotification.isRead ? "Read" : "Unread"} />
+                    <DetailField label="Created" value={new Date(selectedNotification.createdAt).toLocaleString()} />
+                    <DetailField label="Read at" value={selectedNotification.readAt ? new Date(selectedNotification.readAt).toLocaleString() : "Not read"} />
+                  </div>
+
+                  <div className="mt-5 space-y-4">
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Message</p>
+                      <p className="mt-2 text-sm leading-7 text-slate-700">{selectedNotification.description || selectedNotification.message}</p>
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Metadata</p>
+                      <pre className="mt-2 overflow-x-auto text-xs leading-6 text-slate-700">{JSON.stringify(selectedNotification.metadata || {}, null, 2)}</pre>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
         </>
       )}
     </div>
@@ -351,5 +438,14 @@ function ActionLink({ href, label, description }: { href: string; label: string;
         <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200 transition group-hover:ring-slate-300">Open</span>
       </div>
     </Link>
+  );
+}
+
+function DetailField({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</p>
+      <p className="mt-2 break-all text-sm font-medium text-slate-950">{value}</p>
+    </div>
   );
 }

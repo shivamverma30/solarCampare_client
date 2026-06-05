@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import BrandMark from "@/components/brand-mark";
@@ -18,6 +18,7 @@ const sidebarLinks: SidebarLink[] = [
   { name: "Notifications", href: "/admin/notifications", icon: "🔔" },
   { name: "Vendors", href: "/admin/vendors", icon: "🏢" },
   { name: "Leads", href: "/admin/leads", icon: "🧭" },
+  { name: "Users", href: "/admin/users", icon: "👥" },
   { name: "Profile", href: "/admin/profile", icon: "👤" },
   { name: "Change Password", href: "/admin/change-password", icon: "🔐" },
 ];
@@ -31,16 +32,18 @@ export default function AdminLayout({
   const router = useRouter();
   const { isLoading, isAuthenticated, admin, role } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const redirectedRef = useRef(false);
   const isAdminLoginPage = pathname === "/admin";
 
   useEffect(() => {
-    if (isAdminLoginPage || isLoading) {
+    if (redirectedRef.current || isAdminLoginPage || isLoading) {
       return;
     }
 
     const isAdminRole = role === "SUPERADMIN" || role === "ADMIN";
 
     if (!isAuthenticated || !isAdminRole) {
+      redirectedRef.current = true;
       router.replace("/admin");
     }
   }, [isAdminLoginPage, isLoading, isAuthenticated, role, router, pathname]);
@@ -68,10 +71,10 @@ export default function AdminLayout({
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-[radial-gradient(circle_at_top_left,rgba(251,191,36,0.08),transparent_28%),linear-gradient(180deg,#f8fafc_0%,#eef2f7_100%)] text-slate-900 md:flex-row">
+    <div className="flex h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(251,191,36,0.08),transparent_28%),linear-gradient(180deg,#f8fafc_0%,#eef2f7_100%)] text-slate-900 md:flex-row">
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-72 transform border-r border-white/70 bg-white/92 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl md:static md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 w-72 transform overflow-y-auto border-r border-white/70 bg-white/92 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl md:static md:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } transition-transform duration-300 md:transition-none`}
       >
@@ -129,7 +132,7 @@ export default function AdminLayout({
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 min-h-0 overflow-hidden">
         {/* Mobile Header */}
         <div className="sticky top-0 z-20 border-b border-white/70 bg-white/85 p-4 backdrop-blur-xl md:hidden">
           <button
@@ -141,7 +144,7 @@ export default function AdminLayout({
         </div>
 
         {/* Page Content */}
-        <div className="p-5 md:p-8">
+        <div className="h-full overflow-y-auto p-5 md:p-8">
           {children}
         </div>
       </main>

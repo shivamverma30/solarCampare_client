@@ -45,14 +45,24 @@ enum NotificationType {
   SYSTEM
   USER_SIGNUP
   VENDOR_SIGNUP
+  USER_REGISTERED
+  VENDOR_REGISTERED
+  AI_CHAT_LEAD
   LEAD_CREATED
   LEAD_UPDATED
   VENDOR_APPROVED
   VENDOR_REJECTED
+  CONSULTATION_REQUEST
   INQUIRY
   QUOTE_REQUEST
   EMAIL_VERIFICATION
   PASSWORD_RESET
+}
+
+enum NotificationPriority {
+  LOW
+  MEDIUM
+  HIGH
 }
 
 enum VerificationPurpose {
@@ -104,6 +114,7 @@ model Admin {
   role      AdminRole  @default(SUPERADMIN)
   status    AccountStatus @default(ACTIVE)
   emailVerifiedAt DateTime?
+  lastLoginAt DateTime?
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   products  Product[]
@@ -158,6 +169,7 @@ model User {
   state            String?
   status           AccountStatus       @default(ACTIVE)
   emailVerifiedAt  DateTime?
+  lastLoginAt      DateTime?
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
   calculatorHistory CalculatorHistory[]
@@ -190,9 +202,14 @@ model Vendor {
   businessType     String
   experience       Int
   services         String[]            @default([])
+  certifications   String[]            @default([])
+  installationCount Int                @default(0)
+  warrantySupport  Boolean             @default(true)
+  responseTimeHours Int?
   password         String
   status           VendorStatus        @default(PENDING)
   emailVerifiedAt  DateTime?
+  lastLoginAt      DateTime?
   rejectionReason  String?
   approvedAt       DateTime?
   rejectedAt       DateTime?
@@ -366,6 +383,7 @@ model Notification {
   id          String                @id @default(cuid())
   audience    NotificationAudience
   type        NotificationType
+  priority    NotificationPriority  @default(MEDIUM)
   title       String
   body        String
   metadata    Json?

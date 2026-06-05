@@ -8,6 +8,7 @@ type NotificationItem = {
   id: string;
   title: string;
   body?: string;
+  description?: string;
   createdAt: string;
   isRead: boolean;
 };
@@ -56,7 +57,7 @@ export default function VendorNotificationsPage() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="font-semibold text-slate-900">{item.title}</p>
-                <p className="mt-1 text-sm text-slate-600">{item.body || "No details"}</p>
+                <p className="mt-1 text-sm text-slate-600">{item.description || item.body || "No details"}</p>
                 <p className="mt-1 text-xs text-slate-500">{new Date(item.createdAt).toLocaleString()}</p>
               </div>
               <div>
