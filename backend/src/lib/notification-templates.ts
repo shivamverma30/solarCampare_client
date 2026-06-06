@@ -51,6 +51,11 @@ export const notificationTemplates = {
     email: string;
     phone?: string | null;
     pincode?: string | null;
+    city?: string | null;
+    state?: string | null;
+    serviceName?: string;
+    inquiryType?: string;
+    message?: string | null;
     monthlyBill?: number | null;
     roofSize?: number | null;
     recommendedCapacity?: string;
@@ -59,16 +64,22 @@ export const notificationTemplates = {
     timestamp?: Date | string;
   }): NotificationTemplate {
     const timestamp = formatTimestamp(input.timestamp);
+    const isServiceInquiry = input.inquiryType === "service" || Boolean(input.serviceName);
+    const title = isServiceInquiry && input.serviceName ? `New Service Inquiry: ${input.serviceName}` : "New Quote Request";
 
     return {
-      title: "New Quote Request",
+      title,
       body: [
         "Lead Details",
         `Name: ${input.name}`,
         `Email: ${input.email}`,
         `Phone: ${input.phone || "-"}`,
+        `Service Required: ${input.serviceName || input.inquiryType || "Solar Quote"}`,
         `Pincode: ${input.pincode || "-"}`,
+        `City: ${input.city || "-"}`,
+        `State: ${input.state || "-"}`,
         "",
+        `Message: ${input.message || "-"}`,
         `Monthly Bill: ${input.monthlyBill ?? "-"}`,
         `Roof Size: ${input.roofSize ?? "-"}`,
         `Recommended Capacity: ${input.recommendedCapacity || "-"}`,

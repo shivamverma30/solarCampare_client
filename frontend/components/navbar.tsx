@@ -4,14 +4,14 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import BrandMark from "@/components/brand-mark";
-import { navLinks } from "@/data/site";
-import { ChevronDown, Globe, Menu, PanelTop, ShieldCheck, X } from "lucide-react";
+import { ChevronDown, Globe, Menu, X } from "lucide-react";
 import { useLocale } from "@/components/locale-provider";
+import { servicePages } from "@/data/service-pages";
+import { infoPages } from "@/data/info-pages";
 
 type NavLinkItem = {
   label: string;
   href: string;
-  description: string;
 };
 
 type NavGroup = {
@@ -19,40 +19,6 @@ type NavGroup = {
   href?: string;
   items: NavLinkItem[];
 };
-
-const menuGroups: NavGroup[] = [
-  {
-    label: "Solutions",
-    href: "/calculator",
-    items: [
-      { label: "Solar Calculator", href: "/calculator", description: "Estimate roof size, savings, subsidy, and payback." },
-      { label: "EMI Calculator", href: "/emi", description: "Model loan amount, tenure, and monthly repayment." },
-      { label: "Panel Comparison", href: "/compare", description: "Evaluate technical and commercial tradeoffs side by side." },
-    ],
-  },
-  {
-    label: "Company",
-    href: "/#our-products",
-    items: [
-      { label: "Our Products", href: "/#our-products", description: "Browse premium solar products and brand highlights." },
-      { label: "Verified Vendors", href: "/", description: "Explore the vendor network and service coverage." },
-      { label: "How It Works", href: "/", description: "See the guided solar buying flow from inquiry to install." },
-    ],
-  },
-  {
-    label: "Resources",
-    href: "/compare",
-    items: [
-      { label: "Government Schemes", href: "/", description: "Understand subsidy context and eligibility basics." },
-      { label: "Education Center", href: "/", description: "Learn the fundamentals behind the solar journey." },
-      { label: "Contact Support", href: "/login", description: "Reach the team or continue to account access." },
-    ],
-  },
-];
-
-function getLabel(item: { labelKey?: string; label?: string }, t: (key: string) => string) {
-  return item.labelKey ? t(item.labelKey) : item.label || "";
-}
 
 function LanguageSwitcher({
   locale,
@@ -152,8 +118,8 @@ function DropdownGroup({
 }) {
   const triggerStyles = overlay
     ? isActive
-      ? "bg-white/16 text-white font-semibold ring-1 ring-white/20"
-      : "border-transparent text-white/95 hover:bg-white/10 hover:text-white/95"
+      ? "border-white/18 bg-white/14 text-white font-semibold ring-1 ring-white/20"
+      : "border-white/10 text-white/95 hover:border-white/18 hover:bg-white/10 hover:text-white"
     : isActive
       ? "border-slate-900/10 bg-slate-50 text-slate-900 font-semibold shadow-sm"
       : "border-transparent text-slate-600 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900";
@@ -174,12 +140,12 @@ function DropdownGroup({
       </button>
 
       <div
-        className={`absolute left-0 top-[calc(100%+0.75rem)] w-104 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_28px_60px_rgba(15,23,42,0.12)] transition-all duration-200 ${
+        className={`absolute left-0 top-[calc(100%+0.75rem)] w-104 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl border border-slate-200/80 bg-white/98 shadow-[0_24px_50px_rgba(15,23,42,0.12)] transition-all duration-200 ${
           isOpen ? "translate-y-0 scale-100 opacity-100" : "pointer-events-none -translate-y-2 scale-[0.98] opacity-0"
         } lg:group-hover:pointer-events-auto lg:group-hover:translate-y-0 lg:group-hover:scale-100 lg:group-hover:opacity-100`}
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="grid gap-2 p-3">
+        <div className="p-2">
           {group.items.map((item) => {
             const active = pathname === item.href || (item.href.startsWith("/#") && pathname === "/");
             const itemKey = `${group.label}-${item.label}-${item.href}`;
@@ -189,31 +155,17 @@ function DropdownGroup({
                 key={itemKey}
                 href={item.href}
                 onClick={closeMenu}
-                className={`rounded-2xl border px-4 py-3 transition ${
+                className={`flex items-center justify-between rounded-xl px-3.5 py-3 text-sm transition ${
                   active
-                    ? "border-slate-200 bg-slate-50"
-                    : "border-transparent hover:border-slate-200 hover:bg-slate-50"
+                    ? "bg-slate-50 text-slate-950"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"
                 }`}
               >
-                <div className="flex items-start gap-3">
-                  <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-700">
-                    {group.label === "Company" ? <ShieldCheck className="h-4 w-4" /> : <PanelTop className="h-4 w-4" />}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-sm font-semibold text-slate-900">{item.label}</span>
-                    <span className="mt-1 block text-xs leading-5 text-slate-500">{item.description}</span>
-                  </span>
-                </div>
+                <span className="font-medium">{item.label}</span>
+                <ChevronDown className="h-4 w-4 -rotate-90 text-slate-400" />
               </Link>
             );
           })}
-        </div>
-        <div className="border-t border-slate-100 bg-slate-50 px-4 py-3 text-xs text-slate-500">
-          {group.href ? (
-            <Link href={group.href} onClick={closeMenu} className="font-semibold text-slate-700 transition hover:text-slate-900">
-              Explore {group.label.toLowerCase()}
-            </Link>
-          ) : null}
         </div>
       </div>
     </div>
@@ -227,8 +179,73 @@ export default function Navbar() {
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
 
+  const closeMenus = () => {
+    setMobileOpen(false);
+    setActiveGroup(null);
+  };
+
+  const serviceGroupItems = useMemo(
+    () =>
+      [
+        "residential-solar",
+        "industrial-solar",
+        "solar-loan",
+        "solar-cleaning",
+        "ground-mounted-solar",
+        "solar-maintenance",
+      ]
+        .map((slug) => servicePages.find((service) => service.slug === slug))
+        .filter((service): service is (typeof servicePages)[number] => Boolean(service))
+        .map((service) => ({
+          label: service.title,
+          href: `/services/${service.slug}`,
+        })),
+    []
+  );
+
+  const moreGroupItems = useMemo(
+    () =>
+      [
+        "about-us",
+        "contact-us",
+        "blogs",
+        "faq",
+        "how-it-works",
+        "subsidy-information",
+        "vendor-network",
+        "financing-options",
+      ]
+        .map((slug) => infoPages.find((page) => page.slug === slug))
+        .filter((page): page is (typeof infoPages)[number] => Boolean(page))
+        .map((page) => ({
+          label: page.title,
+          href: `/more/${page.slug}`,
+        })),
+    []
+  );
+
+  const primaryLinks = [
+    { label: t("nav.home"), href: "/" },
+    { label: t("nav.calculator"), href: "/calculator" },
+    { label: t("nav.compare"), href: "/compare" },
+    { label: t("nav.emi"), href: "/emi" },
+  ];
+
+  const menuGroups: NavGroup[] = [
+    {
+      label: t("nav.services"),
+      href: "/services",
+      items: serviceGroupItems,
+    },
+    {
+      label: t("nav.more"),
+      href: "/more",
+      items: moreGroupItems,
+    },
+  ];
+
   const isHome = pathname === "/";
-  const overlay = isHome && !isScrolled;
+  const overlay = isHome && !isScrolled && !mobileOpen;
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 24);
@@ -249,51 +266,43 @@ export default function Navbar() {
     return () => window.removeEventListener("keydown", handleEscape);
   }, []);
 
-  const primaryLinks = useMemo(() => navLinks.filter((link) => link.href !== "/#our-products"), []);
-
-  const closeMenus = () => {
-    setMobileOpen(false);
-    setActiveGroup(null);
-  };
-
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 border-b transition-all duration-300 ${
+      className={`fixed inset-x-0 top-0 z-90 border-b transition-[background-color,box-shadow,transform] duration-300 ${
         overlay
-          ? "border-transparent bg-[rgba(0,0,0,0.28)] backdrop-blur-md text-white"
-          : "border-slate-200 bg-white text-slate-900 shadow-[0_14px_40px_rgba(15,23,42,0.08)]"
+          ? "border-white/18 bg-slate-950/12 text-white shadow-[0_16px_40px_rgba(2,6,23,0.14)] backdrop-blur-2xl"
+          : "border-slate-200/80 bg-white/96 text-slate-900 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur-xl"
       }`}
     >
-      <div className={`mx-auto flex w-full max-w-screen-2xl items-center gap-4 px-4 py-3 sm:px-6 lg:px-8 ${overlay ? "lg:py-4" : "lg:py-3.5"}`}>
-        <div className="flex min-w-0 flex-1 items-center gap-3">
+      <div className={`mx-auto flex w-full max-w-screen-2xl items-center gap-4 px-1 py-3 sm:px-3 lg:px-4 ${overlay ? "lg:py-4" : "lg:py-3.5"}`}>
+        <div className="flex min-w-0 flex-1 items-center gap-8">
           <BrandMark
             href="/"
             compact
-            titleClassName={overlay ? "text-white" : "text-slate-900"}
-            taglineClassName={overlay ? "text-white/70" : "text-slate-500"}
+            titleClassName={overlay ? "text-white drop-shadow-sm" : "text-slate-900"}
+            taglineClassName={overlay ? "text-white/75" : "text-slate-500"}
           />
 
-          <div className="hidden xl:flex min-w-0 items-center gap-2 pl-4">
+          <div className="hidden min-w-0 items-center gap-6 pl-14 xl:flex">
             {primaryLinks.map((link) => {
-              const label = getLabel(link, t);
               const isActive = pathname === link.href;
-              const navKey = `${link.href}-${label}`;
+              const navKey = `${link.href}-${link.label}`;
 
               return (
                 <Link
                   key={navKey}
                   href={link.href}
-                  className={`rounded-full px-4 py-2 text-sm font-medium transition focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${
+                  className={`rounded-full px-4 py-2 text-sm font-medium transition focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${
                     overlay
                       ? isActive
                         ? "bg-white/16 text-white font-semibold ring-1 ring-white/20"
-                        : "text-white/95 hover:bg-white/10 hover:text-white/95"
+                        : "text-white/92 hover:bg-white/10 hover:text-white"
                       : isActive
                         ? "bg-slate-100 text-slate-900 font-semibold ring-1 ring-slate-200"
                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                   }`}
                 >
-                  {label}
+                  {link.label}
                 </Link>
               );
             })}
@@ -313,12 +322,12 @@ export default function Navbar() {
           </div>
         </div>
 
-        <div className="hidden items-center gap-3 lg:flex">
+        <div className="hidden items-center gap-6 lg:flex">
           <LanguageSwitcher locale={locale} setLocale={setLocale} overlay={overlay} />
 
           <Link
             href="/login"
-            className={`inline-flex h-11 items-center rounded-full border px-5 text-sm font-medium transition focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 ${
+            className={`inline-flex h-11 items-center rounded-full border px-5 text-sm font-medium transition focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 ${
               overlay
                 ? "border-white/18 bg-white/10 text-white hover:bg-white/16 focus-visible:ring-white/30"
                 : "border-slate-200 bg-white text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50"
@@ -329,7 +338,7 @@ export default function Navbar() {
 
           <Link
             href="/calculator"
-            className="inline-flex h-11 items-center rounded-full bg-slate-950 px-5 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(15,23,42,0.14)] transition hover:bg-slate-800 focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+            className="inline-flex h-11 items-center rounded-full bg-slate-950 px-5 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(15,23,42,0.14)] transition hover:bg-slate-800 focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2"
           >
             {t("buttons.getProposal")}
           </Link>
@@ -338,7 +347,7 @@ export default function Navbar() {
         <button
           type="button"
           onClick={() => setMobileOpen((value) => !value)}
-          className={`inline-flex h-11 w-11 items-center justify-center rounded-full border transition lg:hidden focus-visible:ring-2 focus-visible:ring-amber-400 ${
+          className={`inline-flex h-11 w-11 items-center justify-center rounded-full border transition lg:hidden focus-visible:ring-2 focus-visible:ring-emerald-400 ${
             overlay
               ? "border-white/18 bg-white/10 text-white"
               : "border-slate-200 bg-white text-slate-700 shadow-sm"
@@ -351,13 +360,12 @@ export default function Navbar() {
       </div>
 
       <div
-        className={`lg:hidden ${mobileOpen ? "max-h-[calc(100vh-4rem)] opacity-100" : "pointer-events-none max-h-0 opacity-0"} overflow-hidden border-t border-slate-200 bg-white/98 backdrop-blur-xl transition-all duration-300`}
+        className={`lg:hidden ${mobileOpen ? "max-h-[calc(100vh-4rem)] opacity-100" : "pointer-events-none max-h-0 opacity-0"} overflow-hidden border-t border-slate-200/80 bg-white/98 backdrop-blur-xl transition-all duration-300`}
       >
         <div className="mx-auto w-full max-w-screen-2xl px-4 py-4 sm:px-6">
           <nav className="space-y-3">
             {primaryLinks.map((link) => {
-              const label = getLabel(link, t);
-              const navKey = `${link.href}-${label}`;
+              const navKey = `${link.href}-${link.label}`;
 
               return (
                 <Link
@@ -366,7 +374,7 @@ export default function Navbar() {
                   onClick={closeMenus}
                   className="flex items-center justify-between rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900"
                 >
-                  <span>{label}</span>
+                  <span>{link.label}</span>
                   <ChevronDown className="h-4 w-4 -rotate-90 text-slate-400" />
                 </Link>
               );
@@ -387,7 +395,7 @@ export default function Navbar() {
                     <ChevronDown className={`h-4 w-4 transition ${isOpen ? "rotate-180" : ""}`} />
                   </button>
 
-                  <div className={`${isOpen ? "block" : "hidden"} space-y-2 border-t border-slate-200 px-3 py-3`}>
+                  <div className={`${isOpen ? "block" : "hidden"} border-t border-slate-200 px-2 py-2`}>
                     {group.items.map((item) => {
                       const itemKey = `${group.label}-${item.label}-${item.href}`;
 
@@ -396,10 +404,10 @@ export default function Navbar() {
                           key={itemKey}
                           href={item.href}
                           onClick={closeMenus}
-                          className="block rounded-xl bg-white px-4 py-3 text-sm text-slate-600 shadow-sm transition hover:text-slate-900"
+                          className="flex items-center justify-between rounded-xl px-3 py-3 text-sm text-slate-700 transition hover:bg-white hover:text-slate-950"
                         >
-                          <span className="block font-medium text-slate-900">{item.label}</span>
-                          <span className="mt-1 block text-xs leading-5 text-slate-500">{item.description}</span>
+                          <span className="font-medium">{item.label}</span>
+                          <ChevronDown className="h-4 w-4 -rotate-90 text-slate-400" />
                         </Link>
                       );
                     })}

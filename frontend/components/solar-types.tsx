@@ -33,7 +33,7 @@ export default function SolarTypes() {
     {
       key: "onGrid",
       icon: "☀️",
-      color: "amber",
+      color: "emerald",
     },
     {
       key: "offGrid",
@@ -50,7 +50,7 @@ export default function SolarTypes() {
   return (
     <section id="solar-types" className="mx-auto mt-16 w-full max-w-7xl px-4 md:px-8">
       <div className="mb-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-amber-500">
+        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-600">
           {t("solarTypes.eyebrow")}
         </p>
         <h2 className="mt-3 font-serif text-3xl text-slate-900 md:text-4xl">
@@ -75,7 +75,7 @@ export default function SolarTypes() {
                 <span className="text-3xl">{type.icon}</span>
               </div>
 
-              <p className="mb-2 inline-block rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-amber-700">
+              <p className="mb-2 inline-block rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-emerald-700">
                 {typeData.badge}
               </p>
 
@@ -109,7 +109,7 @@ export default function SolarTypes() {
       {/* Panel Types Info */}
       <div className="mt-10 grid gap-4 md:grid-cols-3">
         <div className="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-amber-600">
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-emerald-600">
             Panel Types Available
           </p>
           <div className="mt-4 space-y-2">
@@ -124,14 +124,14 @@ export default function SolarTypes() {
                 className="flex justify-between rounded-lg bg-slate-50 p-2 text-sm"
               >
                 <span className="text-slate-600">{panel.name}</span>
-                <span className="font-semibold text-amber-600">{panel.eff}</span>
+                <span className="font-semibold text-emerald-700">{panel.eff}</span>
               </div>
             ))}
           </div>
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-amber-600">
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-emerald-600">
             Inverter Types
           </p>
           <div className="mt-4 space-y-2">
@@ -152,7 +152,7 @@ export default function SolarTypes() {
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-amber-600">
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-emerald-600">
             Installation Types
           </p>
           <div className="mt-4 space-y-2">

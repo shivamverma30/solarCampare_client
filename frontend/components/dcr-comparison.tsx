@@ -63,7 +63,7 @@ export default function DCRComparisonSection() {
   return (
     <section id="dcr-comparison" className="mx-auto mt-20 w-full max-w-7xl px-4 md:px-8">
       <div className="mb-12 text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-amber-500">
+        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-600">
           Detailed Comparison
         </p>
         <h2 className="mt-3 font-serif text-3xl text-slate-900 md:text-4xl">
@@ -225,12 +225,12 @@ export default function DCRComparisonSection() {
       </div>
 
       {/* Decision Helper */}
-      <div className="rounded-2xl bg-linear-to-r from-amber-50 to-orange-50 border-2 border-amber-200 p-8">
+      <div className="rounded-2xl bg-linear-to-r from-emerald-50 to-slate-50 border-2 border-emerald-200 p-8">
         <h3 className="text-2xl font-bold text-slate-900 mb-8">Which Should You Choose?</h3>
         
         <div className="grid gap-6 md:grid-cols-2">
           <div className="rounded-xl bg-white p-6">
-            <h4 className="font-bold text-emerald-700 mb-4">Choose DCR If...</h4>
+            <h4 className="mb-4 font-bold text-emerald-700">Choose DCR If...</h4>
             <ul className="space-y-2 text-sm text-slate-700">
               <li className="flex gap-2">
                 <Check className="h-4 w-4 shrink-0 text-emerald-500 mt-0.5" />
@@ -252,22 +252,22 @@ export default function DCRComparisonSection() {
           </div>
 
           <div className="rounded-xl bg-white p-6">
-            <h4 className="font-bold text-blue-700 mb-4">Choose Non-DCR If...</h4>
+            <h4 className="mb-4 font-bold text-slate-700">Choose Non-DCR If...</h4>
             <ul className="space-y-2 text-sm text-slate-700">
               <li className="flex gap-2">
-                <Check className="h-4 w-4 shrink-0 text-blue-500 mt-0.5" />
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
                 <span>Premium efficiency is important</span>
               </li>
               <li className="flex gap-2">
-                <Check className="h-4 w-4 shrink-0 text-blue-500 mt-0.5" />
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
                 <span>You want extended warranty (30 years)</span>
               </li>
               <li className="flex gap-2">
-                <Check className="h-4 w-4 shrink-0 text-blue-500 mt-0.5" />
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
                 <span>You have limited roof space</span>
               </li>
               <li className="flex gap-2">
-                <Check className="h-4 w-4 shrink-0 text-blue-500 mt-0.5" />
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
                 <span>Long-term output & performance matter more</span>
               </li>
             </ul>

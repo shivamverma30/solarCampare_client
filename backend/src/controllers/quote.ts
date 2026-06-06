@@ -44,11 +44,20 @@ export const createQuoteRequest = async (req: AuthRequest, res: Response): Promi
       },
     });
 
+    const metadataRecord = metadata && typeof metadata === "object" && metadata !== null ? (metadata as Record<string, unknown>) : {};
+    const serviceName = typeof metadataRecord.serviceName === "string" ? metadataRecord.serviceName : undefined;
+    const inquiryType = typeof metadataRecord.inquiryType === "string" ? metadataRecord.inquiryType : undefined;
+
     const notification = notificationTemplates.quoteRequest({
       name: String(fullName),
       email: String(email),
       phone: phone ? String(phone) : null,
       pincode: pincode ? String(pincode) : null,
+      city: city ? String(city) : null,
+      state: state ? String(state) : null,
+      serviceName,
+      inquiryType,
+      message: notes ? String(notes) : null,
       monthlyBill: monthlyBill ? Number(monthlyBill) : null,
       roofSize: roofSize ? Number(roofSize) : null,
       recommendedCapacity: metadata && typeof metadata === "object" && metadata !== null && "recommendedKw" in metadata ? `${Number((metadata as Record<string, unknown>).recommendedKw || 0).toFixed(1)} kW` : undefined,
@@ -74,10 +83,7 @@ export const createQuoteRequest = async (req: AuthRequest, res: Response): Promi
       },
     });
 
-    await safeEmailDispatch(
-      "New quote request",
-      `${fullName} (${email}) submitted a quote request${pincode ? ` for PIN ${pincode}` : ""}.`
-    );
+    await safeEmailDispatch(notification.title, notification.body);
 
     res.status(201).json({ success: true, quoteRequest });
   } catch (error) {

@@ -24,7 +24,7 @@ export default function AppShell({ children }: AppShellProps) {
   return (
     <div className="relative min-h-screen flex flex-col overflow-x-hidden">
       <LocaleProvider>
-        <Navbar />
+        <Navbar key={pathname} />
         <main className={isHomePage ? "pt-0 flex-1" : "pt-24 flex-1"}>{children}</main>
         <Footer />
         <ChatbotPopup />

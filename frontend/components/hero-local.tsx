@@ -9,60 +9,44 @@ export default function HeroLocal() {
   const { t } = useLocale()
 
   return (
-    <section className="relative mx-auto min-h-[88vh] w-full max-w-375 overflow-hidden rounded-none px-4 pb-16 pt-28 shadow-2xl md:px-8 md:pb-20 md:pt-32">
-      <HeroSlider />
-      <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,380px)] lg:items-start">
-        <div>
-          <p className="inline-flex rounded-full border border-white/30 bg-white/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.26em] text-white backdrop-blur">
-            {t("site.tagline")}
+    <section className="relative isolate mx-auto w-full max-w-375 overflow-hidden px-4 pb-0 pt-24 md:px-8 md:pt-28 min-h-screen">
+      <div className="absolute inset-0 -z-20 bg-[linear-gradient(180deg,rgba(255,255,255,0.1),rgba(255,255,255,0.64))]" />
+      <HeroSlider background />
+      <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(2,6,23,0.24),rgba(2,6,23,0.42),rgba(2,6,23,0.18))]" />
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.18),transparent_28%),radial-gradient(circle_at_top_right,rgba(255,255,255,0.12),transparent_24%)]" />
+
+      <div className="relative z-10 mx-auto grid max-w-7xl items-start gap-8 lg:grid-cols-1 lg:gap-12">
+        <div className="space-y-7 max-w-4xl">
+          <p className="inline-flex rounded-full border border-emerald-300/30 bg-emerald-500/14 px-4 py-2 text-xs font-semibold uppercase tracking-[0.26em] text-emerald-100 shadow-sm">
+            {t("site.premium")}
           </p>
 
-          <h1 className="mt-5 max-w-4xl text-3xl leading-tight text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)] sm:text-4xl md:mt-6 md:text-5xl">
+          <h1 className="max-w-4xl text-4xl leading-tight text-white sm:text-5xl md:text-6xl">
             {t("site.heroTitle")}
           </h1>
 
-          <p className="mt-4 max-w-2xl text-base leading-7 text-white/92 md:mt-5 md:text-lg md:leading-8">
+          <p className="max-w-2xl text-base leading-7 text-slate-100/88 md:text-lg md:leading-8">
             {t("site.heroDescription")}
           </p>
 
-          <div className="mt-7 flex flex-wrap gap-3 md:mt-8">
+          <div className="flex flex-wrap items-stretch gap-3">
             <Link
               href="/calculator"
-              className="rounded-full border border-amber-200/80 bg-amber-400 px-7 py-3 text-sm font-semibold text-black shadow-[0_10px_30px_rgba(251,191,36,0.35)] transition hover:bg-amber-300"
+              className="inline-flex h-12 items-center justify-center rounded-full border border-emerald-400/30 bg-emerald-500 px-7 text-sm font-semibold text-white shadow-[0_10px_26px_rgba(15,23,42,0.28)] transition hover:bg-emerald-600"
             >
               {t("buttons.calculateMySavings")}
             </Link>
             <Link
               href="/compare"
-              className="rounded-full border border-white/55 bg-white/18 px-7 py-3 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/30"
+              className="inline-flex h-12 items-center justify-center rounded-full border border-white/20 bg-white/10 px-7 text-sm font-semibold text-white shadow-sm transition hover:border-white/30 hover:bg-white/18"
             >
               {t("buttons.comparePanels")}
             </Link>
           </div>
-
-          <div className="mt-10 md:mt-12">
-            <div className="rounded-[28px] bg-[rgba(255,255,255,0.14)] backdrop-blur-[20px] border border-white/20 p-4 shadow-[0_10px_30px_rgba(2,6,23,0.12)] ring-1 ring-white/10 md:p-6">
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="text-center">
-                  <p className="text-4xl font-extrabold text-white">12,000+</p>
-                  <p className="mt-1 text-sm text-white/70">{t("home.statSystems")}</p>
-                </div>
-
-                <div className="text-center">
-                  <p className="text-4xl font-extrabold text-white">INR 18Cr+</p>
-                  <p className="mt-1 text-sm text-white/70">{t("home.statSavings")}</p>
-                </div>
-
-                <div className="text-center">
-                  <p className="text-4xl font-extrabold text-white">4.9/5</p>
-                  <p className="mt-1 text-sm text-white/70">{t("home.statRating")}</p>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
-        <div className="mt-4 lg:mt-0 lg:justify-self-end">
+        {/* Compact countdown positioned top-right on large screens */}
+        <div className="absolute right-6 top-6 z-20 hidden lg:block">
           <Countdown variant="hero" />
         </div>
       </div>

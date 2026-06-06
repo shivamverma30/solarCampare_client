@@ -1,10 +1,11 @@
 {
   "nav": {
     "home": "Home",
-    "products": "Our Products",
     "calculator": "Solar Calculator",
     "compare": "Compare Panels",
-    "emi": "EMI Calculator"
+    "emi": "EMI Calculator",
+    "services": "Services",
+    "more": "More"
   },
   "buttons": {
     "login": "Login",
@@ -21,13 +22,10 @@
   "site": {
     "tagline": "Solar Compare by SAFWE ENERGY",
     "premium": "Premium Solar Intelligence Platform",
-    "heroTitle": "Build a future-ready solar system with confidence, speed, and transparent economics.",
-    "heroDescription": "Compare top brands, estimate savings, and calculate financing in one cinematic buying experience crafted for premium homeowners and businesses."
+    "heroTitle": "Compare solar brands, savings, subsidies, and trusted installers in one place.",
+    "heroDescription": "Built for Indian homes and businesses that want a clearer solar decision: compare panel options, estimate savings, understand subsidy support, and explore financing with confidence."
   },
   "home": {
-    "statSystems": "Systems Assessed",
-    "statSavings": "Projected Client Savings",
-    "statRating": "Average Client Rating",
     "ourProducts": "Our Products",
     "topProducts": "Top Solar Products",
     "productsDescription": "Compare premium solar brands with transparent specifications and trusted performance.",
@@ -269,5 +267,24 @@
     "monthlyBill": "Monthly Bill (₹)",
     "interest": "Interest",
     "requestConsultation": "Request Free Consultation"
+  },
+  "more": {
+    "aboutUs": "About Us",
+    "contactUs": "Contact Us",
+    "blogs": "Blogs",
+    "faqs": "FAQs",
+    "subsidyInformation": "Subsidy Information",
+    "whySolarCompare": "Why Solar Compare",
+    "howItWorks": "How It Works",
+    "vendorNetwork": "Vendor Network",
+    "financingOptions": "Financing Options"
+  },
+  "services": {
+    "residentialSolar": "Residential Solar",
+    "industrialSolar": "Industrial Solar",
+    "solarLoan": "Solar Loan",
+    "solarCleaning": "Solar Cleaning",
+    "groundMountedSolar": "Ground Mounted Solar",
+    "solarMaintenance": "Solar Maintenance"
   }
 }

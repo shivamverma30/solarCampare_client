@@ -29,10 +29,60 @@ type UserStats = {
   recentNotifications?: Array<{ id: string; title: string; description?: string; createdAt: string; isRead: boolean; priority?: string }>;
 };
 
+type TrackerStatus =
+  | "CONSULTATION_REQUESTED"
+  | "REQUEST_REVIEWED"
+  | "VENDOR_ASSIGNED"
+  | "APPOINTMENT_SCHEDULED"
+  | "SITE_VISIT_COMPLETED"
+  | "PROPOSAL_SHARED"
+  | "NEGOTIATION"
+  | "PROJECT_CONFIRMED"
+  | "INSTALLATION_IN_PROGRESS"
+  | "INSTALLATION_COMPLETED";
+
+type ConsultationTrackingEntry = {
+  id: string;
+  status: TrackerStatus;
+  notes?: string | null;
+  updatedBy: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type UserConsultation = {
+  id: string;
+  status: string;
+  createdAt: string;
+  vendor?: {
+    id: string;
+    companyName: string;
+    ownerName: string;
+    city?: string | null;
+    state?: string | null;
+  } | null;
+  consultationTracking: ConsultationTrackingEntry[];
+};
+
+const trackerFlow: Array<{ key: TrackerStatus; label: string }> = [
+  { key: "CONSULTATION_REQUESTED", label: "Consultation Requested" },
+  { key: "REQUEST_REVIEWED", label: "Request Reviewed" },
+  { key: "VENDOR_ASSIGNED", label: "Vendor Assigned" },
+  { key: "APPOINTMENT_SCHEDULED", label: "Appointment Scheduled" },
+  { key: "SITE_VISIT_COMPLETED", label: "Site Visit Completed" },
+  { key: "PROPOSAL_SHARED", label: "Proposal Shared" },
+  { key: "NEGOTIATION", label: "Negotiation / Discussion" },
+  { key: "PROJECT_CONFIRMED", label: "Project Confirmed" },
+  { key: "INSTALLATION_IN_PROGRESS", label: "Installation In Progress" },
+  { key: "INSTALLATION_COMPLETED", label: "Installation Completed" },
+];
+
 export default function UserDashboardPage() {
   const [stats, setStats] = useState<UserStats | null>(null);
+  const [consultations, setConsultations] = useState<UserConsultation[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [trackerLoading, setTrackerLoading] = useState(true);
   const [savedVendorIds, setSavedVendorIds] = useState<string[]>([]);
   const [consultationToast, setConsultationToast] = useState("");
   const [requestingVendorId, setRequestingVendorId] = useState<string | null>(null);
@@ -52,14 +102,25 @@ export default function UserDashboardPage() {
     const run = async () => {
       const token = getToken();
       if (!token) return;
-      const response = await apiClient.dashboard.getUserStats(token);
-      if (!response.success) {
-        setError(response.error || "Failed to load dashboard");
-        setLoading(false);
-        return;
+      const [statsResponse, consultationsResponse] = await Promise.all([
+        apiClient.dashboard.getUserStats(token),
+        apiClient.leads.getUserConsultations(token),
+      ]);
+
+      if (!statsResponse.success) {
+        setError(statsResponse.error || "Failed to load dashboard");
+      } else {
+        setStats(statsResponse.stats as UserStats);
       }
-      setStats(response.stats as UserStats);
+
+      if (consultationsResponse.success) {
+        setConsultations((consultationsResponse.consultations as UserConsultation[]) || []);
+      } else {
+        setError((current) => current || consultationsResponse.error || "Failed to load consultation tracker");
+      }
+
       setLoading(false);
+      setTrackerLoading(false);
     };
 
     void run();
@@ -89,6 +150,10 @@ export default function UserDashboardPage() {
 
     if (response.success) {
       setConsultationToast("✅ Consultation request sent successfully.");
+      const consultationsResponse = await apiClient.leads.getUserConsultations(token);
+      if (consultationsResponse.success) {
+        setConsultations((consultationsResponse.consultations as UserConsultation[]) || []);
+      }
       window.setTimeout(() => setConsultationToast(""), 3000);
     } else {
       setError(response.error || "Failed to send consultation request");
@@ -204,6 +269,34 @@ export default function UserDashboardPage() {
       <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_20px_50px_rgba(15,23,42,0.06)] md:p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-600">Application Tracker</p>
+            <h2 className="mt-2 text-xl font-semibold text-slate-950">Track the progress of your solar consultation request.</h2>
+          </div>
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{consultations.length} requests</span>
+        </div>
+
+        <div className="mt-5 space-y-4">
+          {trackerLoading ? (
+            <div className="space-y-3">
+              {[1, 2].map((item) => (
+                <div key={item} className="h-36 animate-pulse rounded-2xl border border-slate-200 bg-slate-50" />
+              ))}
+            </div>
+          ) : consultations.length ? (
+            consultations.map((consultation) => (
+              <ConsultationTrackerCard key={consultation.id} consultation={consultation} />
+            ))
+          ) : (
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-sm text-slate-600">
+              No consultation tracker entries yet. Use Request Consultation on a vendor card to start tracking.
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_20px_50px_rgba(15,23,42,0.06)] md:p-6">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
             <h2 className="text-xl font-semibold text-slate-950">Nearby Vendors</h2>
             <p className="mt-1 text-sm text-slate-600">Matched by your pincode first, then city/state proximity.</p>
           </div>
@@ -257,6 +350,57 @@ export default function UserDashboardPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+function ConsultationTrackerCard({ consultation }: { consultation: UserConsultation }) {
+  const latest = consultation.consultationTracking[consultation.consultationTracking.length - 1];
+  const activeIndex = latest ? trackerFlow.findIndex((step) => step.key === latest.status) : -1;
+  const notes = consultation.consultationTracking.filter((entry) => Boolean(entry.notes));
+
+  return (
+    <article className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 md:p-5">
+      <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-slate-950">{consultation.vendor?.companyName || "Assigned vendor pending"}</p>
+          <p className="mt-1 text-xs uppercase tracking-[0.2em] text-slate-500">Consultation ID: {consultation.id}</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
+          Last update: {latest ? new Date(latest.createdAt).toLocaleString() : new Date(consultation.createdAt).toLocaleString()}
+        </div>
+      </div>
+
+      <div className="mt-4 space-y-2">
+        {trackerFlow.map((step, index) => {
+          const isDone = index < activeIndex;
+          const isCurrent = index === activeIndex;
+          const baseTone = isDone ? "text-emerald-700" : isCurrent ? "text-sky-700" : "text-slate-400";
+          const symbol = isDone ? "✓" : isCurrent ? "●" : "○";
+          return (
+            <div key={`${consultation.id}-${step.key}`} className={`flex items-center gap-2 text-sm font-medium ${baseTone}`}>
+              <span aria-hidden="true" className="w-4 text-center">{symbol}</span>
+              <span>{step.label}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-4 rounded-xl border border-slate-200 bg-white p-3">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Notes</p>
+        {notes.length ? (
+          <div className="mt-2 space-y-2">
+            {notes.slice(-3).reverse().map((entry) => (
+              <div key={entry.id} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                <p className="text-sm text-slate-700">{entry.notes}</p>
+                <p className="mt-1 text-xs text-slate-500">{new Date(entry.createdAt).toLocaleString()}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-2 text-sm text-slate-500">No notes added yet.</p>
+        )}
+      </div>
+    </article>
   );
 }
 

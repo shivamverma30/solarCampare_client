@@ -14,15 +14,36 @@ type Lead = {
   status: string;
   vendorId: string;
   createdAt: string;
+  consultationTracking?: Array<{
+    id: string;
+    status: string;
+    notes?: string | null;
+    createdAt: string;
+    updatedBy: string;
+  }>;
 };
 
 const leadStatuses = ["NEW", "CONTACTED", "VENDOR_ASSIGNED", "NEGOTIATION", "CLOSED_WON", "CLOSED_LOST"];
+const trackerStatuses = [
+  "CONSULTATION_REQUESTED",
+  "REQUEST_REVIEWED",
+  "VENDOR_ASSIGNED",
+  "APPOINTMENT_SCHEDULED",
+  "SITE_VISIT_COMPLETED",
+  "PROPOSAL_SHARED",
+  "NEGOTIATION",
+  "PROJECT_CONFIRMED",
+  "INSTALLATION_IN_PROGRESS",
+  "INSTALLATION_COMPLETED",
+];
 
 export default function AdminLeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [trackerStatusByLead, setTrackerStatusByLead] = useState<Record<string, string>>({});
+  const [trackerNotesByLead, setTrackerNotesByLead] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const load = async () => {
@@ -37,7 +58,15 @@ export default function AdminLeadsPage() {
       if (!response.success) {
         setError(response.error || "Failed to load leads");
       } else {
-        setLeads((response.leads as Lead[]) || []);
+        const rows = (response.leads as Lead[]) || [];
+        setLeads(rows);
+        setTrackerStatusByLead(
+          rows.reduce<Record<string, string>>((acc, lead) => {
+            const latest = lead.consultationTracking?.[lead.consultationTracking.length - 1];
+            acc[lead.id] = latest?.status || "CONSULTATION_REQUESTED";
+            return acc;
+          }, {})
+        );
       }
 
       setLoading(false);
@@ -57,6 +86,38 @@ export default function AdminLeadsPage() {
       setLeads((current) => current.map((lead) => (lead.id === id ? { ...lead, status } : lead)));
     } else {
       setError(response.error || "Failed to update lead");
+    }
+
+    setBusyId(null);
+  };
+
+  const updateTracker = async (id: string) => {
+    const token = getToken();
+    if (!token) return;
+
+    const status = trackerStatusByLead[id] || "CONSULTATION_REQUESTED";
+    const notes = trackerNotesByLead[id] || "";
+
+    setBusyId(id);
+    const response = await apiClient.leads.updateConsultationTracker(token, id, status, notes);
+
+    if (response.success && response.tracking) {
+      setLeads((current) =>
+        current.map((lead) => {
+          if (lead.id !== id) return lead;
+          const existing = lead.consultationTracking || [];
+          return {
+            ...lead,
+            consultationTracking: [
+              ...existing,
+              response.tracking as { id: string; status: string; notes?: string | null; createdAt: string; updatedBy: string },
+            ],
+          };
+        })
+      );
+      setTrackerNotesByLead((current) => ({ ...current, [id]: "" }));
+    } else {
+      setError(response.error || "Failed to update tracker");
     }
 
     setBusyId(null);
@@ -134,6 +195,48 @@ export default function AdminLeadsPage() {
                     ))}
                   </div>
                 </div>
+              </div>
+
+              <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-700">Update Tracker Status</p>
+                <div className="mt-3 grid gap-3 md:grid-cols-[1fr_2fr_auto] md:items-start">
+                  <select
+                    value={trackerStatusByLead[lead.id] || "CONSULTATION_REQUESTED"}
+                    onChange={(event) => setTrackerStatusByLead((current) => ({ ...current, [lead.id]: event.target.value }))}
+                    className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
+                  >
+                    {trackerStatuses.map((status) => (
+                      <option key={`${lead.id}-${status}`} value={status}>{status}</option>
+                    ))}
+                  </select>
+                  <textarea
+                    rows={2}
+                    value={trackerNotesByLead[lead.id] || ""}
+                    onChange={(event) => setTrackerNotesByLead((current) => ({ ...current, [lead.id]: event.target.value }))}
+                    placeholder="Add optional note"
+                    className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => void updateTracker(lead.id)}
+                    disabled={busyId === lead.id}
+                    className="rounded-full bg-slate-950 px-4 py-2 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {busyId === lead.id ? "Saving..." : "Save Update"}
+                  </button>
+                </div>
+
+                {lead.consultationTracking?.length ? (
+                  <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                    {lead.consultationTracking.slice(-4).reverse().map((entry) => (
+                      <div key={entry.id} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
+                        <p className="font-semibold text-slate-900">{entry.status}</p>
+                        <p className="mt-1">{entry.notes || "No notes"}</p>
+                        <p className="mt-1 text-[11px] text-slate-500">{new Date(entry.createdAt).toLocaleString()}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             </article>
           ))}

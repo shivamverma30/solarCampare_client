@@ -30,6 +30,8 @@ interface ApiResponse<T> {
   unreadCount?: number;
   uploadAsset?: T;
   uploadAssets?: T[];
+  consultations?: T[];
+  tracking?: T;
 }
 
 export const apiClient = {
@@ -399,6 +401,21 @@ export const apiClient = {
 
     async getVendorLeads(token: string) {
       return apiClient.request("/leads/vendor/me", {}, token);
+    },
+
+    async getUserConsultations(token: string) {
+      return apiClient.request("/leads/user/consultations", {}, token);
+    },
+
+    async updateConsultationTracker(token: string, id: string, status: string, notes?: string) {
+      return apiClient.request(
+        `/leads/${id}/tracker`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ status, notes }),
+        },
+        token
+      );
     },
   },
 

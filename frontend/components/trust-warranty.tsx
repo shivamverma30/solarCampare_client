@@ -92,7 +92,7 @@ export default function TrustAndWarrantySection() {
   return (
     <section id="trust" className="mx-auto mt-20 w-full max-w-7xl px-4 md:px-8">
       <div className="mb-12 text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-amber-500">
+        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-600">
           Built on Trust
         </p>
         <h2 className="mt-3 font-serif text-3xl text-slate-900 md:text-4xl">
@@ -113,20 +113,20 @@ export default function TrustAndWarrantySection() {
             <div className="text-4xl mb-3 text-center">{cert.icon}</div>
             <h3 className="font-semibold text-slate-900 text-sm mb-1">{cert.name}</h3>
             <p className="text-xs text-slate-600 mb-3 leading-5">{cert.desc}</p>
-            <div className="text-amber-500 text-sm font-semibold">{cert.trust}</div>
+            <div className="text-emerald-600 text-sm font-semibold">{cert.trust}</div>
           </div>
         ))}
       </div>
 
       {/* Our 4 Guarantees */}
-      <div className="mb-16 rounded-2xl bg-linear-to-b from-amber-50 to-white border border-amber-200 p-8 md:p-12">
+      <div className="mb-16 rounded-2xl border border-emerald-200 bg-linear-to-b from-emerald-50 to-white p-8 md:p-12">
         <h3 className="text-2xl font-bold text-slate-900 mb-8 text-center">
           Our 4 Ironclad Guarantees
         </h3>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {guarantees.map((g, i) => (
             <div key={i} className="rounded-xl bg-white p-6 text-center">
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-600 mb-4">
+              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
                 {g.icon}
               </div>
               <h4 className="font-bold text-slate-900 mb-2 text-sm">{g.title}</h4>
@@ -193,14 +193,14 @@ export default function TrustAndWarrantySection() {
       </div>
 
       {/* Support Promise */}
-      <div className="mt-12 text-center rounded-2xl bg-linear-to-r from-amber-400 to-orange-400 px-8 py-12 text-white">
+      <div className="mt-12 rounded-2xl bg-linear-to-r from-emerald-600 to-slate-900 px-8 py-12 text-center text-white">
         <h3 className="text-2xl font-bold mb-3">Our Support Promise</h3>
         <p className="max-w-2xl mx-auto mb-6 text-sm">
           Beyond warranty, we&apos;re committed to your long-term satisfaction. We monitor your system 24/7, proactively alert you of any issues, and provide maintenance reminders to ensure your solar runs flawlessly for decades.
         </p>
         <a
           href="/contact"
-          className="inline-block rounded-lg bg-white px-8 py-3 font-bold text-amber-600 transition hover:bg-amber-50"
+          className="inline-block rounded-lg bg-white px-8 py-3 font-bold text-emerald-700 transition hover:bg-emerald-50"
         >
           Learn About Our Support Plan →
         </a>

@@ -8,25 +8,32 @@ export default function CtaBanner() {
 
   return (
     <section className="mx-auto mt-16 w-full max-w-7xl px-4 md:px-8">
-      <div className="relative overflow-hidden rounded-3xl border border-amber-200/50 bg-linear-to-r from-amber-100 via-orange-100 to-yellow-100 p-8 shadow-xl">
+      <div className="relative overflow-hidden rounded-3xl border border-emerald-200/70 bg-linear-to-r from-white via-emerald-50 to-slate-100 p-8 shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.16),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(15,23,42,0.08),transparent_28%)]" />
         <div className="max-w-2xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.26em] text-amber-700">{t("cta.eyebrow")}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.26em] text-emerald-700">{t("cta.eyebrow")}</p>
           <h3 className="mt-3 font-serif text-3xl text-slate-900">{t("cta.title")}</h3>
           <p className="mt-3 text-sm text-slate-700">
             {t("cta.description")}
           </p>
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="mt-6 flex flex-wrap items-stretch gap-3">
             <Link
               href="/calculator"
-              className="rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-black"
+              className="inline-flex h-12 items-center justify-center rounded-full bg-slate-950 px-6 text-sm font-semibold text-white transition hover:bg-slate-800"
             >
               {t("buttons.startCalculation")}
             </Link>
             <Link
               href="/compare"
-              className="rounded-full border border-slate-400/60 px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-white/70"
+              className="inline-flex h-12 items-center justify-center rounded-full border border-slate-300 bg-white px-6 text-sm font-semibold text-slate-900 transition hover:border-slate-400 hover:bg-slate-50"
             >
               {t("buttons.comparePanels")}
+            </Link>
+            <Link
+              href="/calculator"
+              className="inline-flex h-12 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 px-6 text-sm font-semibold text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100"
+            >
+              {t("buttons.getProposal")}
             </Link>
           </div>
         </div>

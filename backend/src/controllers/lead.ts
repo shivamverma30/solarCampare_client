@@ -3,6 +3,44 @@ import prisma from "../lib/prisma";
 import { AuthRequest } from "../middleware/auth";
 import { createAuditLog, createNotification, safeEmailDispatch } from "../lib/workflow";
 import { notificationTemplates } from "../lib/notification-templates";
+import { ConsultationTrackingStatus } from "@prisma/client";
+
+const consultationTrackerFlow: ConsultationTrackingStatus[] = [
+  "CONSULTATION_REQUESTED",
+  "REQUEST_REVIEWED",
+  "VENDOR_ASSIGNED",
+  "APPOINTMENT_SCHEDULED",
+  "SITE_VISIT_COMPLETED",
+  "PROPOSAL_SHARED",
+  "NEGOTIATION",
+  "PROJECT_CONFIRMED",
+  "INSTALLATION_IN_PROGRESS",
+  "INSTALLATION_COMPLETED",
+];
+
+const vendorAllowedTrackerStatuses: ConsultationTrackingStatus[] = [
+  "APPOINTMENT_SCHEDULED",
+  "SITE_VISIT_COMPLETED",
+  "PROPOSAL_SHARED",
+  "NEGOTIATION",
+];
+
+const consultationTrackerNotificationBody: Record<ConsultationTrackingStatus, string> = {
+  CONSULTATION_REQUESTED: "Your consultation request has been submitted successfully.",
+  REQUEST_REVIEWED: "Your consultation request has been reviewed.",
+  VENDOR_ASSIGNED: "A vendor has been assigned to your consultation request.",
+  APPOINTMENT_SCHEDULED: "Your consultation appointment has been scheduled.",
+  SITE_VISIT_COMPLETED: "Site visit completed for your consultation request.",
+  PROPOSAL_SHARED: "Your solar proposal has been shared.",
+  NEGOTIATION: "Your consultation has moved to negotiation/discussion.",
+  PROJECT_CONFIRMED: "Your solar project has been confirmed.",
+  INSTALLATION_IN_PROGRESS: "Installation is now in progress.",
+  INSTALLATION_COMPLETED: "Installation has been completed successfully.",
+};
+
+function trackerStatusIndex(status: ConsultationTrackingStatus): number {
+  return consultationTrackerFlow.indexOf(status);
+}
 
 export const submitVendorLead = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -123,6 +161,9 @@ export const listLeads = async (_req: AuthRequest, res: Response): Promise<void>
         },
         statusLogs: true,
         commissionNotes: true,
+        consultationTracking: {
+          orderBy: { createdAt: "asc" },
+        },
       },
     });
 
@@ -318,12 +359,157 @@ export const listVendorLeads = async (req: AuthRequest, res: Response): Promise<
       orderBy: { createdAt: "desc" },
       include: {
         statusLogs: true,
+        consultationTracking: {
+          orderBy: { createdAt: "asc" },
+        },
       },
     });
 
     res.status(200).json({ success: true, leads });
   } catch (error) {
     console.error("List vendor leads error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const listUserConsultationLeads = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.userId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const consultations = await prisma.vendorLead.findMany({
+      where: {
+        userId: req.userId,
+        serviceRequirement: "Consultation Request",
+      },
+      orderBy: { createdAt: "desc" },
+      include: {
+        vendor: {
+          select: {
+            id: true,
+            companyName: true,
+            ownerName: true,
+            city: true,
+            state: true,
+            pincode: true,
+          },
+        },
+        consultationTracking: {
+          orderBy: { createdAt: "asc" },
+        },
+      },
+    });
+
+    res.status(200).json({ success: true, consultations });
+  } catch (error) {
+    console.error("List user consultation leads error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const updateConsultationTrackerStatus = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const actorId = req.adminId || req.vendorId;
+    if (!actorId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const { id } = req.params;
+    const status = String(req.body?.status || "") as ConsultationTrackingStatus;
+    const notes = req.body?.notes ? String(req.body.notes) : null;
+
+    if (!consultationTrackerFlow.includes(status)) {
+      res.status(400).json({ error: "Invalid tracker status" });
+      return;
+    }
+
+    const consultation = await prisma.vendorLead.findUnique({
+      where: { id },
+      include: {
+        consultationTracking: {
+          orderBy: { createdAt: "asc" },
+        },
+        vendor: {
+          select: { id: true, companyName: true },
+        },
+      },
+    });
+
+    if (!consultation) {
+      res.status(404).json({ error: "Consultation request not found" });
+      return;
+    }
+
+    const isVendorActor = req.authRole === "VENDOR";
+
+    if (isVendorActor) {
+      if (!req.vendorId || req.vendorId !== consultation.vendorId) {
+        res.status(403).json({ error: "Forbidden" });
+        return;
+      }
+
+      if (!vendorAllowedTrackerStatuses.includes(status)) {
+        res.status(403).json({ error: "Vendors can only update appointment, visit, proposal, or negotiation stages" });
+        return;
+      }
+
+      const hasVendorAssignment = consultation.consultationTracking.some((entry) => entry.status === "VENDOR_ASSIGNED");
+      if (!hasVendorAssignment) {
+        res.status(403).json({ error: "Tracker cannot be updated by vendor before assignment" });
+        return;
+      }
+    }
+
+    const latestEntry = consultation.consultationTracking[consultation.consultationTracking.length - 1];
+    const currentStatus = latestEntry?.status || "CONSULTATION_REQUESTED";
+
+    if (!consultation.userId) {
+      res.status(400).json({ error: "Consultation request has no associated user" });
+      return;
+    }
+
+    if (trackerStatusIndex(status) <= trackerStatusIndex(currentStatus)) {
+      res.status(400).json({ error: "Tracker status can only move forward" });
+      return;
+    }
+
+    const tracking = await prisma.consultationTracking.create({
+      data: {
+        userId: consultation.userId,
+        vendorId: consultation.vendorId,
+        consultationId: consultation.id,
+        status,
+        notes,
+        updatedBy: isVendorActor ? `vendor:${req.vendorId}` : `admin:${req.adminId}`,
+      },
+    });
+
+    if (consultation.userId) {
+      await createNotification(prisma, {
+        audience: "USER",
+        type: "CONSULTATION_REQUEST",
+        priority: "MEDIUM",
+        title: "Application Tracker Update",
+        body: consultationTrackerNotificationBody[status],
+        userId: consultation.userId,
+        vendorId: consultation.vendorId,
+        metadata: {
+          consultationId: consultation.id,
+          vendorId: consultation.vendorId,
+          status,
+          notes,
+          updatedBy: tracking.updatedBy,
+          updatedAt: tracking.createdAt,
+        },
+      });
+    }
+
+    res.status(200).json({ success: true, tracking });
+  } catch (error) {
+    console.error("Update consultation tracker status error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -372,6 +558,17 @@ export const requestConsultation = async (req: AuthRequest, res: Response): Prom
         serviceRequirement: "Consultation Request",
         location: [user.city, user.state, user.pincode].filter(Boolean).join(", ") || "Not provided",
         notes: "Requested via vendor consultation flow",
+      },
+    });
+
+    await prisma.consultationTracking.create({
+      data: {
+        userId: user.id,
+        vendorId: vendor.id,
+        consultationId: lead.id,
+        status: "CONSULTATION_REQUESTED",
+        notes: "Consultation request created by user.",
+        updatedBy: `user:${user.id}`,
       },
     });
 

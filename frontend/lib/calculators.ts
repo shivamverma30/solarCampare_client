@@ -1,4 +1,4 @@
-export type PropertyType = "residential" | "commercial";
+export type PropertyType = "residential" | "commercial" | "agriculture";
 
 export const citySunFactor = {
   Ahmedabad: 1.08,
@@ -102,12 +102,12 @@ export function validateSolarInputs(inputs: SolarInputs): string[] {
 }
 
 export function calculateSolarEstimate(inputs: SolarInputs): SolarEstimate {
-  const typeFactor = inputs.propertyType === "commercial" ? 1.2 : 1;
+  const typeFactor = inputs.propertyType === "commercial" ? 1.2 : inputs.propertyType === "agriculture" ? 1.1 : 1;
   const stateData = stateSubsidies[inputs.state] || stateSubsidies.other;
   const electricityTariff = inputs.electricityTariff || stateData.tariff;
   const sunHours = stateData.sunHours || citySunHours[inputs.city] || 4.5;
   const consumptionUnitsMonthly = Math.max(0, inputs.consumptionUnits || (inputs.monthlyBill / Math.max(electricityTariff, 1)));
-  const performanceRatio = inputs.propertyType === "commercial" ? 0.78 : 0.82;
+  const performanceRatio = inputs.propertyType === "commercial" ? 0.78 : inputs.propertyType === "agriculture" ? 0.8 : 0.82;
   const billBasedKw = consumptionUnitsMonthly / Math.max(1, sunHours * 30 * performanceRatio * typeFactor);
   const roofBasedKw = inputs.roofSize / 95;
   const recommendedKw = Math.max(1, Math.min(billBasedKw, roofBasedKw));
@@ -131,6 +131,8 @@ export function calculateSolarEstimate(inputs: SolarInputs): SolarEstimate {
 
     const stateSubsidy = Math.min(stateData.state, investment - centralSubsidy);
     totalSubsidy = Math.max(0, centralSubsidy + stateSubsidy);
+  } else if (inputs.propertyType === "agriculture") {
+    totalSubsidy = Math.min(investment * 0.18, 78000);
   }
 
   const netInvestment = Math.max(0, investment - totalSubsidy);

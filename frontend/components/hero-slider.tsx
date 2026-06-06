@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 
 const slides = ["/hero/1.avif", "/hero/2.jpg", "/hero/3.jpg"];
 
-export default function HeroSlider() {
+export default function HeroSlider({ background = false }: { background?: boolean }) {
   const [active, setActive] = useState(0);
 
   useEffect(() => {
@@ -17,7 +17,7 @@ export default function HeroSlider() {
   }, []);
 
   return (
-    <div className="absolute inset-0 -z-10">
+    <div className={background ? "absolute inset-0 overflow-hidden" : "relative h-full min-h-105 overflow-hidden rounded-[36px] border border-white/20 bg-slate-950 shadow-[0_24px_70px_rgba(2,6,23,0.24)] ring-1 ring-white/10"}>
       {slides.map((src, index) => {
         const isActive = active === index;
 
@@ -32,7 +32,9 @@ export default function HeroSlider() {
           </div>
         );
       })}
-      <div className="absolute inset-0 bg-linear-to-b from-black/40 via-black/46 to-black/58" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.18),rgba(2,6,23,0.36),rgba(2,6,23,0.62))]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.16),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(15,23,42,0.2),transparent_30%)]" />
+      <div className="absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,rgba(2,6,23,0),rgba(2,6,23,0.55))]" />
     </div>
   );
 }

@@ -54,9 +54,9 @@ export default function GovernmentSchemes() {
       case "HIGH":
         return "bg-emerald-50 text-emerald-700";
       case "MEDIUM":
-        return "bg-amber-50 text-amber-700";
+        return "bg-emerald-50 text-emerald-700";
       case "LOWER":
-        return "bg-red-50 text-red-700";
+        return "bg-slate-100 text-slate-600";
       default:
         return "bg-slate-50 text-slate-700";
     }
@@ -65,7 +65,7 @@ export default function GovernmentSchemes() {
   return (
     <section id="schemes" className="mx-auto mt-16 w-full max-w-7xl px-4 md:px-8">
       <div className="mb-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-amber-500">
+        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-600">
           {t("schemes.eyebrow")}
         </p>
         <h2 className="mt-3 font-serif text-3xl text-slate-900 md:text-4xl">
@@ -93,11 +93,11 @@ export default function GovernmentSchemes() {
             <h3 className="text-lg font-semibold text-slate-900">{scheme.name}</h3>
             <p className="mt-2 text-sm leading-6 text-slate-600">{scheme.desc}</p>
 
-            <div className="mt-4 rounded-lg bg-amber-50 p-3">
-              <p className="text-xs font-semibold uppercase tracking-widest text-amber-600">
+            <div className="mt-4 rounded-lg bg-emerald-50 p-3">
+              <p className="text-xs font-semibold uppercase tracking-widest text-emerald-700">
                 {scheme.label}
               </p>
-              <p className="mt-1 font-serif text-2xl font-bold text-amber-700">
+              <p className="mt-1 font-serif text-2xl font-bold text-emerald-700">
                 {scheme.amount}
               </p>
             </div>
@@ -117,7 +117,7 @@ export default function GovernmentSchemes() {
         <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-200 shadow-md">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="border-b border-slate-200 bg-amber-50">
+              <tr className="border-b border-slate-200 bg-emerald-50">
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-600">
                   State
                 </th>

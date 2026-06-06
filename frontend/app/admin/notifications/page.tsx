@@ -241,7 +241,7 @@ export default function AdminNotificationsPage() {
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-600">Notification details</p>
                 <h3 className="mt-2 text-2xl font-semibold text-slate-950">{selectedNotification.title}</h3>
               </div>
-              <button type="button" onClick={closeModal} className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
+              <button type="button" onClick={() => setSelectedNotification(null)} className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
                 Close
               </button>
             </div>

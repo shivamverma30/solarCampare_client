@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     default: "Solar Compare by SAFWE ENERGY",
     template: "%s | Solar Compare by SAFWE ENERGY",
   },
-  description: "Solar Compare by SAFWE ENERGY is a premium solar comparison and calculator platform.",
+  description: "Compare solar brands, estimate savings, and connect with trusted installers across India.",
   icons: {
     icon: [
       { url: "/favicon.ico", type: "image/x-icon" },

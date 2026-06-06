@@ -30,6 +30,7 @@ interface NotificationItem {
   id: string;
   title: string;
   message: string;
+  description?: string;
   type: string;
   priority: string;
   createdAt: string;

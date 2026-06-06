@@ -168,11 +168,12 @@ export default function ChatbotPopup() {
   };
 
   return (
-    <div className="fixed bottom-22 right-4 z-50 flex flex-col items-end gap-3 sm:bottom-24 sm:right-6">
+    <div className="fixed bottom-20 right-4 z-30 flex flex-col items-end gap-3 sm:bottom-24 sm:right-6">
       {open ? (
         <div
           aria-hidden={!open}
-          className="pointer-events-auto h-[min(78vh,660px)] w-[min(430px,calc(100vw-1rem))] overflow-hidden rounded-3xl border border-emerald-200/50 bg-white/95 shadow-[0_20px_50px_rgba(2,40,25,0.2)] ring-1 ring-white/70 backdrop-blur-xl transition-all duration-300 ease-out sm:h-[min(76vh,640px)] translate-y-0 scale-100 opacity-100"
+          className="pointer-events-auto h-[min(68vh,540px)] w-[min(380px,calc(100vw-1rem))] overflow-hidden rounded-3xl border border-emerald-200/50 bg-white/95 shadow-[0_20px_50px_rgba(2,40,25,0.2)] ring-1 ring-white/70 backdrop-blur-xl transition-all duration-300 ease-out translate-y-0 scale-100 opacity-100 sm:h-[min(64vh,520px)]"
+          style={{ maxHeight: "calc(100vh - 7.5rem)" }}
         >
           <div className="flex h-full flex-col">
             <div className="flex items-center justify-between border-b border-slate-200/80 bg-linear-to-r from-emerald-50/80 via-white to-white px-4 py-3.5 sm:px-5">
@@ -391,7 +392,7 @@ export default function ChatbotPopup() {
         onClick={() => setOpen((prev) => !prev)}
         aria-label={t("chatbot.toggleLabel")}
         aria-expanded={open}
-        className="pointer-events-auto inline-flex h-14 items-center gap-2 rounded-full border border-emerald-300/30 bg-[#1f8f4d]/40 px-4 text-sm font-semibold tracking-wide text-white backdrop-blur-xl shadow-[0_14px_34px_rgba(10,80,46,0.42)] ring-1 ring-white/20 transition duration-300 hover:-translate-y-1 hover:scale-105 hover:bg-[#1f8f4d]/52 hover:shadow-[0_18px_42px_rgba(10,80,46,0.52)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+        className="pointer-events-auto inline-flex h-12 items-center gap-2 rounded-full border border-emerald-300/30 bg-[#1f8f4d]/40 px-3 text-xs font-semibold tracking-wide text-white backdrop-blur-xl shadow-[0_14px_34px_rgba(10,80,46,0.42)] ring-1 ring-white/20 transition duration-300 hover:-translate-y-1 hover:scale-105 hover:bg-[#1f8f4d]/52 hover:shadow-[0_18px_42px_rgba(10,80,46,0.52)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
       >
         <svg viewBox="0 0 24 24" aria-hidden className="h-5 w-5 fill-current">
           <path d="M4 4h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-5 4v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />

@@ -35,7 +35,7 @@ export default function HowItWorks() {
   return (
     <section id="how" className="mx-auto mt-16 w-full max-w-7xl px-4 md:px-8">
       <div className="mb-12 text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-amber-500">
+        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-600">
           {t("howItWorks.eyebrow")}
         </p>
         <h2 className="mt-3 font-serif text-3xl text-slate-900 md:text-4xl">
@@ -52,7 +52,7 @@ export default function HowItWorks() {
             {/* Step Card */}
             <div className="text-center">
               <div className="mb-4 flex justify-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-amber-400 bg-amber-50 font-serif text-xl font-bold text-amber-600">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-emerald-400 bg-emerald-50 font-serif text-xl font-bold text-emerald-700">
                   {step.num}
                 </div>
               </div>
@@ -63,7 +63,7 @@ export default function HowItWorks() {
 
             {/* Connector Line */}
             {idx < steps.length - 1 && (
-              <div className="absolute top-8 left-[calc(50%+2rem)] right-[calc(-100%+2rem)] hidden h-0.5 bg-linear-to-r from-amber-400 to-transparent md:block" />
+              <div className="absolute top-8 left-[calc(50%+2rem)] right-[calc(-100%+2rem)] hidden h-0.5 bg-linear-to-r from-emerald-400 to-transparent md:block" />
             )}
           </div>
         ))}

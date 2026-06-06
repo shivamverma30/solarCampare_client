@@ -13,12 +13,24 @@ type Lead = {
   location: string;
   status: string;
   createdAt: string;
+  consultationTracking?: Array<{
+    id: string;
+    status: string;
+    notes?: string | null;
+    createdAt: string;
+    updatedBy: string;
+  }>;
 };
+
+const vendorTrackerStatuses = ["APPOINTMENT_SCHEDULED", "SITE_VISIT_COMPLETED", "PROPOSAL_SHARED", "NEGOTIATION"];
 
 export default function VendorLeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [trackerStatusByLead, setTrackerStatusByLead] = useState<Record<string, string>>({});
+  const [trackerNotesByLead, setTrackerNotesByLead] = useState<Record<string, string>>({});
+  const [savingTrackerId, setSavingTrackerId] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -29,7 +41,14 @@ export default function VendorLeadsPage() {
         setError(response.error || "Failed to load leads");
         return;
       }
-      setLeads((response.leads as Lead[]) || []);
+      const rows = (response.leads as Lead[]) || [];
+      setLeads(rows);
+      setTrackerStatusByLead(
+        rows.reduce<Record<string, string>>((acc, lead) => {
+          acc[lead.id] = vendorTrackerStatuses[0];
+          return acc;
+        }, {})
+      );
     };
 
     void load();
@@ -51,6 +70,38 @@ export default function VendorLeadsPage() {
     }
 
     setDeletingId(null);
+  };
+
+  const updateTracker = async (leadId: string) => {
+    const token = getToken();
+    if (!token || savingTrackerId) return;
+
+    const status = trackerStatusByLead[leadId] || vendorTrackerStatuses[0];
+    const notes = trackerNotesByLead[leadId] || "";
+
+    setSavingTrackerId(leadId);
+    const response = await apiClient.leads.updateConsultationTracker(token, leadId, status, notes);
+
+    if (response.success && response.tracking) {
+      setLeads((current) =>
+        current.map((lead) => {
+          if (lead.id !== leadId) return lead;
+          const history = lead.consultationTracking || [];
+          return {
+            ...lead,
+            consultationTracking: [
+              ...history,
+              response.tracking as { id: string; status: string; notes?: string | null; createdAt: string; updatedBy: string },
+            ],
+          };
+        })
+      );
+      setTrackerNotesByLead((current) => ({ ...current, [leadId]: "" }));
+    } else {
+      setError(response.error || "Failed to update consultation tracker");
+    }
+
+    setSavingTrackerId(null);
   };
 
   return (
@@ -85,6 +136,48 @@ export default function VendorLeadsPage() {
                   {deletingId === lead.id ? "Deleting..." : "Delete"}
                 </button>
               </div>
+            </div>
+
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-700">Update Tracker Status</p>
+              <p className="mt-1 text-xs text-slate-500">Allowed: Appointment Scheduled, Site Visit Completed, Proposal Shared, Negotiation.</p>
+              <div className="mt-3 grid gap-3 md:grid-cols-[1fr_2fr_auto] md:items-start">
+                <select
+                  value={trackerStatusByLead[lead.id] || vendorTrackerStatuses[0]}
+                  onChange={(event) => setTrackerStatusByLead((current) => ({ ...current, [lead.id]: event.target.value }))}
+                  className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
+                >
+                  {vendorTrackerStatuses.map((status) => (
+                    <option key={`${lead.id}-${status}`} value={status}>{status}</option>
+                  ))}
+                </select>
+                <textarea
+                  rows={2}
+                  value={trackerNotesByLead[lead.id] || ""}
+                  onChange={(event) => setTrackerNotesByLead((current) => ({ ...current, [lead.id]: event.target.value }))}
+                  placeholder="Add optional note"
+                  className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
+                />
+                <button
+                  type="button"
+                  onClick={() => void updateTracker(lead.id)}
+                  disabled={savingTrackerId === lead.id}
+                  className="rounded-full bg-slate-950 px-4 py-2 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {savingTrackerId === lead.id ? "Saving..." : "Save Update"}
+                </button>
+              </div>
+
+              {lead.consultationTracking?.length ? (
+                <div className="mt-3 space-y-2">
+                  {lead.consultationTracking.slice(-3).reverse().map((entry) => (
+                    <div key={entry.id} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
+                      <p className="font-semibold text-slate-900">{entry.status}</p>
+                      <p className="mt-1">{entry.notes || "No notes"}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
             </div>
           </article>
         ))}
