@@ -10,20 +10,21 @@ import {getEnv} from "./lib/env";
 const env = getEnv();
 
 const app = express();
-const PORT = Number(env.PORT || process.env.PORT);
+const PORT = Number(env.PORT);
 
 if (!PORT || Number.isNaN(PORT)) {
   throw new Error("Missing or invalid environment variable: PORT");
 }
 
-if (!env.FRONTEND_URL) {
-  throw new Error("Missing required environment variable: FRONTEND_URL");
-}
-
 const normalizeOrigin = (value: string) => value.replace(/\/$/, "");
+const configuredFrontendOrigins = env.FRONTEND_URL
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean)
+  .map(normalizeOrigin);
 const allowedOrigins = new Set([
   "http://localhost:3000",
-  normalizeOrigin(env.FRONTEND_URL),
+  ...configuredFrontendOrigins,
 ]);
 
 // Middleware
@@ -84,6 +85,6 @@ app.use((req, res) => {
 // Start server
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
-  console.log(`🔗 Frontend URL: ${env.FRONTEND_URL}`);
+  console.log(`🔗 Frontend URL(s): ${Array.from(allowedOrigins).join(", ")}`);
   console.log(`📊 Database: ${process.env.DATABASE_URL?.substring(0, 40)}...`);
 });

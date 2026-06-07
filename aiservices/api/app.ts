@@ -7,9 +7,14 @@ export function createApp() {
   const env = getEnv();
   const app = express();
   const normalizeOrigin = (value: string) => value.replace(/\/$/, "");
+  const configuredFrontendOrigins = env.FRONTEND_URL
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+    .map(normalizeOrigin);
   const allowedOrigins = new Set([
     "http://localhost:3000",
-    normalizeOrigin(env.FRONTEND_URL),
+    ...configuredFrontendOrigins,
   ]);
 
   app.use(

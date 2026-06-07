@@ -6,12 +6,10 @@ import { generateToken } from "../utils/jwt";
 import { AuthRequest } from "../middleware/auth";
 import { createAuditLog, createNotification, safeEmailDispatch, sendTransactionalEmail, welcomeTemplate, otpTemplate } from "../lib/workflow";
 import { notificationTemplates } from "../lib/notification-templates";
+import { getEnv } from "../lib/env";
 
-const frontendUrl = process.env.FRONTEND_URL;
-
-if (!frontendUrl) {
-  throw new Error("Missing required environment variable: FRONTEND_URL");
-}
+const env = getEnv();
+const frontendUrl = (env.FRONTEND_URL.split(",").map((origin) => origin.trim()).find(Boolean) || "http://localhost:3000").replace(/\/$/, "");
 
 function createOneTimeToken(): string {
   return randomBytes(32).toString("hex");

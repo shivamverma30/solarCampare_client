@@ -1,8 +1,6 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+import { frontendEnv } from "./env";
 
-if (!API_URL) {
-  throw new Error("Missing required environment variable: NEXT_PUBLIC_API_URL");
-}
+const API_URL = frontendEnv.NEXT_PUBLIC_API_URL;
 
 type JsonObject = Record<string, unknown>;
 

@@ -1,8 +1,6 @@
-const AI_SERVICE_URL = process.env.NEXT_PUBLIC_AI_SERVICE_URL;
+import { frontendEnv } from "./env";
 
-if (!AI_SERVICE_URL) {
-  throw new Error("Missing required environment variable: NEXT_PUBLIC_AI_SERVICE_URL");
-}
+const AI_SERVICE_URL = frontendEnv.NEXT_PUBLIC_AI_SERVICE_URL;
 
 type AiMessagePayload = {
   message: string;
