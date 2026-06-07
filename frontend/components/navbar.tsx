@@ -51,7 +51,7 @@ function LanguageSwitcher({
     <div className="relative" onClick={(event) => event.stopPropagation()}>
       <button
         type="button"
-        className={`inline-flex h-11 items-center gap-2 rounded-full border px-4 text-sm font-medium transition focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 ${
+        className={`inline-flex h-11 items-center gap-3 rounded-full border px-4 text-sm font-medium transition focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 ${
           overlay
             ? "border-white/18 bg-white/10 text-white hover:bg-white/16 focus-visible:ring-white/30"
             : "border-slate-200 bg-white text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50"
@@ -211,9 +211,6 @@ export default function Navbar() {
         "blogs",
         "faq",
         "how-it-works",
-        "subsidy-information",
-        "vendor-network",
-        "financing-options",
       ]
         .map((slug) => infoPages.find((page) => page.slug === slug))
         .filter((page): page is (typeof infoPages)[number] => Boolean(page))
@@ -227,7 +224,6 @@ export default function Navbar() {
   const primaryLinks = [
     { label: t("nav.home"), href: "/" },
     { label: t("nav.calculator"), href: "/calculator" },
-    { label: t("nav.compare"), href: "/compare" },
     { label: t("nav.emi"), href: "/emi" },
   ];
 
@@ -271,7 +267,7 @@ export default function Navbar() {
       className={`fixed inset-x-0 top-0 z-90 border-b transition-[background-color,box-shadow,transform] duration-300 ${
         overlay
           ? "border-white/18 bg-slate-950/12 text-white shadow-[0_16px_40px_rgba(2,6,23,0.14)] backdrop-blur-2xl"
-          : "border-slate-200/80 bg-white/96 text-slate-900 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur-xl"
+          : "border-white/70 bg-white/92 text-slate-900 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl"
       }`}
     >
       <div className={`mx-auto flex w-full max-w-screen-2xl items-center gap-4 px-1 py-3 sm:px-3 lg:px-4 ${overlay ? "lg:py-4" : "lg:py-3.5"}`}>
@@ -279,12 +275,15 @@ export default function Navbar() {
           <BrandMark
             href="/"
             compact
+            stacked
+            showTagline={false}
+            className="mr-10 lg:mr-12"
             titleClassName={overlay ? "text-white drop-shadow-sm" : "text-slate-900"}
-            taglineClassName={overlay ? "text-white/75" : "text-slate-500"}
+            imageClassName="shrink-0"
           />
 
-          <div className="hidden min-w-0 items-center gap-6 pl-14 xl:flex">
-            {primaryLinks.map((link) => {
+          <div className="hidden min-w-0 items-center gap-6 xl:flex ml-auto">
+            {(isHome ? primaryLinks.filter((link) => link.href !== "/compare") : primaryLinks).map((link) => {
               const isActive = pathname === link.href;
               const navKey = `${link.href}-${link.label}`;
 
@@ -292,7 +291,7 @@ export default function Navbar() {
                 <Link
                   key={navKey}
                   href={link.href}
-                  className={`rounded-full px-4 py-2 text-sm font-medium transition focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${
+                  className={`inline-flex h-11 items-center justify-center rounded-full px-5 py-2 text-sm font-medium transition focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${
                     overlay
                       ? isActive
                         ? "bg-white/16 text-white font-semibold ring-1 ring-white/20"
@@ -322,7 +321,7 @@ export default function Navbar() {
           </div>
         </div>
 
-        <div className="hidden items-center gap-6 lg:flex">
+        <div className="hidden items-center gap-3 lg:flex">
           <LanguageSwitcher locale={locale} setLocale={setLocale} overlay={overlay} />
 
           <Link

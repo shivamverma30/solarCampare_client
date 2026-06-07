@@ -1,23 +1,35 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, Download, Info, PiggyBank, Sparkles, Wallet } from "lucide-react";
-import { useLocale } from "@/components/locale-provider";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { ArrowRight, BarChart3, Landmark, Loader2, Wallet, X } from "lucide-react";
 import { calculateEmiEstimate, formatCurrency, validateEmiInputs } from "@/lib/calculators";
+import { apiClient } from "@/lib/api-client";
+import { getSessionProfile, getToken } from "@/lib/auth";
+import { useAuth } from "@/lib/use-auth";
 
-function buildYearlySchedule(principal: number, annualRate: number, years: number, emi: number) {
+type YearRow = {
+  year: number;
+  opening: number;
+  principal: number;
+  interest: number;
+  closing: number;
+};
+
+function buildYearlySchedule(principal: number, annualRate: number, years: number, emi: number): YearRow[] {
   const monthlyRate = annualRate / 12 / 100;
   const months = Math.max(1, Math.round(years * 12));
   let balance = principal;
-  const schedule = [] as Array<{ year: number; opening: number; principal: number; interest: number; closing: number; payment: number }>;
+  const rows: YearRow[] = [];
 
   for (let year = 1; year <= years; year += 1) {
     const opening = balance;
     let principalPaid = 0;
     let interestPaid = 0;
 
-    for (let month = 0; month < 12 && schedule.length * 12 + month < months; month += 1) {
+    for (let month = 0; month < 12 && rows.length * 12 + month < months; month += 1) {
       const interestPortion = balance * monthlyRate;
       const principalPortion = Math.min(emi - interestPortion, balance);
       balance = Math.max(0, balance - principalPortion);
@@ -25,191 +37,320 @@ function buildYearlySchedule(principal: number, annualRate: number, years: numbe
       interestPaid += interestPortion;
     }
 
-    schedule.push({
+    rows.push({
       year,
       opening,
       principal: principalPaid,
       interest: interestPaid,
       closing: balance,
-      payment: Math.min(emi * 12, opening + interestPaid),
     });
   }
 
-  return schedule;
+  return rows;
+}
+
+function formatInterestShare(totalInterest: number, totalPayable: number) {
+  const share = totalPayable > 0 ? Math.round((totalInterest / totalPayable) * 100) : 0;
+  return share;
+}
+
+function formatDisplayAmount(value: number) {
+  return formatCurrency(value);
 }
 
 export default function EmiPage() {
-  const { t } = useLocale();
-  const [cost, setCost] = useState(450000);
-  const [downPayment, setDownPayment] = useState(50000);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { isAuthenticated, role } = useAuth();
+  const initialPrincipal = Number(searchParams.get("principal") || 200000);
+  const [loanAmount, setLoanAmount] = useState(initialPrincipal > 0 ? initialPrincipal : 200000);
   const [interest, setInterest] = useState(9.5);
-  const [years, setYears] = useState(5);
+  const [years, setYears] = useState(7);
+  const [showFinanceForm, setShowFinanceForm] = useState(false);
+  const [isSubmittingFinance, setIsSubmittingFinance] = useState(false);
+  const [financeFeedback, setFinanceFeedback] = useState<string | null>(null);
+  const [financeForm, setFinanceForm] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    city: "",
+    state: "",
+  });
 
-  const estimate = useMemo(() => calculateEmiEstimate({ cost, downPayment, interest, years }), [cost, downPayment, interest, years]);
-  const validationErrors = useMemo(() => validateEmiInputs({ cost, downPayment, interest, years }), [cost, downPayment, interest, years]);
+  useEffect(() => {
+    const queryPrincipal = Number(searchParams.get("principal") || 0);
+    if (queryPrincipal > 0) {
+      setLoanAmount(queryPrincipal);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    const profile = getSessionProfile() as Record<string, unknown> | null;
+    if (!profile) return;
+
+    setFinanceForm((current) => ({
+      ...current,
+      fullName: String(profile.fullName || profile.name || current.fullName || ""),
+      email: String(profile.email || current.email || ""),
+      phone: String(profile.phone || current.phone || ""),
+      city: String(profile.city || current.city || ""),
+      state: String(profile.state || current.state || ""),
+    }));
+  }, [isAuthenticated]);
+
+  const estimate = useMemo(() => calculateEmiEstimate({ cost: loanAmount, downPayment: 0, interest, years }), [interest, loanAmount, years]);
+  const validationErrors = useMemo(() => validateEmiInputs({ cost: loanAmount, downPayment: 0, interest, years }), [interest, loanAmount, years]);
   const yearlySchedule = useMemo(() => buildYearlySchedule(estimate.principal, interest, years, estimate.emi), [estimate.emi, estimate.principal, interest, years]);
+  const interestShare = formatInterestShare(estimate.totalInterest, estimate.totalPayable);
+  const principalShare = Math.max(0, 100 - interestShare);
 
-  const summaryLines = [
-    "EMI estimate summary",
-    `Project cost: ${formatCurrency(cost)}`,
-    `Down payment: ${formatCurrency(downPayment)}`,
-    `Loan amount: ${formatCurrency(estimate.principal)}`,
-    `Monthly EMI: ${formatCurrency(estimate.emi)}`,
-    `Total payable: ${formatCurrency(estimate.totalPayable)}`,
-    `Interest amount: ${formatCurrency(estimate.totalInterest)}`,
-  ].join("\n");
+  const handleFinanceClick = () => {
+    setFinanceFeedback(null);
+    if (!isAuthenticated || role !== "USER") {
+      const redirectPath = `/emi?principal=${Math.round(loanAmount)}&openFlow=financing`;
+      router.push(`/login?redirect=${encodeURIComponent(redirectPath)}`);
+      return;
+    }
 
-  const handleCopySummary = async () => {
-    if (typeof navigator === "undefined" || !navigator.clipboard) return;
-    await navigator.clipboard.writeText(summaryLines);
+    setShowFinanceForm(true);
   };
 
-  const handleDownloadCsv = () => {
-    const rows = [
-      ["Metric", "Value"],
-      ["Project Cost", String(Math.round(cost))],
-      ["Down Payment", String(Math.round(downPayment))],
-      ["Loan Amount", String(Math.round(estimate.principal))],
-      ["Monthly EMI", String(Math.round(estimate.emi))],
-      ["Total Payable", String(Math.round(estimate.totalPayable))],
-      ["Interest Amount", String(Math.round(estimate.totalInterest))],
-      ["Tenure Months", String(estimate.months)],
-    ];
+  useEffect(() => {
+    if (searchParams.get("openFlow") === "financing" && isAuthenticated && role === "USER") {
+      setShowFinanceForm(true);
+    }
+  }, [isAuthenticated, role, searchParams]);
 
-    const csv = rows.map((row) => row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = "emi-estimate.csv";
-    anchor.click();
-    URL.revokeObjectURL(url);
+  const handleFinanceSubmit = async () => {
+    if (!financeForm.fullName.trim() || !financeForm.email.trim() || !financeForm.phone.trim()) {
+      setFinanceFeedback("Please complete Name, Email, and Phone Number.");
+      return;
+    }
+
+    setIsSubmittingFinance(true);
+    setFinanceFeedback(null);
+    try {
+      const response = await apiClient.quotes.createQuote({
+        fullName: financeForm.fullName,
+        email: financeForm.email,
+        phone: financeForm.phone,
+        city: financeForm.city,
+        state: financeForm.state,
+        projectType: "EMI Financing",
+        monthlyBill: null,
+        notes: "User submitted EMI financing request from EMI calculator.",
+        metadata: {
+          source: "EMI Financing Request",
+          loanAmount: Math.round(loanAmount),
+          emi: Math.round(estimate.emi),
+          interestRate: interest,
+          tenureYears: years,
+          totalInterest: Math.round(estimate.totalInterest),
+          totalPayable: Math.round(estimate.totalPayable),
+        },
+      });
+
+      if (!response.success) {
+        throw new Error(response.error || "Unable to submit financing request.");
+      }
+
+      setFinanceFeedback("Your financing request has been submitted successfully.");
+      setTimeout(() => setShowFinanceForm(false), 900);
+    } catch (error) {
+      setFinanceFeedback(error instanceof Error ? error.message : "Unable to submit financing request.");
+    } finally {
+      setIsSubmittingFinance(false);
+    }
   };
 
-  const paymentMixMax = Math.max(estimate.principal, estimate.totalInterest, 1);
-  const interestPct = estimate.totalPayable > 0 ? Math.round((estimate.totalInterest / estimate.totalPayable) * 100) : 0;
+  const summaryText = `Plan your solar EMI`;
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8 md:py-12">
-      <div className="mb-8 flex flex-col gap-4 rounded-4xl border border-slate-200 bg-white/90 p-6 shadow-[0_24px_70px_rgba(15,23,42,0.08)] md:p-8 lg:flex-row lg:items-end lg:justify-between">
+    <section className="hero-shell container-x">
+      <div className="grid gap-8 lg:grid-cols-[402px_1fr] lg:items-start lg:gap-10">
         <div className="max-w-3xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-600">EMI Calculator</p>
-          <h1 className="mt-3 text-3xl text-slate-950 md:text-5xl">Estimate Your Monthly EMI</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 md:text-base">
-            A clean financing layout with monthly EMI, total payable, and interest split presented in a decision-ready format.
+          <div className="overline mb-3">Loan Affordability Engine</div>
+          <h1 className="text-[36px] font-bold leading-10 tracking-[-0.9px] text-slate-900 md:text-[36px]">Plan your solar EMI</h1>
+          <p className="mt-4 max-w-2xl text-[16px] leading-7 text-slate-600">
+            Pre-filled from your solar estimate — tweak rate and tenure to find your sweet spot.
           </p>
-        </div>
 
-        <div className="flex flex-wrap gap-3">
-          <button type="button" onClick={handleCopySummary} className="inline-flex h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50">
-            <Info className="h-4 w-4" />
-            Copy summary
-          </button>
-          <button type="button" onClick={handleDownloadCsv} className="inline-flex h-11 items-center gap-2 rounded-full bg-slate-950 px-4 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(15,23,42,0.14)] transition hover:bg-slate-800">
-            <Download className="h-4 w-4" />
-            Export CSV
-          </button>
-          <Link href={`/calculator?monthlyBill=${Math.max(1000, Math.round(cost / 9))}`} className="inline-flex h-11 items-center rounded-full border border-emerald-300 bg-emerald-50 px-4 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-100">
-            Pre-fill from savings estimate
-          </Link>
-        </div>
-      </div>
-
-      {validationErrors.length > 0 ? <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{validationErrors[0]}</div> : null}
-
-      <div className="grid gap-6 lg:grid-cols-[0.98fr_1.02fr]">
-        <div className="space-y-6 rounded-4xl border border-slate-200 bg-white p-6 shadow-[0_20px_50px_rgba(15,23,42,0.06)] md:p-8">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Loan inputs</p>
-              <h2 className="mt-2 text-2xl text-slate-950">Structure the financing</h2>
+          <form className="mt-8 rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-16px_rgba(15,23,42,0.08)] md:p-7">
+            <div className="mb-5 flex items-center gap-2 text-sm font-semibold text-slate-900">
+              <Landmark className="h-4 w-4 text-emerald-600" />
+              <span>{summaryText}</span>
             </div>
-            <Sparkles className="h-5 w-5 text-emerald-500" />
-          </div>
 
-          <Field label={t("emi.projectCost")} hint="Total project value before financing.">
-            <input type="number" min={100000} value={cost} onChange={(event) => setCost(Number(event.target.value))} className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-2xl font-semibold text-slate-900 outline-none transition focus:border-emerald-400 focus:bg-white" />
-            <input type="range" min={100000} max={2500000} step={5000} value={cost} onChange={(event) => setCost(Number(event.target.value))} className="mt-3 w-full accent-emerald-500" />
-            <div className="mt-1 flex justify-between text-xs text-slate-400"><span>₹1L</span><span>₹12.5L</span><span>₹25L</span></div>
-          </Field>
+            <div>
+              <div className="label-dark">Loan amount (₹)</div>
+              <input
+                type="number"
+                min={10000}
+                max={2000000}
+                step={10000}
+                value={loanAmount}
+                onChange={(event) => setLoanAmount(Number(event.target.value))}
+                className="input-dark h-14.25 px-4 text-[24px]"
+              />
+              <input
+                type="range"
+                min={10000}
+                max={2000000}
+                step={10000}
+                value={loanAmount}
+                onChange={(event) => setLoanAmount(Number(event.target.value))}
+                className="mt-3 w-full accent-brand-500"
+              />
+              <div className="mt-2 flex items-center gap-2 text-[12px] font-medium text-slate-400">
+                <button type="button" onClick={() => setLoanAmount(10000)} className="chip">₹10k</button>
+                <button type="button" onClick={() => setLoanAmount(1000000)} className="chip">₹10L</button>
+                <button type="button" onClick={() => setLoanAmount(2000000)} className="chip">₹20L</button>
+              </div>
+            </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field label={t("emi.downPayment")} hint="Upfront amount paid before the loan starts.">
-              <input type="number" min={0} value={downPayment} onChange={(event) => setDownPayment(Number(event.target.value))} className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-emerald-400 focus:bg-white" />
-              <input type="range" min={0} max={cost} step={1000} value={downPayment} onChange={(event) => setDownPayment(Number(event.target.value))} className="mt-3 w-full accent-emerald-500" />
-            </Field>
-            <Field label={t("emi.interestRate")} hint="Nominal annual interest rate from the lender.">
-              <input type="number" min={0} step={0.1} value={interest} onChange={(event) => setInterest(Number(event.target.value))} className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-emerald-400 focus:bg-white" />
-              <input type="range" min={0} max={18} step={0.1} value={interest} onChange={(event) => setInterest(Number(event.target.value))} className="mt-3 w-full accent-emerald-500" />
-            </Field>
-          </div>
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              <div>
+                <div className="label-dark">Annual interest rate (%)</div>
+                <input
+                  type="number"
+                  min={0}
+                  step={0.1}
+                  value={interest}
+                  onChange={(event) => setInterest(Number(event.target.value))}
+                  className="input-dark h-12.25 px-4 text-[16px]"
+                />
+                <input
+                  type="range"
+                  min={0}
+                  max={18}
+                  step={0.1}
+                  value={interest}
+                  onChange={(event) => setInterest(Number(event.target.value))}
+                  className="mt-3 w-full accent-brand-500"
+                />
+              </div>
 
-          <Field label={t("emi.loanTenure")} hint="Loan duration in years.">
-            <input type="number" min={1} max={15} value={years} onChange={(event) => setYears(Number(event.target.value))} className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-emerald-400 focus:bg-white" />
-            <input type="range" min={1} max={15} step={1} value={years} onChange={(event) => setYears(Number(event.target.value))} className="mt-3 w-full accent-emerald-500" />
-          </Field>
+              <div>
+                <div className="label-dark">Tenure (years)</div>
+                <input
+                  type="number"
+                  min={1}
+                  max={15}
+                  step={1}
+                  value={years}
+                  onChange={(event) => setYears(Number(event.target.value))}
+                  className="input-dark h-12.25 px-4 text-[16px]"
+                />
+                <input
+                  type="range"
+                  min={1}
+                  max={15}
+                  step={1}
+                  value={years}
+                  onChange={(event) => setYears(Number(event.target.value))}
+                  className="mt-3 w-full accent-brand-500"
+                />
+              </div>
+            </div>
 
-          <div className="grid gap-3 md:grid-cols-3">
-            <MiniStat label="Loan amount" value={formatCurrency(estimate.principal)} />
-            <MiniStat label="Annual outgo" value={formatCurrency(estimate.annualOutgo)} />
-            <MiniStat label="Interest share" value={`${interestPct}%`} />
-          </div>
+            <div className="mt-6 grid gap-3 md:grid-cols-3">
+              <MiniStat label="Loan amount" value={formatDisplayAmount(estimate.principal)} />
+              <MiniStat label="Annual outgo" value={formatDisplayAmount(estimate.annualOutgo)} />
+              <MiniStat label="Interest share" value={`${interestShare}%`} />
+            </div>
+          </form>
         </div>
 
-        <aside className="space-y-4 lg:sticky lg:top-28 lg:self-start">
-          <div className="rounded-4xl border border-slate-200 bg-slate-950 p-6 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)] md:p-8">
+        <div className="lg:pt-18.5">
+          <div className="rounded-[28px] border border-slate-200 bg-slate-900 p-6 text-white shadow-[0_30px_60px_-20px_rgba(15,23,42,0.18)] md:p-8">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/55">Calculated output</p>
-                <h2 className="mt-2 text-2xl">EMI breakdown</h2>
+                <div className="text-[12px] font-semibold uppercase tracking-[0.18em] text-white/55">Plan your solar EMI</div>
+                <h2 className="mt-2 text-[22px] font-semibold tracking-[-0.03em] text-white">Monthly EMI breakdown</h2>
               </div>
               <Wallet className="h-5 w-5 text-emerald-300" />
             </div>
 
-            <div className="mt-6 rounded-[1.75rem] border border-white/10 bg-white/5 p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/55">Monthly EMI</p>
-              <p className="mt-2 text-4xl font-semibold text-white">{formatCurrency(estimate.emi)}</p>
-              <p className="mt-2 text-sm text-white/65">{estimate.months} months at {interest.toFixed(1)}% annual interest</p>
+            <div className="mt-6 rounded-[22px] border border-white/10 bg-white/5 p-5">
+              <div className="text-[12px] font-semibold uppercase tracking-[0.18em] text-white/55">Monthly EMI</div>
+              <div className="mt-2 text-[36px] font-bold tracking-[-0.04em] text-white">{formatCurrency(estimate.emi)}</div>
+              <div className="mt-2 text-[14px] text-white/65">
+                {years} years at {interest.toFixed(1)}% annual interest
+              </div>
             </div>
 
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <MetricCard title="Total payable" value={formatCurrency(estimate.totalPayable)} />
-              <MetricCard title="Interest amount" value={formatCurrency(estimate.totalInterest)} />
-              <MetricCard title="Upfront share" value={`${estimate.upfrontShare.toFixed(0)}%`} />
-              <MetricCard title="Financed share" value={`${estimate.financeShare.toFixed(0)}%`} />
+            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+              <DarkMetric label="Total interest" value={formatCurrency(estimate.totalInterest)} />
+              <DarkMetric label="Total payment" value={formatCurrency(estimate.totalPayable)} />
+              <DarkMetric label="Loan amount" value={formatCurrency(estimate.principal)} />
+            </div>
+
+            <div className="mt-6">
+              <div className="text-[12px] font-semibold uppercase tracking-[0.18em] text-white/55">Interest share of payment</div>
+              <div className="mt-4 flex items-center gap-6 text-[14px] text-white/80">
+                <span>● Principal {principalShare}%</span>
+                <span>● Interest {interestShare}%</span>
+              </div>
+              <button type="button" onClick={handleFinanceClick} className="btn-primary mt-5 h-12 w-full">
+                Get a financing quote
+                <ArrowRight className="h-4 w-4" />
+              </button>
             </div>
           </div>
 
-          <div className="rounded-4xl border border-slate-200 bg-white p-6 shadow-[0_20px_50px_rgba(15,23,42,0.06)] md:p-8">
+          <div className="mt-4 rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-16px_rgba(15,23,42,0.08)] md:p-8">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Financing mix</p>
-                <h2 className="mt-2 text-2xl text-slate-950">Principal vs interest</h2>
+                <div className="text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-500">Principal vs interest over time</div>
+                <h2 className="mt-2 text-[22px] font-semibold tracking-[-0.03em] text-slate-900">Year-wise breakdown</h2>
               </div>
-              <PiggyBank className="h-5 w-5 text-emerald-500" />
+              <BarChart3 className="h-5 w-5 text-emerald-600" />
             </div>
 
-            <div className="mt-6 space-y-4">
-              <ProgressRow label="Principal" value={estimate.principal} max={paymentMixMax} tone="bg-slate-950" />
-              <ProgressRow label="Interest" value={estimate.totalInterest} max={paymentMixMax} tone="bg-emerald-500" />
+            <div className="mt-5 flex flex-wrap items-center gap-5 text-[14px] text-slate-600">
+              <Legend tone="bg-amber-400" label="Interest" />
+              <Legend tone="bg-emerald-500" label="Principal" />
             </div>
 
-            <div className="mt-6 rounded-3xl border border-slate-100 bg-slate-50 p-4 text-sm text-slate-600">
-              <p className="font-semibold text-slate-900">What this means</p>
-              <p className="mt-2 leading-6">A larger down payment reduces interest cost and shortens the loan lifecycle. Use the summary export to share financing options internally.</p>
+            <div className="mt-5 overflow-x-auto">
+              <div className="min-w-120 rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-end gap-3 overflow-hidden">
+                  {yearlySchedule.map((row) => {
+                    const total = row.principal + row.interest || 1;
+                    const interestHeight = Math.max(18, (row.interest / total) * 120 + 18);
+                    const principalHeight = Math.max(18, (row.principal / total) * 120 + 18);
+                    return (
+                      <div key={row.year} className="flex flex-1 flex-col items-center gap-2">
+                        <div className="flex h-40 w-full items-end justify-center gap-1">
+                          <div className="w-5 rounded-t-full bg-amber-400/80" style={{ height: `${interestHeight}px` }} />
+                          <div className="w-5 rounded-t-full bg-emerald-500" style={{ height: `${principalHeight}px` }} />
+                        </div>
+                        <div className="text-[12px] font-semibold text-slate-500">{row.year}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="mt-4 flex justify-between px-2 text-[12px] text-slate-400">
+                  <span>0</span>
+                  <span>10k</span>
+                  <span>19k</span>
+                  <span>29k</span>
+                  <span>38k</span>
+                </div>
+              </div>
             </div>
 
-            <div className="mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white">
-              <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">Year-wise breakdown</div>
-              <div className="max-h-88 overflow-auto">
-                <table className="min-w-full text-left text-sm">
-                  <thead className="sticky top-0 bg-white text-xs uppercase tracking-[0.16em] text-slate-500">
+            <div className="mt-6 overflow-hidden rounded-[22px] border border-slate-200 bg-white">
+              <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 text-[14px] font-semibold text-slate-700">Year-wise breakdown</div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-left text-[14px]">
+                  <thead className="bg-white text-[12px] uppercase tracking-[0.16em] text-slate-500">
                     <tr>
                       <th className="px-4 py-3">Year</th>
-                      <th className="px-4 py-3">Opening</th>
+                      <th className="px-4 py-3">Opening balance</th>
                       <th className="px-4 py-3">Principal</th>
                       <th className="px-4 py-3">Interest</th>
-                      <th className="px-4 py-3">Closing</th>
+                      <th className="px-4 py-3">Closing balance</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -227,73 +368,118 @@ export default function EmiPage() {
               </div>
             </div>
           </div>
-
-          <div className="rounded-4xl border border-slate-200 bg-white p-6 shadow-[0_20px_50px_rgba(15,23,42,0.06)] md:p-8">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Next actions</p>
-                <h2 className="mt-2 text-2xl text-slate-950">Continue your solar journey</h2>
-              </div>
-              <ArrowRight className="h-5 w-5 text-emerald-500" />
-            </div>
-
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <Link href="/calculator" className="inline-flex h-12 items-center justify-center rounded-full bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800">
-                Open Calculator
-              </Link>
-              <Link href="/more/contact-us" className="inline-flex h-12 items-center justify-center rounded-full border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-800 transition hover:border-slate-300 hover:bg-slate-50">
-                Talk To Expert
-              </Link>
-            </div>
-          </div>
-        </aside>
+        </div>
       </div>
+
+      {validationErrors.length > 0 ? <p className="mt-4 text-sm text-amber-700">{validationErrors[0]}</p> : null}
+
+      {showFinanceForm ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4 py-6 backdrop-blur-sm">
+          <div className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.22)] md:p-8">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">EMI Financing Request</p>
+                <h2 className="mt-2 text-2xl font-semibold text-slate-950">Confirm your financing details</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowFinanceForm(false)}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="mt-5 grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 sm:grid-cols-2">
+              <p><span className="font-semibold">Loan amount:</span> {formatCurrency(loanAmount)}</p>
+              <p><span className="font-semibold">Estimated EMI:</span> {formatCurrency(estimate.emi)}</p>
+              <p><span className="font-semibold">Interest rate:</span> {interest.toFixed(1)}%</p>
+              <p><span className="font-semibold">Tenure:</span> {years} years</p>
+            </div>
+
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              <FieldInput label="Name" value={financeForm.fullName} onChange={(value) => setFinanceForm((current) => ({ ...current, fullName: value }))} />
+              <FieldInput label="Email" type="email" value={financeForm.email} onChange={(value) => setFinanceForm((current) => ({ ...current, email: value }))} />
+              <FieldInput label="Phone" value={financeForm.phone} onChange={(value) => setFinanceForm((current) => ({ ...current, phone: value }))} />
+              <FieldInput label="City" value={financeForm.city} onChange={(value) => setFinanceForm((current) => ({ ...current, city: value }))} />
+              <FieldInput label="State" value={financeForm.state} onChange={(value) => setFinanceForm((current) => ({ ...current, state: value }))} />
+            </div>
+
+            {financeFeedback ? (
+              <div className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${financeFeedback.startsWith("Your financing") ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-rose-200 bg-rose-50 text-rose-800"}`}>
+                {financeFeedback}
+              </div>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={handleFinanceSubmit}
+              disabled={isSubmittingFinance}
+              className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-full bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSubmittingFinance ? (
+                <span className="inline-flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Submitting
+                </span>
+              ) : (
+                "Submit financing request"
+              )}
+            </button>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
 
-function Field({ label, hint, children }: { label: string; hint: string; children: React.ReactNode }) {
+function FieldInput({
+  label,
+  value,
+  onChange,
+  type = "text",
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+}) {
   return (
-    <label className="block text-sm font-medium text-slate-700">
-      <div className="flex items-center gap-2">
-        <span>{label}</span>
-        <span className="inline-flex items-center text-slate-400" title={hint}>
-          <Info className="h-4 w-4" />
-        </span>
-      </div>
-      {children}
-    </label>
+    <div>
+      <label className="text-sm font-medium text-slate-700">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-900"
+      />
+    </div>
   );
 }
 
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</p>
-      <p className="mt-2 text-sm font-semibold text-slate-950">{value}</p>
+    <div className="rounded-[20px] border border-slate-200 bg-white px-4 py-4">
+      <div className="text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500">{label}</div>
+      <div className="mt-2 text-[18px] font-semibold tracking-[-0.03em] text-slate-900">{value}</div>
     </div>
   );
 }
 
-function MetricCard({ title, value }: { title: string; value: string }) {
+function DarkMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/6 p-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/55">{title}</p>
-      <p className="mt-2 text-lg font-semibold text-white">{value}</p>
+    <div className="rounded-[18px] border border-white/10 bg-white/5 p-4">
+      <div className="text-[12px] font-semibold uppercase tracking-[0.16em] text-white/55">{label}</div>
+      <div className="mt-2 text-[18px] font-semibold tracking-[-0.03em] text-white">{value}</div>
     </div>
   );
 }
 
-function ProgressRow({ label, value, max, tone }: { label: string; value: number; max: number; tone: string }) {
+function Legend({ tone, label }: { tone: string; label: string }) {
   return (
-    <div>
-      <div className="flex items-center justify-between text-sm text-slate-600">
-        <span>{label}</span>
-        <span className="font-semibold text-slate-900">{formatCurrency(value)}</span>
-      </div>
-      <div className="mt-2 h-2 rounded-full bg-slate-100">
-        <div className={`h-2 rounded-full ${tone}`} style={{ width: `${Math.max(8, Math.round((value / max) * 100))}%` }} />
-      </div>
+    <div className="flex items-center gap-2">
+      <span className={`h-3 w-3 rounded-full ${tone}`} />
+      <span>{label}</span>
     </div>
   );
 }

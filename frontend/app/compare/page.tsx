@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { apiClient } from "@/lib/api-client";
-import { getToken } from "@/lib/auth";
 import { panelData } from "@/data/site";
 import { useLocale } from "@/components/locale-provider";
 import DCRComparison from "@/components/dcr-comparison";
@@ -27,8 +27,17 @@ type PublicVendor = {
 
 export default function ComparePage() {
   const { t } = useLocale();
+  const searchParams = useSearchParams();
   const [vendors, setVendors] = useState<PublicVendor[]>([]);
   const [selectedVendorIds, setSelectedVendorIds] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [stateFilter, setStateFilter] = useState("all");
+  const [cityFilter, setCityFilter] = useState("");
+
+  const prefilledState = searchParams.get("state") || "";
+  const prefilledCity = searchParams.get("city") || "";
+  const prefilledSystemSize = searchParams.get("systemSize") || "";
+  const prefilledPropertyType = searchParams.get("propertyType") || "";
 
   useEffect(() => {
     const run = async () => {
@@ -41,9 +50,37 @@ export default function ComparePage() {
     void run();
   }, []);
 
+  useEffect(() => {
+    if (prefilledState) setStateFilter(prefilledState);
+    if (prefilledCity) setCityFilter(prefilledCity);
+  }, [prefilledCity, prefilledState]);
+
+  const stateOptions = useMemo(() => {
+    return Array.from(new Set(vendors.map((vendor) => vendor.state).filter(Boolean) as string[])).sort((a, b) => a.localeCompare(b));
+  }, [vendors]);
+
+  const filteredVendors = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    const selectedState = stateFilter.toLowerCase();
+    const selectedCity = cityFilter.trim().toLowerCase();
+
+    return vendors.filter((vendor) => {
+      const vendorState = String(vendor.state || "").toLowerCase();
+      const vendorCity = String(vendor.city || "").toLowerCase();
+      const searchable = [vendor.companyName, vendor.ownerName, vendor.businessType, ...(vendor.services || []), ...(vendor.certifications || [])]
+        .join(" ")
+        .toLowerCase();
+
+      const stateMatch = selectedState === "all" || vendorState === selectedState;
+      const cityMatch = !selectedCity || vendorCity.includes(selectedCity);
+      const searchMatch = !term || searchable.includes(term);
+      return stateMatch && cityMatch && searchMatch;
+    });
+  }, [cityFilter, searchTerm, stateFilter, vendors]);
+
   const selectedVendors = useMemo(
-    () => vendors.filter((vendor) => selectedVendorIds.includes(vendor.id)).slice(0, 3),
-    [selectedVendorIds, vendors]
+    () => filteredVendors.filter((vendor) => selectedVendorIds.includes(vendor.id)).slice(0, 3),
+    [filteredVendors, selectedVendorIds]
   );
 
   const toggleVendor = (vendorId: string) => {
@@ -68,6 +105,40 @@ export default function ComparePage() {
         <p className="mt-3 max-w-2xl text-sm text-slate-600">
           {t("compare.description")}
         </p>
+
+        <div className="mt-5 grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-4">
+          <input
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Search by company, service, or certification"
+            className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-slate-900 md:col-span-2"
+          />
+          <select
+            value={stateFilter}
+            onChange={(event) => setStateFilter(event.target.value)}
+            className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-slate-900"
+          >
+            <option value="all">All states</option>
+            {stateOptions.map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+          <input
+            value={cityFilter}
+            onChange={(event) => setCityFilter(event.target.value)}
+            placeholder="Filter by city"
+            className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-slate-900"
+          />
+        </div>
+
+        {(prefilledSystemSize || prefilledPropertyType || prefilledState || prefilledCity) ? (
+          <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">
+            {prefilledSystemSize ? <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">System {prefilledSystemSize} kW</span> : null}
+            {prefilledPropertyType ? <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">{prefilledPropertyType}</span> : null}
+            {prefilledState ? <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">{prefilledState}</span> : null}
+            {prefilledCity ? <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">{prefilledCity}</span> : null}
+          </div>
+        ) : null}
 
         <div className="mt-8 overflow-x-auto rounded-2xl border border-slate-200">
           <table className="min-w-full text-left text-sm">
@@ -106,7 +177,7 @@ export default function ComparePage() {
           </div>
 
           <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {vendors.map((vendor) => {
+            {filteredVendors.map((vendor) => {
               const active = selectedVendorIds.includes(vendor.id);
 
               return (
@@ -172,7 +243,7 @@ export default function ComparePage() {
             </div>
           ) : (
             <div className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-8 text-sm text-slate-600">
-              Pick up to three vendors to see the comparison table.
+              Pick up to three vendors from the filtered list to see the comparison table.
             </div>
           )}
         </div>

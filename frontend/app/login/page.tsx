@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import BrandMark from "@/components/brand-mark";
 import { useLocale } from "@/components/locale-provider";
@@ -12,12 +12,15 @@ type LoginRole = "user" | "vendor";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useLocale();
   const [role, setRole] = useState<LoginRole>("user");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const redirectPath = searchParams.get("redirect");
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -48,7 +51,7 @@ export default function LoginPage() {
       setSessionRole("USER");
       setSessionProfile(response.user);
       setUser(response.user);
-      router.push("/user/dashboard");
+      router.push(redirectPath || "/user/dashboard");
       return;
     }
 

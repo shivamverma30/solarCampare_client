@@ -28,21 +28,6 @@ export default function HeroLocal() {
           <p className="max-w-2xl text-base leading-7 text-slate-100/88 md:text-lg md:leading-8">
             {t("site.heroDescription")}
           </p>
-
-          <div className="flex flex-wrap items-stretch gap-3">
-            <Link
-              href="/calculator"
-              className="inline-flex h-12 items-center justify-center rounded-full border border-emerald-400/30 bg-emerald-500 px-7 text-sm font-semibold text-white shadow-[0_10px_26px_rgba(15,23,42,0.28)] transition hover:bg-emerald-600"
-            >
-              {t("buttons.calculateMySavings")}
-            </Link>
-            <Link
-              href="/compare"
-              className="inline-flex h-12 items-center justify-center rounded-full border border-white/20 bg-white/10 px-7 text-sm font-semibold text-white shadow-sm transition hover:border-white/30 hover:bg-white/18"
-            >
-              {t("buttons.comparePanels")}
-            </Link>
-          </div>
         </div>
 
         {/* Compact countdown positioned top-right on large screens */}

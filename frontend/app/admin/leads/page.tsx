@@ -23,6 +23,18 @@ type Lead = {
   }>;
 };
 
+type QuoteLead = {
+  id: string;
+  fullName: string;
+  email: string;
+  phone?: string | null;
+  city?: string | null;
+  state?: string | null;
+  status: string;
+  createdAt: string;
+  metadata?: Record<string, unknown> | null;
+};
+
 const leadStatuses = ["NEW", "CONTACTED", "VENDOR_ASSIGNED", "NEGOTIATION", "CLOSED_WON", "CLOSED_LOST"];
 const trackerStatuses = [
   "CONSULTATION_REQUESTED",
@@ -39,6 +51,7 @@ const trackerStatuses = [
 
 export default function AdminLeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [quoteLeads, setQuoteLeads] = useState<QuoteLead[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -54,7 +67,11 @@ export default function AdminLeadsPage() {
         return;
       }
 
-      const response = await apiClient.leads.getAdmin(token);
+      const [response, quotesResponse] = await Promise.all([
+        apiClient.leads.getAdmin(token),
+        apiClient.quotes.listQuotes(token),
+      ]);
+
       if (!response.success) {
         setError(response.error || "Failed to load leads");
       } else {
@@ -67,6 +84,15 @@ export default function AdminLeadsPage() {
             return acc;
           }, {})
         );
+      }
+
+      if (quotesResponse.success && Array.isArray((quotesResponse as { quoteRequests?: QuoteLead[] }).quoteRequests)) {
+        const allQuoteRows = (quotesResponse as { quoteRequests?: QuoteLead[] }).quoteRequests || [];
+        const filtered = allQuoteRows.filter((row) => {
+          const source = String((row.metadata || {}).source || "");
+          return source === "Solar Calculator Proposal" || source === "EMI Financing Request";
+        });
+        setQuoteLeads(filtered);
       }
 
       setLoading(false);
@@ -161,6 +187,56 @@ export default function AdminLeadsPage() {
         </div>
       ) : (
         <div className="space-y-4">
+          {quoteLeads.length ? (
+            <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_20px_50px_rgba(15,23,42,0.06)]">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Calculator and financing intents</p>
+                <h2 className="mt-2 text-2xl font-semibold text-slate-950">Digital lead requests</h2>
+              </div>
+
+              <div className="mt-5 space-y-3">
+                {quoteLeads.map((lead) => {
+                  const metadata = (lead.metadata || {}) as Record<string, unknown>;
+                  const source = String(metadata.source || "Quote Request");
+                  const recommendedKw = metadata.recommendedSystemSizeKw;
+                  const annualSavings = metadata.estimatedSavingsAnnual;
+                  const subsidy = metadata.subsidyAmount;
+                  const payback = metadata.paybackYears;
+                  const emi = metadata.emi;
+                  const loanAmount = metadata.loanAmount;
+
+                  return (
+                    <article key={lead.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                        <div>
+                          <p className="text-lg font-semibold text-slate-950">{lead.fullName}</p>
+                          <p className="text-sm text-slate-600">
+                            {lead.email}
+                            {lead.phone ? ` • ${lead.phone}` : ""}
+                            {lead.city || lead.state ? ` • ${lead.city || "-"}, ${lead.state || "-"}` : ""}
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">{source}</span>
+                          <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">{lead.status}</span>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 grid gap-2 text-sm text-slate-700 md:grid-cols-2">
+                        {recommendedKw ? <p><span className="font-semibold">Recommended system:</span> {String(recommendedKw)} kW</p> : null}
+                        {annualSavings ? <p><span className="font-semibold">Estimated savings:</span> ₹{Number(annualSavings).toLocaleString("en-IN")}/yr</p> : null}
+                        {subsidy ? <p><span className="font-semibold">Subsidy:</span> ₹{Number(subsidy).toLocaleString("en-IN")}</p> : null}
+                        {payback ? <p><span className="font-semibold">ROI / Payback:</span> {String(payback)} years</p> : null}
+                        {loanAmount ? <p><span className="font-semibold">Loan amount:</span> ₹{Number(loanAmount).toLocaleString("en-IN")}</p> : null}
+                        {emi ? <p><span className="font-semibold">EMI:</span> ₹{Number(emi).toLocaleString("en-IN")}/mo</p> : null}
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          ) : null}
+
           {leads.map((lead) => (
             <article key={lead.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_20px_50px_rgba(15,23,42,0.06)]">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">

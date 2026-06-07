@@ -7,8 +7,8 @@ import { useLocale } from "@/components/locale-provider";
 export default function Footer() {
   const { t } = useLocale();
   return (
-    <footer className="border-t border-black/10 bg-white/70 py-12">
-      <div className="mx-auto grid w-full max-w-7xl gap-8 px-4 md:grid-cols-3 md:px-8">
+    <footer className="border-t border-black/10 bg-white/70 py-8">
+      <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 md:grid-cols-3 md:px-8">
         <div>
           <BrandMark
             href="/"
@@ -50,7 +50,7 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="mx-auto mt-8 w-full max-w-7xl px-4 text-xs text-slate-500 md:px-8">
+      <div className="mx-auto mt-6 w-full max-w-7xl px-4 text-xs text-slate-500 md:px-8">
         <p>{t("footer.copyright", { year: new Date().getFullYear() })}</p>
       </div>
     </footer>

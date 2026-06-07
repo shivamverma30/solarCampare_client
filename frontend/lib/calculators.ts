@@ -1,48 +1,46 @@
 export type PropertyType = "residential" | "commercial" | "agriculture";
 
-export const citySunFactor = {
-  Ahmedabad: 1.08,
-  Bengaluru: 1.02,
-  Delhi: 0.96,
-  Jaipur: 1.1,
-  Mumbai: 0.95,
-  Pune: 1.0,
+export const solarStateProfiles = {
+  AndhraPradesh: { tariff: 7.8, sunHours: 5.0, discom: "APSPDCL / APEPDCL" },
+  ArunachalPradesh: { tariff: 7.2, sunHours: 4.2, discom: "APEDA / Local DISCOM" },
+  Assam: { tariff: 7.6, sunHours: 4.3, discom: "APDCL" },
+  Bihar: { tariff: 7.4, sunHours: 4.4, discom: "NBPDCL / SBPDCL" },
+  Chhattisgarh: { tariff: 7.7, sunHours: 4.8, discom: "CSPDCL" },
+  Goa: { tariff: 8.4, sunHours: 4.6, discom: "Goa Electricity Dept." },
+  Gujarat: { tariff: 7.6, sunHours: 4.9, discom: "GSECL / Torrent Power" },
+  Haryana: { tariff: 8.7, sunHours: 4.6, discom: "DHBVN / UHBVN" },
+  HimachalPradesh: { tariff: 7.9, sunHours: 4.1, discom: "HPSEBL" },
+  Jharkhand: { tariff: 7.5, sunHours: 4.4, discom: "JBVNL" },
+  Karnataka: { tariff: 8.4, sunHours: 4.5, discom: "BESCOM / MESCOM" },
+  Kerala: { tariff: 8.9, sunHours: 4.2, discom: "KSEB" },
+  MadhyaPradesh: { tariff: 7.9, sunHours: 4.8, discom: "MPPKVVCL / MPEB" },
+  Maharashtra: { tariff: 9.0, sunHours: 4.7, discom: "MSEDCL / Adani / Tata Power" },
+  Manipur: { tariff: 7.3, sunHours: 4.0, discom: "MSPDCL" },
+  Meghalaya: { tariff: 7.5, sunHours: 4.1, discom: "MeECL" },
+  Mizoram: { tariff: 7.2, sunHours: 4.0, discom: "Power & Electricity Dept." },
+  Nagaland: { tariff: 7.3, sunHours: 4.1, discom: "NPDCL" },
+  Odisha: { tariff: 7.8, sunHours: 4.6, discom: "TPNODL / TPWODL" },
+  Punjab: { tariff: 8.8, sunHours: 4.5, discom: "PSPCL" },
+  Rajasthan: { tariff: 8.8, sunHours: 5.1, discom: "JVVNL / AVVNL / JdVVNL" },
+  Sikkim: { tariff: 7.4, sunHours: 4.1, discom: "SEDCL" },
+  TamilNadu: { tariff: 8.5, sunHours: 4.6, discom: "TANGEDCO" },
+  Telangana: { tariff: 8.3, sunHours: 4.7, discom: "TSSPDCL / TSNPDCL" },
+  Tripura: { tariff: 7.2, sunHours: 4.0, discom: "TSECL" },
+  UttarPradesh: { tariff: 8.2, sunHours: 4.5, discom: "UPPCL" },
+  Uttarakhand: { tariff: 8.0, sunHours: 4.3, discom: "UPCL" },
+  WestBengal: { tariff: 7.8, sunHours: 4.3, discom: "WBSEDCL" },
+  Delhi: { tariff: 8.9, sunHours: 4.6, discom: "BSES / Tata Power-DDL" },
+  other: { tariff: 8.0, sunHours: 4.5, discom: "Local DISCOM" },
 } as const;
 
-export const citySunHours = {
-  Ahmedabad: 4.9,
-  Bengaluru: 4.4,
-  Delhi: 4.6,
-  Jaipur: 5.1,
-  Mumbai: 4.3,
-  Pune: 4.7,
-} as const;
+export const stateSubsidies = solarStateProfiles;
 
-export const stateSubsidies = {
-  Rajasthan: { central: 78000, state: 50000, tariff: 8.8, sunHours: 5.1 },
-  Gujarat: { central: 78000, state: 40000, tariff: 7.6, sunHours: 4.9 },
-  MP: { central: 78000, state: 30000, tariff: 7.9, sunHours: 4.8 },
-  Maharashtra: { central: 78000, state: 20000, tariff: 9.0, sunHours: 4.7 },
-  UP: { central: 78000, state: 20000, tariff: 8.2, sunHours: 4.5 },
-  Delhi: { central: 78000, state: 10000, tariff: 8.9, sunHours: 4.6 },
-  Karnataka: { central: 78000, state: 15000, tariff: 8.4, sunHours: 4.5 },
-  TamilNadu: { central: 78000, state: 10000, tariff: 8.5, sunHours: 4.6 },
-  Bihar: { central: 78000, state: 5000, tariff: 7.4, sunHours: 4.4 },
-  WestBengal: { central: 78000, state: 5000, tariff: 7.8, sunHours: 4.3 },
-  other: { central: 30000, state: 0, tariff: 8.0, sunHours: 4.5 },
-} as const;
-
-export type SolarCity = keyof typeof citySunFactor;
-export type SolarState = keyof typeof stateSubsidies;
+export type SolarState = keyof typeof solarStateProfiles;
 
 export type SolarInputs = {
   monthlyBill: number;
-  roofSize: number;
-  city: SolarCity;
   state: SolarState;
   propertyType: PropertyType;
-  electricityTariff?: number;
-  consumptionUnits?: number;
 };
 
 export type SolarEstimate = {
@@ -62,11 +60,10 @@ export type SolarEstimate = {
   annualGenerationUnits: number;
   electricityTariff: number;
   annualEnergyValue: number;
-  consumptionUnitsMonthly: number;
   co2SavingsKg: number;
-  treesEquivalent: number;
   sunHours: number;
-  yearlyProjection: Array<{ year: number; cumulativeSavings: number; cumulativeCost: number }>;
+  yearlyProjection: Array<{ year: number; opening: number; principal: number; interest: number; closing: number }>;
+  stateDiscom: string;
 };
 
 export type EmiInputs = {
@@ -96,64 +93,43 @@ export function validateSolarInputs(inputs: SolarInputs): string[] {
   const errors: string[] = [];
 
   if (inputs.monthlyBill <= 0) errors.push("Monthly bill must be greater than zero.");
-  if (inputs.roofSize <= 0) errors.push("Roof size must be greater than zero.");
 
   return errors;
 }
 
 export function calculateSolarEstimate(inputs: SolarInputs): SolarEstimate {
-  const typeFactor = inputs.propertyType === "commercial" ? 1.2 : inputs.propertyType === "agriculture" ? 1.1 : 1;
-  const stateData = stateSubsidies[inputs.state] || stateSubsidies.other;
-  const electricityTariff = inputs.electricityTariff || stateData.tariff;
-  const sunHours = stateData.sunHours || citySunHours[inputs.city] || 4.5;
-  const consumptionUnitsMonthly = Math.max(0, inputs.consumptionUnits || (inputs.monthlyBill / Math.max(electricityTariff, 1)));
-  const performanceRatio = inputs.propertyType === "commercial" ? 0.78 : inputs.propertyType === "agriculture" ? 0.8 : 0.82;
-  const billBasedKw = consumptionUnitsMonthly / Math.max(1, sunHours * 30 * performanceRatio * typeFactor);
-  const roofBasedKw = inputs.roofSize / 95;
-  const recommendedKw = Math.max(1, Math.min(billBasedKw, roofBasedKw));
+  const stateData = solarStateProfiles[inputs.state] || solarStateProfiles.other;
+  const electricityTariff = stateData.tariff;
+  const sunHours = stateData.sunHours;
+  const rawKw = inputs.monthlyBill / (electricityTariff * sunHours * 30);
+  const recommendedKw = Math.max(1, Math.round(rawKw * 10) / 10);
   const panelCount = Math.ceil((recommendedKw * 1000) / 550);
-  const annualGenerationUnits = recommendedKw * sunHours * 365 * performanceRatio;
+  const annualGenerationUnits = recommendedKw * sunHours * 365;
   const annualEnergyValue = annualGenerationUnits * electricityTariff;
   const investment = recommendedKw * 55000;
 
-  let totalSubsidy = 0;
-
-  if (inputs.propertyType === "residential") {
-    let centralSubsidy = 0;
-
-    if (recommendedKw <= 2) {
-      centralSubsidy = 30000;
-    } else if (recommendedKw <= 3) {
-      centralSubsidy = 60000;
-    } else {
-      centralSubsidy = Math.min(78000, recommendedKw * 26000);
-    }
-
-    const stateSubsidy = Math.min(stateData.state, investment - centralSubsidy);
-    totalSubsidy = Math.max(0, centralSubsidy + stateSubsidy);
-  } else if (inputs.propertyType === "agriculture") {
-    totalSubsidy = Math.min(investment * 0.18, 78000);
-  }
+  const firstTwoKw = Math.min(recommendedKw, 2);
+  const nextOneKw = Math.min(Math.max(recommendedKw - 2, 0), 1);
+  const totalSubsidy = Math.min(78000, Math.round(firstTwoKw * 30000 + nextOneKw * 18000));
 
   const netInvestment = Math.max(0, investment - totalSubsidy);
-  const annualSavings = Math.min(inputs.monthlyBill, annualEnergyValue * 0.9);
-  const roiYears = annualSavings > 0 ? netInvestment / annualSavings : 0;
-  const roiPercent = netInvestment > 0 ? (annualSavings / netInvestment) * 100 : 0;
+  const annualSavings = annualEnergyValue;
   const monthlySavings = annualSavings / 12;
-  const savings25yr = annualSavings * 25 * 1.05;
-  const annualSavings5yr = annualSavings * 5 * 1.05;
-  const annualSavings10yr = annualSavings * 10 * 1.05;
+  const roiYears = monthlySavings > 0 ? netInvestment / monthlySavings / 12 : 0;
+  const roiPercent = netInvestment > 0 ? (annualSavings / netInvestment) * 100 : 0;
+  const annualSavings5yr = annualSavings * 5;
+  const annualSavings10yr = annualSavings * 10;
+  const savings25yr = annualSavings * 21.6 + 30000 + (recommendedKw < 3 ? 30000 : 0);
   const paybackMonths = roiYears * 12;
-  const co2SavingsKg = annualGenerationUnits * 0.82;
-  const treesEquivalent = co2SavingsKg / 21;
+  const co2SavingsKg = annualGenerationUnits * 0.8;
 
   const yearlyProjection = Array.from({ length: 5 }, (_, index) => {
     const year = index + 1;
-    return {
-      year,
-      cumulativeSavings: annualSavings * year * (1 + ((year - 1) * 0.05)),
-      cumulativeCost: netInvestment > 0 ? Math.min(netInvestment, (netInvestment / 5) * year) : 0,
-    };
+    const opening = Math.max(0, netInvestment - (netInvestment / 5) * (year - 1));
+    const principal = Math.min(netInvestment, netInvestment / 5);
+    const interest = Math.max(0, annualSavings - principal);
+    const closing = Math.max(0, netInvestment - (netInvestment / 5) * year);
+    return { year, opening, principal, interest, closing };
   });
 
   return {
@@ -173,11 +149,10 @@ export function calculateSolarEstimate(inputs: SolarInputs): SolarEstimate {
     annualGenerationUnits,
     electricityTariff,
     annualEnergyValue,
-    consumptionUnitsMonthly,
     co2SavingsKg,
-    treesEquivalent,
     sunHours,
     yearlyProjection,
+    stateDiscom: stateData.discom,
   };
 }
 

@@ -49,14 +49,14 @@ export default function Countdown({
 
   const card = (
     <div
-      className={`rounded-[28px] border border-emerald-200/30 bg-[rgba(6,23,16,0.46)] ${isHero ? "p-3 w-80" : "p-4 sm:p-5"} shadow-[0_18px_40px_rgba(2,6,23,0.28)] ring-1 ring-white/10 backdrop-blur-[22px] transition duration-300 ${
+      className={`rounded-[28px] border border-emerald-200/30 bg-[rgba(6,23,16,0.46)] ${isHero ? "w-96 p-3" : "p-4 sm:p-5"} shadow-[0_18px_40px_rgba(2,6,23,0.28)] ring-1 ring-white/10 backdrop-blur-[22px] transition duration-300 ${
         isHero ? "hover:translate-y-0" : "hover:-translate-y-0.5 hover:shadow-[0_22px_48px_rgba(2,6,23,0.3)]"
       }`}
     >
       <div className="flex flex-col gap-3">
         <div>
           <p className={`text-[11px] font-semibold uppercase tracking-[0.26em] text-emerald-200 ${isHero ? "text-[10px]" : ""}`}>Upcoming Solar Subsidy Update</p>
-          <h3 className={`mt-1 font-extrabold text-white ${isHero ? "text-lg" : "text-xl sm:text-2xl"}`}>Time left to review the next subsidy window</h3>
+          <h3 className={`mt-1 font-medium text-white ${isHero ? "text-lg" : "text-xl sm:text-2xl"}`}>Time left to review the next subsidy window</h3>
           <p className={`mt-1 text-sm leading-5 text-emerald-50/84 ${isHero ? "text-xs leading-4" : "leading-6"}`}>Track the deadline and plan your proposal before the update closes.</p>
         </div>
 

@@ -9,6 +9,7 @@ type BrandMarkProps = {
   imageClassName?: string;
   compact?: boolean;
   showTagline?: boolean;
+  stacked?: boolean;
 };
 
 export default function BrandMark({
@@ -19,11 +20,12 @@ export default function BrandMark({
   imageClassName = "",
   compact = false,
   showTagline = true,
+  stacked = false,
 }: BrandMarkProps) {
   // Slightly smaller logo when `compact` to keep the header slim
   const imageSize = compact ? 36 : 52;
   const linkClassName = `inline-flex items-center gap-2 ${className}`.trim();
-  const titleClasses = `font-serif text-[0.96rem] font-semibold tracking-[0.12em] ${titleClassName}`.trim();
+  const titleClasses = `font-serif text-[0.98rem] font-extrabold uppercase tracking-[0.16em] ${titleClassName}`.trim();
   const taglineClasses = `mt-0.5 text-[0.58rem] font-semibold uppercase tracking-[0.18em] ${taglineClassName}`.trim();
 
   return (
@@ -38,8 +40,15 @@ export default function BrandMark({
         priority
       />
 
-      <span className="flex min-w-0 flex-col leading-none">
-        <span className={titleClasses}>Solar Compare</span>
+      <span className={`flex min-w-0 leading-none ${stacked ? "flex-col" : "flex-col"}`}>
+        {stacked ? (
+          <>
+            <span className={`${titleClasses} text-[1.16rem] font-black tracking-[0.11em]`}>Solar</span>
+            <span className={`${titleClasses} mt-0.5 text-[1.16rem] font-black tracking-[0.09em]`}>Compare</span>
+          </>
+        ) : (
+          <span className={titleClasses}>Solar Compare</span>
+        )}
         {showTagline && <span className={taglineClasses}>by SAFWE ENERGY</span>}
       </span>
     </Link>
