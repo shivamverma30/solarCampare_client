@@ -20,10 +20,29 @@ if (!env.FRONTEND_URL) {
   throw new Error("Missing required environment variable: FRONTEND_URL");
 }
 
+const normalizeOrigin = (value: string) => value.replace(/\/$/, "");
+const allowedOrigins = new Set([
+  "http://localhost:3000",
+  normalizeOrigin(env.FRONTEND_URL),
+]);
+
 // Middleware
 app.use(
   cors({
-    origin: env.FRONTEND_URL,
+    origin: (requestOrigin, callback) => {
+      if (!requestOrigin) {
+        callback(null, true);
+        return;
+      }
+
+      const normalizedRequestOrigin = normalizeOrigin(requestOrigin);
+      if (allowedOrigins.has(normalizedRequestOrigin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   })
 );

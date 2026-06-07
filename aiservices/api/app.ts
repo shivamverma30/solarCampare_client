@@ -6,10 +6,28 @@ import { apiRouter } from "./router.js";
 export function createApp() {
   const env = getEnv();
   const app = express();
+  const normalizeOrigin = (value: string) => value.replace(/\/$/, "");
+  const allowedOrigins = new Set([
+    "http://localhost:3000",
+    normalizeOrigin(env.FRONTEND_URL),
+  ]);
 
   app.use(
     cors({
-      origin: env.FRONTEND_URL,
+      origin: (requestOrigin, callback) => {
+        if (!requestOrigin) {
+          callback(null, true);
+          return;
+        }
+
+        const normalizedRequestOrigin = normalizeOrigin(requestOrigin);
+        if (allowedOrigins.has(normalizedRequestOrigin)) {
+          callback(null, true);
+          return;
+        }
+
+        callback(new Error("Not allowed by CORS"));
+      },
       credentials: true,
     })
   );
