@@ -7,7 +7,7 @@ export default function TrustedBrands() {
   const { t } = useLocale();
 
   return (
-    <section className="mx-auto mt-16 w-full max-w-7xl px-4 md:px-8">
+    <section className="mx-auto mt-12 mb-8 w-full max-w-7xl px-4 md:mb-10 md:px-8">
       <div className="rounded-3xl border border-slate-200 bg-white/85 p-8 shadow-xl">
         <p className="text-center text-xs font-semibold uppercase tracking-[0.26em] text-slate-500">
           {t("trustedBrands.title")}

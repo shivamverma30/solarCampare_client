@@ -11,7 +11,7 @@ async function main() {
   const app = createApp();
 
   app.listen(env.PORT, () => {
-    console.log(`✅ Solar AI Assistant running on http://localhost:${env.PORT}`);
+    console.log(`✅ Solar AI Assistant running on port ${env.PORT}`);
     console.log(`🔗 Frontend URL: ${env.FRONTEND_URL}`);
     console.log(`🤖 Model: ${env.AI_MODEL}`);
   });

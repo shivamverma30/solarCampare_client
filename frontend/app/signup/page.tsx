@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import BrandMark from "@/components/brand-mark";
 import { useLocale } from "@/components/locale-provider";
 import { apiClient } from "@/lib/api-client";
@@ -26,6 +26,12 @@ export default function SignupPage() {
   const [verificationToken, setVerificationToken] = useState<string | null>(null);
   const [otp, setOtp] = useState("");
   const [resendLoading, setResendLoading] = useState(false);
+  const [redirectPath, setRedirectPath] = useState<string | null>(null);
+
+  useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    setRedirectPath(query.get("redirect"));
+  }, []);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -64,7 +70,7 @@ export default function SignupPage() {
       setSessionRole("USER");
       setSessionProfile(response.user);
       setUser(response.user);
-      router.push("/user/dashboard");
+      router.push(redirectPath || "/user/dashboard");
       return;
     }
   };
@@ -100,7 +106,7 @@ export default function SignupPage() {
                         setSessionRole("USER");
                         setSessionProfile(res.user);
                         setUser(res.user);
-                        router.push("/user/dashboard");
+                        router.push(redirectPath || "/user/dashboard");
                         return;
                       }
                       router.push("/login");

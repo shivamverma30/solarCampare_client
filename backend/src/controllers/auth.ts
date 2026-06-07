@@ -7,7 +7,11 @@ import { AuthRequest } from "../middleware/auth";
 import { createAuditLog, createNotification, safeEmailDispatch, sendTransactionalEmail, welcomeTemplate, otpTemplate } from "../lib/workflow";
 import { notificationTemplates } from "../lib/notification-templates";
 
-const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+const frontendUrl = process.env.FRONTEND_URL;
+
+if (!frontendUrl) {
+  throw new Error("Missing required environment variable: FRONTEND_URL");
+}
 
 function createOneTimeToken(): string {
   return randomBytes(32).toString("hex");

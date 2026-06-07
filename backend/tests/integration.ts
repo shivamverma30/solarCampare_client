@@ -1,4 +1,8 @@
-const BASE = process.env.BASE_URL || 'http://localhost:3001';
+const BASE = process.env.BASE_URL;
+
+if (!BASE) {
+  throw new Error("Missing required environment variable: BASE_URL");
+}
 
 // use global fetch (Node 18+). If not available, runtime will error.
 const fetchFn: typeof fetch = (globalThis as any).fetch ? (globalThis as any).fetch.bind(globalThis) : (async () => { throw new Error('fetch is not available in this Node runtime'); }) as any;

@@ -21,6 +21,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
 
   const redirectPath = searchParams.get("redirect");
+  const signupHref = redirectPath ? `/signup?redirect=${encodeURIComponent(redirectPath)}` : "/signup";
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -69,7 +70,7 @@ export default function LoginPage() {
           <p className="mt-5 max-w-sm text-sm leading-7 text-white/80">{t("auth.signinDescription")}</p>
           <div className="mt-10 rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur">
             <p className="text-sm text-white/85">New here?</p>
-            <Link href="/signup" className="mt-3 inline-flex rounded-full border border-amber-300/80 bg-amber-400 px-5 py-2 text-sm font-semibold text-black transition hover:bg-amber-300">
+            <Link href={signupHref} className="mt-3 inline-flex rounded-full border border-amber-300/80 bg-amber-400 px-5 py-2 text-sm font-semibold text-black transition hover:bg-amber-300">
               {t("buttons.createAccount")}
             </Link>
           </div>
@@ -121,7 +122,7 @@ export default function LoginPage() {
                 <input type="checkbox" className="h-4 w-4 rounded border-slate-300 accent-amber-500" />
                 {t("auth.rememberMe")}
               </label>
-              <Link href="/signup" className="text-sm font-semibold text-amber-600 transition hover:text-amber-500">
+              <Link href={signupHref} className="text-sm font-semibold text-amber-600 transition hover:text-amber-500">
                 {t("buttons.createAccount")}
               </Link>
             </div>
@@ -132,7 +133,7 @@ export default function LoginPage() {
           </form>
 
           <p className="mt-5 text-sm text-slate-600">
-            {t("auth.dontHaveAccount")} <Link href="/signup" className="font-semibold text-amber-600 transition hover:text-amber-500">{t("buttons.signUp")}</Link>
+            {t("auth.dontHaveAccount")} <Link href={signupHref} className="font-semibold text-amber-600 transition hover:text-amber-500">{t("buttons.signUp")}</Link>
           </p>
         </div>
       </div>

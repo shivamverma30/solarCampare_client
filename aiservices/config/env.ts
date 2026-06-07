@@ -16,8 +16,9 @@ export function getEnv(): AiServiceEnv {
   const DATABASE_URL = process.env.DATABASE_URL || "";
   const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
   const AI_MODEL = process.env.AI_MODEL || "gemini-2.5-flash";
-  const PORT = Number(process.env.PORT || "4000");
-  const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+  const rawPort = process.env.PORT || "";
+  const FRONTEND_URL = process.env.FRONTEND_URL || "";
+  const PORT = Number(rawPort);
 
   if (!DATABASE_URL) {
     throw new Error("Missing required environment variable: DATABASE_URL");
@@ -25,6 +26,14 @@ export function getEnv(): AiServiceEnv {
 
   if (!GEMINI_API_KEY) {
     throw new Error("Missing required environment variable: GEMINI_API_KEY");
+  }
+
+  if (!rawPort || Number.isNaN(PORT)) {
+    throw new Error("Missing or invalid environment variable: PORT");
+  }
+
+  if (!FRONTEND_URL) {
+    throw new Error("Missing required environment variable: FRONTEND_URL");
   }
 
   cachedEnv = { DATABASE_URL, GEMINI_API_KEY, AI_MODEL, PORT, FRONTEND_URL };

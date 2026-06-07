@@ -1,4 +1,8 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+if (!API_URL) {
+  throw new Error("Missing required environment variable: NEXT_PUBLIC_API_URL");
+}
 
 type JsonObject = Record<string, unknown>;
 

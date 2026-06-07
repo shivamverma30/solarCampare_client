@@ -1,4 +1,8 @@
-const AI_SERVICE_URL = process.env.NEXT_PUBLIC_AI_SERVICE_URL || "http://localhost:4000";
+const AI_SERVICE_URL = process.env.NEXT_PUBLIC_AI_SERVICE_URL;
+
+if (!AI_SERVICE_URL) {
+  throw new Error("Missing required environment variable: NEXT_PUBLIC_AI_SERVICE_URL");
+}
 
 type AiMessagePayload = {
   message: string;

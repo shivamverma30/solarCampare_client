@@ -95,7 +95,7 @@ export default function CalculatorPage() {
 
   const handleCompareVendors = () => {
     const profile = getSessionProfile() as Record<string, unknown> | null;
-    const city = String(profile?.city || "");
+    const city = proposalForm.city.trim() || String(profile?.city || "");
 
     const comparePath = `/compare?state=${encodeURIComponent(state)}&city=${encodeURIComponent(city)}&systemSize=${encodeURIComponent(formatKw(estimate.recommendedKw))}&propertyType=${encodeURIComponent(propertyType)}`;
 

@@ -5,6 +5,22 @@ const env = getEnv();
 
 let transporter: nodemailer.Transporter | null = null;
 
+function getSupportEmail() {
+  const supportEmail = env.ADMIN_EMAIL || process.env.ADMIN_EMAIL || env.EMAIL_FROM || process.env.EMAIL_FROM;
+  if (!supportEmail) {
+    throw new Error("Missing required environment variable: ADMIN_EMAIL or EMAIL_FROM");
+  }
+  return supportEmail;
+}
+
+function getAppUrl() {
+  const appUrl = env.FRONTEND_URL || process.env.FRONTEND_URL;
+  if (!appUrl) {
+    throw new Error("Missing required environment variable: FRONTEND_URL");
+  }
+  return appUrl.replace(/\/$/, "");
+}
+
 function initTransporter() {
   if (transporter) return transporter;
 
@@ -30,8 +46,8 @@ function initTransporter() {
 }
 
 function baseHtmlTemplate({ title, preheader, bodyHtml, ctaText, ctaHref }: { title: string; preheader?: string; bodyHtml: string; ctaText?: string; ctaHref?: string; }) {
-  const supportEmail = env.ADMIN_EMAIL || process.env.ADMIN_EMAIL || "support@solarcompare.example";
-  const appUrl = (env.FRONTEND_URL || process.env.FRONTEND_URL || "https://solarcompare.example").replace(/\/$/, "");
+  const supportEmail = getSupportEmail();
+  const appUrl = getAppUrl();
 
   const primaryButton = ctaText && ctaHref ? `
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:22px;">
@@ -192,7 +208,7 @@ export function resetTemplate(name: string, link: string) {
 }
 
 export function welcomeTemplate(name: string) {
-  const appUrl = (env.FRONTEND_URL || process.env.FRONTEND_URL || "https://solarcompare.example").replace(/\/$/, "");
+  const appUrl = getAppUrl();
   const body = `
     <div style="margin:0 0 12px 0;">Hi ${name},</div>
     <div style="margin:0 0 18px 0;">Welcome to Solar Compare. You now have access to a premium solar marketplace built to help you compare, discover and connect faster.</div>
@@ -213,7 +229,7 @@ export function welcomeTemplate(name: string) {
 }
 
 export function vendorApprovalTemplate(companyName: string) {
-  const appUrl = (env.FRONTEND_URL || process.env.FRONTEND_URL || "https://solarcompare.example").replace(/\/$/, "");
+  const appUrl = getAppUrl();
   const body = `
     <div style="margin:0 0 12px 0;">Hi ${companyName},</div>
     <div style="margin:0 0 18px 0;">Congratulations — your vendor profile is approved and ready to use.</div>
@@ -231,7 +247,7 @@ export function vendorApprovalTemplate(companyName: string) {
 }
 
 export function vendorRejectionTemplate(companyName: string, reason?: string) {
-  const supportEmail = env.ADMIN_EMAIL || process.env.ADMIN_EMAIL || "support@solarcompare.example";
+  const supportEmail = getSupportEmail();
   const body = `
     <div style="margin:0 0 12px 0;">Hi ${companyName},</div>
     <div style="margin:0 0 18px 0;">Thank you for applying to join Solar Compare. After review, we’re unable to approve the application at this time.</div>
@@ -254,7 +270,7 @@ export function adminNotificationTemplate(subject: string, message: string) {
 }
 
 export function quoteNotificationTemplate(payloadSummary: string) {
-  const appUrl = (env.FRONTEND_URL || process.env.FRONTEND_URL || "https://solarcompare.example").replace(/\/$/, "");
+  const appUrl = getAppUrl();
   const body = `
     <div style="margin:0 0 12px 0;">A new inquiry or quote was submitted.</div>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">

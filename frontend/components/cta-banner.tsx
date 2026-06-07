@@ -16,18 +16,12 @@ export default function CtaBanner() {
           <p className="mt-3 text-sm text-slate-700">
             {t("cta.description")}
           </p>
-          <div className="mt-6 flex flex-wrap items-stretch gap-3">
+          <div className="mt-7 flex flex-wrap items-stretch gap-3 sm:gap-4">
             <Link
               href="/calculator"
               className="inline-flex h-12 items-center justify-center rounded-full bg-slate-950 px-6 text-sm font-semibold text-white transition hover:bg-slate-800"
             >
               {t("buttons.startCalculation")}
-            </Link>
-            <Link
-              href="/compare"
-              className="inline-flex h-12 items-center justify-center rounded-full border border-slate-300 bg-white px-6 text-sm font-semibold text-slate-900 transition hover:border-slate-400 hover:bg-slate-50"
-            >
-              {t("buttons.comparePanels")}
             </Link>
             <Link
               href="/calculator"

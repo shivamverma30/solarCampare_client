@@ -3,19 +3,27 @@ import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
 
-// validate environment early
-import {getEnv} from "./lib/env";
-getEnv();
-
 dotenv.config();
 
+// validate environment early
+import {getEnv} from "./lib/env";
+const env = getEnv();
+
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = Number(env.PORT || process.env.PORT);
+
+if (!PORT || Number.isNaN(PORT)) {
+  throw new Error("Missing or invalid environment variable: PORT");
+}
+
+if (!env.FRONTEND_URL) {
+  throw new Error("Missing required environment variable: FRONTEND_URL");
+}
 
 // Middleware
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: env.FRONTEND_URL,
     credentials: true,
   })
 );
@@ -56,7 +64,7 @@ app.use((req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
-  console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL}`);
+  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`🔗 Frontend URL: ${env.FRONTEND_URL}`);
   console.log(`📊 Database: ${process.env.DATABASE_URL?.substring(0, 40)}...`);
 });
