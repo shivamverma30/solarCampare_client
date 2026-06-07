@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, ChevronDown, Factory, Home, Leaf, Loader2, PanelTop, SunMedium, X } from "lucide-react";
 import {
@@ -30,7 +30,7 @@ function formatKw(value: number) {
   return Number.isInteger(rounded) ? String(Math.round(rounded)) : rounded.toFixed(1);
 }
 
-export default function CalculatorPage() {
+function CalculatorPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, role } = useAuth();
@@ -475,6 +475,14 @@ export default function CalculatorPage() {
         </div>
       ) : null}
     </section>
+  );
+}
+
+export default function CalculatorPage() {
+  return (
+    <Suspense fallback={null}>
+      <CalculatorPageContent />
+    </Suspense>
   );
 }
 

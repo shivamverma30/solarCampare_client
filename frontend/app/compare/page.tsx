@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { apiClient } from "@/lib/api-client";
 import { panelData } from "@/data/site";
@@ -25,7 +25,7 @@ type PublicVendor = {
   serviceAreas?: Array<{ city?: string | null; state?: string | null; pincode: string; isPrimary: boolean }>;
 };
 
-export default function ComparePage() {
+function ComparePageContent() {
   const { t } = useLocale();
   const searchParams = useSearchParams();
   const [vendors, setVendors] = useState<PublicVendor[]>([]);
@@ -279,5 +279,13 @@ export default function ComparePage() {
         <DCRComparison />
       </div>
     </section>
+  );
+}
+
+export default function ComparePage() {
+  return (
+    <Suspense fallback={null}>
+      <ComparePageContent />
+    </Suspense>
   );
 }

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import BrandMark from "@/components/brand-mark";
 import { useLocale } from "@/components/locale-provider";
 import { apiClient } from "@/lib/api-client";
@@ -10,7 +10,7 @@ import { setSessionProfile, setSessionRole, setToken, setUser, setVendor } from 
 
 type LoginRole = "user" | "vendor";
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useLocale();
@@ -138,5 +138,13 @@ export default function LoginPage() {
         </div>
       </div>
     </section>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageContent />
+    </Suspense>
   );
 }

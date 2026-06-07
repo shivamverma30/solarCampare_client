@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import { ArrowRight, BarChart3, Landmark, Loader2, Wallet, X } from "lucide-react";
@@ -58,7 +58,7 @@ function formatDisplayAmount(value: number) {
   return formatCurrency(value);
 }
 
-export default function EmiPage() {
+function EmiPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, role } = useAuth();
@@ -430,6 +430,14 @@ export default function EmiPage() {
         </div>
       ) : null}
     </section>
+  );
+}
+
+export default function EmiPage() {
+  return (
+    <Suspense fallback={null}>
+      <EmiPageContent />
+    </Suspense>
   );
 }
 
