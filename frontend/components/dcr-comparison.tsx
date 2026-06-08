@@ -57,9 +57,6 @@ export default function DCRComparisonSection() {
     },
   ];
 
-  const dcrBrands = ["Adani Solar", "Goldi Solar", "Luminous", "Vikram Solar", "Waaree"];
-  const nonDcrBrands = ["Tata Solar", "Panasonic", "Canadian Solar", "JinkoSolar", "JA Solar"];
-
   return (
     <section id="dcr-comparison" className="mx-auto mt-20 w-full max-w-7xl px-4 md:px-8">
       <div className="mb-12 text-center">
@@ -184,43 +181,6 @@ export default function DCRComparisonSection() {
               ))}
             </tbody>
           </table>
-        </div>
-      </div>
-
-      {/* Brand Comparison */}
-      <div className="grid gap-8 md:grid-cols-2 mb-12">
-        <div className="rounded-2xl bg-emerald-50 border border-emerald-200 p-8">
-          <h3 className="text-xl font-bold text-emerald-900 mb-6">Popular DCR Brands (Indian)</h3>
-          <div className="grid grid-cols-2 gap-3">
-            {dcrBrands.map((brand) => (
-              <div
-                key={brand}
-                className="rounded-lg bg-white p-3 border border-emerald-200 text-sm font-medium text-slate-900 text-center"
-              >
-                {brand}
-              </div>
-            ))}
-          </div>
-          <p className="mt-6 text-sm text-emerald-800">
-            These brands manufacture in India and qualify for maximum PM Surya Ghar subsidies.
-          </p>
-        </div>
-
-        <div className="rounded-2xl bg-blue-50 border border-blue-200 p-8">
-          <h3 className="text-xl font-bold text-blue-900 mb-6">Popular Non-DCR Brands (International)</h3>
-          <div className="grid grid-cols-2 gap-3">
-            {nonDcrBrands.map((brand) => (
-              <div
-                key={brand}
-                className="rounded-lg bg-white p-3 border border-blue-200 text-sm font-medium text-slate-900 text-center"
-              >
-                {brand}
-              </div>
-            ))}
-          </div>
-          <p className="mt-6 text-sm text-blue-800">
-            These premium international brands offer higher efficiency and longer warranties.
-          </p>
         </div>
       </div>
 

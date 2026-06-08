@@ -6,7 +6,6 @@ import {
   aboutOverview,
   blogPosts,
   businessBenefits,
-  faqItems,
   homeownerBenefits,
   howItWorksSteps,
   platformStats,
@@ -14,7 +13,6 @@ import {
 } from "@/data/more-content";
 import BlogCard from "@/components/more/blog-card";
 import ContactEnquiryForm from "@/components/more/contact-enquiry-form";
-import FaqAccordion from "@/components/more/faq-accordion";
 import { BarChart3, Calculator, ClipboardCheck, Handshake, SearchCheck, Sparkles } from "lucide-react";
 
 type MorePageProps = {
@@ -350,8 +348,17 @@ export default async function MorePage({ params, searchParams }: MorePageProps) 
         ) : null}
 
         {slug === "faq" ? (
-          <div className="mt-8">
-            <FaqAccordion items={faqItems} />
+          <div className="mt-8 rounded-3xl border border-slate-200 bg-slate-50 p-6 md:p-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">FAQ Relocated</p>
+            <h3 className="mt-3 text-2xl font-semibold text-slate-950">FAQ is now available on the Home page</h3>
+            <p className="mt-3 text-sm leading-7 text-slate-600">
+              We moved frequently asked questions to the Home experience for faster buyer access during comparison and proposal workflows.
+            </p>
+            <div className="mt-5">
+              <Link href="/#home-faq" className="inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-100">
+                Go to Home FAQ
+              </Link>
+            </div>
           </div>
         ) : null}
 

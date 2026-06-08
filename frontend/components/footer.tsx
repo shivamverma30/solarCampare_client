@@ -16,10 +16,36 @@ const socialPlaceholders = [
 export default function Footer() {
   const { t } = useLocale();
 
+  const platformLinks = [
+    { label: "Compare Quotes", href: "/compare" },
+    { label: "Subsidy Calculator", href: "/calculator" },
+    { label: "PM Surya Ghar Help", href: "/more/how-it-works" },
+    { label: "Financing & EMI", href: "/emi" },
+    { label: "Solar Insurance", href: "/services/solar-maintenance" },
+    { label: "Energy Monitor", href: "/services/solar-maintenance" },
+  ];
+
+  const learnLinks = [
+    { label: "Solar Panel Types", href: "/services/residential-solar" },
+    { label: "Inverter Guide", href: "/more/blogs" },
+    { label: "DCR Brand List", href: "/#dcr-comparison" },
+    { label: "State Subsidies", href: "/calculator" },
+    { label: "ROI Calculator", href: "/calculator" },
+    { label: "Blog", href: "/more/blogs" },
+  ];
+
+  const companyLinks = [
+    { label: "About Us", href: "/more/about-us" },
+    { label: "Vendor Partners", href: "/become-vendor" },
+    { label: "Careers", href: "/more/contact-us" },
+    { label: "Contact", href: "/more/contact-us" },
+    { label: "Privacy Policy", href: "/more/contact-us" },
+  ];
+
   return (
-    <footer className="border-t border-slate-200 bg-white/85 pt-6 md:pt-8">
-      <div className="mx-auto grid w-full max-w-7xl gap-8 px-4 md:grid-cols-[1.35fr_1fr_1fr] md:px-8 md:gap-10">
-        <div className="max-w-md">
+    <footer className="border-t border-slate-200 bg-white/90 pt-8 md:pt-10">
+      <div className="mx-auto grid w-full max-w-7xl gap-8 px-4 md:grid-cols-[1.2fr_1fr_1fr_1fr] md:gap-10 md:px-8">
+        <div className="max-w-sm">
           <BrandMark
             href="/"
             compact
@@ -28,7 +54,7 @@ export default function Footer() {
             taglineClassName="text-slate-500"
           />
           <p className="mt-3 text-sm leading-7 text-slate-600">
-            {t("footer.description")}
+            Compare verified solar vendors, subsidy opportunities, and financing options through one trusted, India-focused platform.
           </p>
 
           <div className="mt-5">
@@ -53,34 +79,40 @@ export default function Footer() {
         </div>
 
         <div className="md:pt-1">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">{t("footer.quickLinks")}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Platform</p>
           <div className="mt-4 flex flex-col gap-2.5 text-sm">
-            <Link href="/" className="text-slate-700 transition hover:text-black">
-              {t("nav.home")}
-            </Link>
-            <Link href="/calculator" className="text-slate-700 transition hover:text-black">
-              {t("nav.calculator")}
-            </Link>
-            <Link href="/compare" className="text-slate-700 transition hover:text-black">
-              {t("nav.compare")}
-            </Link>
-            <Link href="/emi" className="text-slate-700 transition hover:text-black">
-              {t("nav.emi")}
-            </Link>
+            {platformLinks.map((link) => (
+              <Link key={link.label} href={link.href} className="text-slate-700 transition hover:text-black">
+                {link.label}
+              </Link>
+            ))}
           </div>
         </div>
 
         <div className="md:pt-1">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">{t("footer.contact")}</p>
-          <div className="mt-4 space-y-2.5 text-sm text-slate-700">
-            <p>{t("footer.contactEmail")}</p>
-            <p>{t("footer.contactPhone")}</p>
-            <p>{t("footer.hours")}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Learn</p>
+          <div className="mt-4 flex flex-col gap-2.5 text-sm">
+            {learnLinks.map((link) => (
+              <Link key={link.label} href={link.href} className="text-slate-700 transition hover:text-black">
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <div className="md:pt-1">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Company</p>
+          <div className="mt-4 flex flex-col gap-2.5 text-sm">
+            {companyLinks.map((link) => (
+              <Link key={link.label} href={link.href} className="text-slate-700 transition hover:text-black">
+                {link.label}
+              </Link>
+            ))}
           </div>
         </div>
       </div>
 
-      <div className="mx-auto mt-6 w-full max-w-7xl border-t border-slate-200 px-4 py-4 text-xs text-slate-500 md:px-8">
+      <div className="mx-auto mt-8 w-full max-w-7xl border-t border-slate-200 px-4 py-5 text-xs text-slate-500 md:px-8">
         <p>{t("footer.copyright", { year: new Date().getFullYear() })}</p>
       </div>
     </footer>

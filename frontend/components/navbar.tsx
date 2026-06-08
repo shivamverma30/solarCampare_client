@@ -197,7 +197,14 @@ export default function Navbar() {
         .map((slug) => servicePages.find((service) => service.slug === slug))
         .filter((service): service is (typeof servicePages)[number] => Boolean(service))
         .map((service) => ({
-          label: service.title,
+          label: `${({
+            "residential-solar": "☀️",
+            "industrial-solar": "⚡",
+            "solar-loan": "🏦",
+            "solar-cleaning": "🛡️",
+            "ground-mounted-solar": "🔋",
+            "solar-maintenance": "📋",
+          } as Record<string, string>)[service.slug] || "📌"} ${service.title}`,
           href: `/services/${service.slug}`,
         })),
     []
@@ -209,13 +216,17 @@ export default function Navbar() {
         "about-us",
         "contact-us",
         "blogs",
-        "faq",
         "how-it-works",
       ]
         .map((slug) => infoPages.find((page) => page.slug === slug))
         .filter((page): page is (typeof infoPages)[number] => Boolean(page))
         .map((page) => ({
-          label: page.title,
+          label: `${({
+            "about-us": "📖",
+            "contact-us": "📞",
+            blogs: "📰",
+            "how-it-works": "📚",
+          } as Record<string, string>)[page.slug] || "📌"} ${page.title}`,
           href: `/more/${page.slug}`,
         })),
     []

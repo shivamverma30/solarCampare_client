@@ -6,7 +6,7 @@ export default function SolarCtaSection() {
   const router = useRouter();
 
   return (
-    <section className="mx-auto mt-20 w-full max-w-7xl px-4 md:px-8">
+    <section className="mx-auto mt-20 mb-14 w-full max-w-7xl px-4 md:mb-20 md:px-8">
       <div className="relative overflow-hidden rounded-3xl border border-emerald-200/70 bg-linear-to-br from-white via-emerald-50 to-[#d9f6e8] p-10 shadow-[0_26px_62px_rgba(10,80,46,0.16)] md:p-16">
         {/* Decorative radial glows */}
         <div className="pointer-events-none absolute inset-0">

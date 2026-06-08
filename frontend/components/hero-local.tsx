@@ -37,6 +37,12 @@ export default function HeroLocal() {
             Compare quotes, track subsidies, explore financing, and connect with verified solar partners-all through one trusted platform.
           </motion.p>
         </div>
+
+        <div className="pointer-events-none absolute bottom-6 left-6 z-20 max-w-[220px] text-left sm:bottom-8 sm:left-8 sm:max-w-[280px]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/90 drop-shadow-[0_2px_8px_rgba(2,6,23,0.35)] sm:text-xs">
+            Powering India&apos;s Solar Future
+          </p>
+        </div>
       </div>
     </section>
   )
