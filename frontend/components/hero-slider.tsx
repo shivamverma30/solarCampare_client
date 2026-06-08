@@ -3,12 +3,16 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
-const slides = ["/hero/1.avif", "/hero/2.jpg", "/hero/3.jpg"];
+const slides = ["/hero/bg.png"];
 
 export default function HeroSlider({ background = false }: { background?: boolean }) {
   const [active, setActive] = useState(0);
 
   useEffect(() => {
+    if (slides.length <= 1) {
+      return;
+    }
+
     const timer = window.setInterval(() => {
       setActive((prev) => (prev + 1) % slides.length);
     }, 2000);

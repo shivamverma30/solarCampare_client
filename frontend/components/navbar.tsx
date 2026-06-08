@@ -54,7 +54,7 @@ function LanguageSwitcher({
         className={`inline-flex h-11 items-center gap-3 rounded-full border px-4 text-sm font-medium transition focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 ${
           overlay
             ? "border-white/18 bg-white/10 text-white hover:bg-white/16 focus-visible:ring-white/30"
-            : "border-slate-200 bg-white text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50"
+            : "border-slate-200 bg-white text-slate-900 shadow-sm hover:border-slate-300 hover:bg-slate-50"
         }`}
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
@@ -122,7 +122,7 @@ function DropdownGroup({
       : "border-white/10 text-white/95 hover:border-white/18 hover:bg-white/10 hover:text-white"
     : isActive
       ? "border-slate-900/10 bg-slate-50 text-slate-900 font-semibold shadow-sm"
-      : "border-transparent text-slate-600 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900";
+      : "border-transparent text-slate-900 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900";
 
   return (
     <div className="relative group">
@@ -162,7 +162,7 @@ function DropdownGroup({
                 }`}
               >
                 <span className="font-medium">{item.label}</span>
-                <ChevronDown className="h-4 w-4 -rotate-90 text-slate-400" />
+                <ChevronDown className="h-4 w-4 -rotate-90 text-slate-600" />
               </Link>
             );
           })}
@@ -241,10 +241,13 @@ export default function Navbar() {
   ];
 
   const isHome = pathname === "/";
-  const overlay = isHome && !isScrolled && !mobileOpen;
+  const overlay = false;
 
   useEffect(() => {
-    const onScroll = () => setIsScrolled(window.scrollY > 24);
+    const onScroll = () => {
+      const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
+      setIsScrolled(scrollTop > 0);
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -267,7 +270,7 @@ export default function Navbar() {
       className={`fixed inset-x-0 top-0 z-90 border-b transition-[background-color,box-shadow,transform] duration-300 ${
         overlay
           ? "border-white/18 bg-slate-950/12 text-white shadow-[0_16px_40px_rgba(2,6,23,0.14)] backdrop-blur-2xl"
-          : "border-white/70 bg-white/92 text-slate-900 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl"
+          : "border-slate-200 bg-white text-slate-900 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur-sm"
       }`}
     >
       <div className={`mx-auto flex w-full max-w-screen-2xl items-center gap-4 px-1 py-3 sm:px-3 lg:px-4 ${overlay ? "lg:py-4" : "lg:py-3.5"}`}>
@@ -278,7 +281,7 @@ export default function Navbar() {
             stacked
             showTagline={false}
             className="mr-10 lg:mr-12"
-            titleClassName={overlay ? "text-white drop-shadow-sm" : "text-slate-900"}
+            titleClassName={overlay ? "text-white drop-shadow-sm" : "text-slate-950"}
             imageClassName="shrink-0"
           />
 
@@ -298,7 +301,7 @@ export default function Navbar() {
                         : "text-white/92 hover:bg-white/10 hover:text-white"
                       : isActive
                         ? "bg-slate-100 text-slate-900 font-semibold ring-1 ring-slate-200"
-                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                        : "text-slate-900 hover:bg-slate-50 hover:text-slate-900"
                   }`}
                 >
                   {link.label}
@@ -329,7 +332,7 @@ export default function Navbar() {
             className={`inline-flex h-11 items-center rounded-full border px-5 text-sm font-medium transition focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 ${
               overlay
                 ? "border-white/18 bg-white/10 text-white hover:bg-white/16 focus-visible:ring-white/30"
-                : "border-slate-200 bg-white text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50"
+                : "border-slate-200 bg-white text-slate-900 shadow-sm hover:border-slate-300 hover:bg-slate-50"
             }`}
           >
             {t("buttons.login")}

@@ -1,6 +1,7 @@
 "use client";
 
 import HeroLocal from "@/components/hero-local";
+import SubsidyCountdownSection from "@/components/subsidy-countdown-section";
 import BenefitsSection from "@/components/benefits-section";
 import TrustedBrands from "@/components/trusted-brands";
 import CtaBanner from "@/components/cta-banner";
@@ -13,6 +14,7 @@ export default function Home() {
   return (
     <div>
       <HeroLocal />
+      <SubsidyCountdownSection />
 
       <BenefitsSection />
       <CtaBanner />

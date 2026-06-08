@@ -1,38 +1,41 @@
 "use client"
 
 import Link from "next/link"
-import { useLocale } from "@/components/locale-provider"
+import { motion } from "framer-motion"
 import HeroSlider from "@/components/hero-slider"
-import Countdown from "@/components/countdown"
 
 export default function HeroLocal() {
-  const { t } = useLocale()
+  const premiumEase = [0.22, 1, 0.36, 1] as const;
+  const fadeUp = {
+    initial: { opacity: 0, y: 20 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, amount: 0.5 },
+    transition: { duration: 0.65, ease: premiumEase },
+  };
 
   return (
-    <section className="relative isolate mx-auto w-full max-w-375 overflow-hidden px-4 pb-0 pt-24 md:px-8 md:pt-28 min-h-screen">
-      <div className="absolute inset-0 -z-20 bg-[linear-gradient(180deg,rgba(255,255,255,0.1),rgba(255,255,255,0.64))]" />
+    <section className="relative isolate mx-auto w-full max-w-375 overflow-hidden px-4 pb-20 pt-24 md:px-8 md:pb-28 md:pt-28 min-h-[82vh]">
+      <div className="absolute inset-0 -z-20 bg-[linear-gradient(180deg,rgba(255,255,255,0.18),rgba(255,255,255,0.56))]" />
       <HeroSlider background />
-      <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(2,6,23,0.24),rgba(2,6,23,0.42),rgba(2,6,23,0.18))]" />
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.18),transparent_28%),radial-gradient(circle_at_top_right,rgba(255,255,255,0.12),transparent_24%)]" />
+      <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(2,6,23,0.16),rgba(2,6,23,0.2),rgba(2,6,23,0.12))]" />
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.2),transparent_30%),radial-gradient(circle_at_top_right,rgba(255,255,255,0.2),transparent_26%)]" />
 
-      <div className="relative z-10 mx-auto grid max-w-7xl items-start gap-8 lg:grid-cols-1 lg:gap-12">
-        <div className="space-y-7 max-w-4xl">
-          <p className="inline-flex rounded-full border border-emerald-300/30 bg-emerald-500/14 px-4 py-2 text-xs font-semibold uppercase tracking-[0.26em] text-emerald-100 shadow-sm">
-            {t("site.premium")}
-          </p>
+      <div className="relative z-10 mx-auto flex min-h-[72vh] max-w-7xl flex-col items-center justify-center text-center">
+        <div className="w-full max-w-5xl space-y-8 sm:space-y-9 md:space-y-10">
+          <motion.h1
+            {...fadeUp}
+            className="mx-auto max-w-5xl text-4xl font-extrabold leading-[1.02] tracking-[-0.02em] text-white drop-shadow-[0_10px_28px_rgba(2,6,23,0.3)] sm:text-5xl md:text-6xl lg:text-7xl"
+          >
+            Compare Solar with Confidence
+          </motion.h1>
 
-          <h1 className="max-w-4xl text-4xl leading-tight text-white sm:text-5xl md:text-6xl">
-            {t("site.heroTitle")}
-          </h1>
-
-          <p className="max-w-2xl text-base leading-7 text-slate-100/88 md:text-lg md:leading-8">
-            {t("site.heroDescription")}
-          </p>
-        </div>
-
-        {/* Compact countdown positioned top-right on large screens */}
-        <div className="absolute right-6 top-6 z-20 hidden lg:block">
-          <Countdown variant="hero" />
+          <motion.p
+            {...fadeUp}
+            transition={{ duration: 0.68, ease: premiumEase, delay: 0.08 }}
+            className="mx-auto max-w-4xl text-lg leading-8 text-slate-100 md:text-2xl md:leading-10"
+          >
+            Compare quotes, track subsidies, explore financing, and connect with verified solar partners-all through one trusted platform.
+          </motion.p>
         </div>
       </div>
     </section>
