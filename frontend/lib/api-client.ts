@@ -1,6 +1,16 @@
 import { frontendEnv } from "./env";
 
-const API_URL = frontendEnv.NEXT_PUBLIC_API_URL;
+function normalizeApiUrl(baseUrl: string): string {
+  const trimmed = baseUrl.trim().replace(/\/+$/, "");
+
+  if (trimmed.endsWith("/api")) {
+    return trimmed;
+  }
+
+  return `${trimmed}/api`;
+}
+
+const API_URL = normalizeApiUrl(frontendEnv.NEXT_PUBLIC_API_URL);
 
 type JsonObject = Record<string, unknown>;
 
