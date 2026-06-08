@@ -1,8 +1,7 @@
 const isProduction = process.env.NODE_ENV === "production";
 
-function getClientEnv(name: string, developmentDefault: string): string {
-  const value = process.env[name];
-  if (value) {
+function getClientEnv(value: string | undefined, name: string, developmentDefault: string): string {
+  if (value && value.trim().length > 0) {
     return value;
   }
 
@@ -14,6 +13,14 @@ function getClientEnv(name: string, developmentDefault: string): string {
 }
 
 export const frontendEnv = {
-  NEXT_PUBLIC_API_URL: getClientEnv("NEXT_PUBLIC_API_URL", "http://localhost:3001/api"),
-  NEXT_PUBLIC_AI_SERVICE_URL: getClientEnv("NEXT_PUBLIC_AI_SERVICE_URL", "http://localhost:3002"),
+  NEXT_PUBLIC_API_URL: getClientEnv(
+    process.env.NEXT_PUBLIC_API_URL,
+    "NEXT_PUBLIC_API_URL",
+    "http://localhost:3001/api"
+  ),
+  NEXT_PUBLIC_AI_SERVICE_URL: getClientEnv(
+    process.env.NEXT_PUBLIC_AI_SERVICE_URL,
+    "NEXT_PUBLIC_AI_SERVICE_URL",
+    "http://localhost:3002"
+  ),
 };
