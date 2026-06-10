@@ -31,7 +31,7 @@ export default function BrandMark({
   return (
     <Link href={href} className={linkClassName}>
       <Image
-        src="/images/safwe-logo.png"
+        src="/images/safewe-logo.png"
         alt="SAFWE ENERGY logo"
         width={imageSize}
         height={imageSize}

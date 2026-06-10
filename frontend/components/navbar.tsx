@@ -4,7 +4,24 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import BrandMark from "@/components/brand-mark";
-import { ChevronDown, Globe, Menu, X } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import {
+  BadgeCheck,
+  Building2,
+  ChevronDown,
+  FileText,
+  Globe,
+  HandCoins,
+  Info,
+  Menu,
+  PanelsTopLeft,
+  Phone,
+  Sparkles,
+  SunMedium,
+  Workflow,
+  Wrench,
+  X,
+} from "lucide-react";
 import { useLocale } from "@/components/locale-provider";
 import { servicePages } from "@/data/service-pages";
 import { infoPages } from "@/data/info-pages";
@@ -12,6 +29,7 @@ import { infoPages } from "@/data/info-pages";
 type NavLinkItem = {
   label: string;
   href: string;
+  icon?: LucideIcon;
 };
 
 type NavGroup = {
@@ -161,7 +179,14 @@ function DropdownGroup({
                     : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"
                 }`}
               >
-                <span className="font-medium">{item.label}</span>
+                <span className="flex items-center gap-3">
+                  {item.icon ? (
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-700">
+                      <item.icon className="h-4 w-4" />
+                    </span>
+                  ) : null}
+                  <span className="font-medium">{item.label}</span>
+                </span>
                 <ChevronDown className="h-4 w-4 -rotate-90 text-slate-600" />
               </Link>
             );
@@ -177,7 +202,6 @@ export default function Navbar() {
   const { locale, setLocale, t } = useLocale();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
-  const [isScrolled, setIsScrolled] = useState(false);
 
   const closeMenus = () => {
     setMobileOpen(false);
@@ -187,32 +211,29 @@ export default function Navbar() {
   const serviceGroupItems = useMemo(
     () =>
       [
-        "residential-solar",
-        "industrial-solar",
-        "solar-loan",
-        "solar-cleaning",
-        "ground-mounted-solar",
-        "solar-maintenance",
+        { slug: "residential-solar", icon: SunMedium },
+        { slug: "industrial-solar", icon: Building2 },
+        { slug: "solar-loan", icon: HandCoins },
+        { slug: "solar-cleaning", icon: Sparkles },
+        { slug: "ground-mounted-solar", icon: PanelsTopLeft },
+        { slug: "solar-maintenance", icon: Wrench },
       ]
-        .map((slug) => servicePages.find((service) => service.slug === slug))
-        .filter((service): service is (typeof servicePages)[number] => Boolean(service))
-        .map((service) => ({
-          label: `${({
-            "residential-solar": "☀️",
-            "industrial-solar": "⚡",
-            "solar-loan": "🏦",
-            "solar-cleaning": "🛡️",
-            "ground-mounted-solar": "🔋",
-            "solar-maintenance": "📋",
-          } as Record<string, string>)[service.slug] || "📌"} ${service.title}`,
-          href: `/services/${service.slug}`,
-        })),
+        .map(({ slug, icon }) => {
+          const service = servicePages.find((item) => item.slug === slug);
+          if (!service) return null;
+          return {
+            label: service.title,
+            href: `/services/${service.slug}`,
+            icon,
+          } satisfies NavLinkItem;
+        })
+        .filter((service): service is NavLinkItem & { icon: LucideIcon } => Boolean(service)),
     []
   );
 
   const moreGroupItems = useMemo(
-    () =>
-      [
+    () => {
+      const pages = [
         "about-us",
         "contact-us",
         "blogs",
@@ -221,14 +242,25 @@ export default function Navbar() {
         .map((slug) => infoPages.find((page) => page.slug === slug))
         .filter((page): page is (typeof infoPages)[number] => Boolean(page))
         .map((page) => ({
-          label: `${({
-            "about-us": "📖",
-            "contact-us": "📞",
-            blogs: "📰",
-            "how-it-works": "📚",
-          } as Record<string, string>)[page.slug] || "📌"} ${page.title}`,
+          label: page.title,
           href: `/more/${page.slug}`,
-        })),
+          icon: ({
+            "about-us": Info,
+            "contact-us": Phone,
+            blogs: FileText,
+            "how-it-works": Workflow,
+          } as Record<string, LucideIcon>)[page.slug],
+        }));
+
+      return [
+        ...pages,
+        {
+          label: "DCR vs Non-DCR",
+          href: "/compare",
+          icon: BadgeCheck,
+        },
+      ];
+    },
     []
   );
 
@@ -253,16 +285,6 @@ export default function Navbar() {
 
   const isHome = pathname === "/";
   const overlay = false;
-
-  useEffect(() => {
-    const onScroll = () => {
-      const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
-      setIsScrolled(scrollTop > 0);
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -419,7 +441,14 @@ export default function Navbar() {
                           onClick={closeMenus}
                           className="flex items-center justify-between rounded-xl px-3 py-3 text-sm text-slate-700 transition hover:bg-white hover:text-slate-950"
                         >
-                          <span className="font-medium">{item.label}</span>
+                          <span className="flex items-center gap-3">
+                            {item.icon ? (
+                              <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700">
+                                <item.icon className="h-4 w-4" />
+                              </span>
+                            ) : null}
+                            <span className="font-medium">{item.label}</span>
+                          </span>
                           <ChevronDown className="h-4 w-4 -rotate-90 text-slate-400" />
                         </Link>
                       );

@@ -5,7 +5,16 @@ export const navLinks = [
   { href: "/emi", labelKey: "nav.emi" },
 ];
 
-export const trustedBrands = ["Goldi", "Tata Power Solar", "Waaree", "Adani Solar", "Luminous", "Vikram"];
+export const trustedBrands = [
+  "Adani Solar",
+  "Waaree",
+  "Tata Power Solar",
+  "Vikram Solar",
+  "RenewSys",
+  "Goldi Solar",
+  "Loom Solar",
+  "Premier Energies",
+];
 
 export const benefits = [
   {

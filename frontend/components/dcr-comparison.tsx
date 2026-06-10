@@ -58,7 +58,7 @@ export default function DCRComparisonSection() {
   ];
 
   return (
-    <section id="dcr-comparison" className="mx-auto mt-20 w-full max-w-7xl px-4 md:px-8">
+    <section id="dcr-comparison" className="mx-auto mt-10 w-full max-w-7xl px-4 md:mt-12 md:px-8">
       <div className="mb-12 text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-600">
           Detailed Comparison
@@ -69,87 +69,6 @@ export default function DCRComparisonSection() {
         <p className="mt-4 mx-auto max-w-3xl text-sm leading-6 text-slate-600 md:text-base">
           Understanding the difference is crucial for maximizing government subsidies and choosing the right panels for your roof
         </p>
-      </div>
-
-      {/* Quick Compare Cards */}
-      <div className="mb-12 grid gap-6 md:grid-cols-2">
-        {/* DCR Card */}
-        <div className="rounded-2xl border-2 border-emerald-300 bg-linear-to-br from-emerald-50 to-white p-8 shadow-lg">
-          <div className="flex items-start justify-between mb-6">
-            <div>
-              <h3 className="text-2xl font-bold text-emerald-900">DCR Panels</h3>
-              <p className="text-sm text-emerald-700 mt-1">Made in India</p>
-            </div>
-            <span className="text-4xl">🇮🇳</span>
-          </div>
-
-          <div className="space-y-4 mb-8">
-            <div>
-              <p className="text-xs text-emerald-600 font-semibold">Subsidy (3kW)</p>
-              <p className="text-3xl font-bold text-emerald-600">₹78,000</p>
-            </div>
-            <div className="rounded-lg bg-white p-3">
-              <p className="text-xs text-slate-600">Net Cost After Subsidy</p>
-              <p className="text-2xl font-bold text-slate-900">₹27,000 - ₹42,000</p>
-            </div>
-          </div>
-
-          <ul className="space-y-3 text-sm mb-8">
-            {["✓ Maximum subsidy benefit", "✓ Fastest payback (2.5-3.5 yrs)", "✓ Indian manufacturing", "✓ Government backed"].map(
-              (item, i) => (
-                <li key={i} className="flex items-center gap-2 text-slate-700">
-                  <span className="text-emerald-500">✓</span> {item.replace("✓ ", "")}
-                </li>
-              )
-            )}
-          </ul>
-
-          <a
-            href="/calculator?type=dcr"
-            className="block rounded-lg bg-emerald-500 px-4 py-2 text-center font-semibold text-white transition hover:bg-emerald-600"
-          >
-            Calculate DCR Savings →
-          </a>
-        </div>
-
-        {/* Non-DCR Card */}
-        <div className="rounded-2xl border-2 border-blue-300 bg-linear-to-br from-blue-50 to-white p-8 shadow-lg">
-          <div className="flex items-start justify-between mb-6">
-            <div>
-              <h3 className="text-2xl font-bold text-blue-900">Non-DCR Panels</h3>
-              <p className="text-sm text-blue-700 mt-1">International (High Efficiency)</p>
-            </div>
-            <span className="text-4xl">🌍</span>
-          </div>
-
-          <div className="space-y-4 mb-8">
-            <div>
-              <p className="text-xs text-blue-600 font-semibold">Subsidy (3kW)</p>
-              <p className="text-3xl font-bold text-blue-600">₹30,000</p>
-            </div>
-            <div className="rounded-lg bg-white p-3">
-              <p className="text-xs text-slate-600">Net Cost After Subsidy</p>
-              <p className="text-2xl font-bold text-slate-900">₹90,000 - ₹1,14,000</p>
-            </div>
-          </div>
-
-          <ul className="space-y-3 text-sm mb-8">
-            {["✓ Higher efficiency (21-22%)", "✓ Premium warranty (30 years)", "✓ Global brand trust", "✓ Better long-term output"].map(
-              (item, i) => (
-                <li key={i} className="flex items-center gap-2 text-slate-700">
-                  <span className="text-blue-500">✓</span> {item.replace("✓ ", "")}
-                </li>
-              )
-            )}
-          </ul>
-
-          <a
-            href="/calculator?type=nondcr"
-            className="block rounded-lg bg-blue-500 px-4 py-2 text-center font-semibold text-white transition hover:bg-blue-600"
-          >
-            Calculate Non-DCR Savings →
-          </a>
-        </div>
       </div>
 
       {/* Detailed Comparison Table */}
