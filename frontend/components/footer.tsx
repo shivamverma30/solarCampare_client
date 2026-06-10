@@ -17,29 +17,29 @@ export default function Footer() {
   const { t } = useLocale();
 
   const platformLinks = [
-    { label: "Compare Quotes", href: "/compare" },
-    { label: "Subsidy Calculator", href: "/calculator" },
-    { label: "PM Surya Ghar Help", href: "/more/how-it-works" },
-    { label: "Financing & EMI", href: "/emi" },
-    { label: "Solar Insurance", href: "/services/solar-maintenance" },
-    { label: "Energy Monitor", href: "/services/solar-maintenance" },
+    { label: t("footer.compareQuotes"), href: "/compare" },
+    { label: t("footer.subsidyCalculator"), href: "/calculator" },
+    { label: t("footer.suryaGharHelp"), href: "/more/how-it-works" },
+    { label: t("footer.financingEmi"), href: "/emi" },
+    { label: t("footer.solarInsurance"), href: "/services/solar-maintenance" },
+    { label: t("footer.energyMonitor"), href: "/services/solar-maintenance" },
   ];
 
   const learnLinks = [
-    { label: "Solar Panel Types", href: "/services/residential-solar" },
-    { label: "Inverter Guide", href: "/more/blogs" },
-    { label: "DCR Brand List", href: "/#dcr-comparison" },
-    { label: "State Subsidies", href: "/calculator" },
-    { label: "ROI Calculator", href: "/calculator" },
-    { label: "Blog", href: "/more/blogs" },
+    { label: t("footer.solarPanelTypes"), href: "/services/residential-solar" },
+    { label: t("footer.inverterGuide"), href: "/more/blogs" },
+    { label: t("footer.dcrBrandList"), href: "/#dcr-comparison" },
+    { label: t("footer.stateSubsidies"), href: "/calculator" },
+    { label: t("footer.roiCalculator"), href: "/calculator" },
+    { label: t("footer.blog"), href: "/more/blogs" },
   ];
 
   const companyLinks = [
-    { label: "About Us", href: "/more/about-us" },
-    { label: "Vendor Partners", href: "/become-vendor" },
-    { label: "Careers", href: "/more/contact-us" },
-    { label: "Contact", href: "/more/contact-us" },
-    { label: "Privacy Policy", href: "/more/contact-us" },
+    { label: t("footer.aboutUs"), href: "/more/about-us" },
+    { label: t("footer.vendorPartners"), href: "/become-vendor" },
+    { label: t("footer.careers"), href: "/more/contact-us" },
+    { label: t("footer.contact"), href: "/more/contact-us" },
+    { label: t("footer.privacyPolicy"), href: "/more/contact-us" },
   ];
 
   return (
@@ -54,11 +54,11 @@ export default function Footer() {
             taglineClassName="text-slate-500"
           />
           <p className="mt-3 text-sm leading-7 text-slate-600">
-            Compare verified solar vendors, subsidy opportunities, and financing options through one trusted, India-focused platform.
+            {t("footer.description")}
           </p>
 
           <div className="mt-5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Social</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">{t("footer.social")}</p>
             <div className="mt-3 flex flex-wrap gap-2.5">
               {socialPlaceholders.map((item) => {
                 const Icon = item.icon;
@@ -79,10 +79,10 @@ export default function Footer() {
         </div>
 
         <div className="md:pt-1">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Platform</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">{t("footer.platform")}</p>
           <div className="mt-4 flex flex-col gap-2.5 text-sm">
             {platformLinks.map((link) => (
-              <Link key={link.label} href={link.href} className="text-slate-700 transition hover:text-black">
+              <Link key={link.label} href={link.href} className="text-slate-700 font-semibold transition hover:text-black">
                 {link.label}
               </Link>
             ))}
@@ -90,10 +90,10 @@ export default function Footer() {
         </div>
 
         <div className="md:pt-1">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Learn</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">{t("footer.learn")}</p>
           <div className="mt-4 flex flex-col gap-2.5 text-sm">
             {learnLinks.map((link) => (
-              <Link key={link.label} href={link.href} className="text-slate-700 transition hover:text-black">
+              <Link key={link.label} href={link.href} className="text-slate-700 font-semibold transition hover:text-black">
                 {link.label}
               </Link>
             ))}
@@ -101,10 +101,10 @@ export default function Footer() {
         </div>
 
         <div className="md:pt-1">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Company</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">{t("footer.company")}</p>
           <div className="mt-4 flex flex-col gap-2.5 text-sm">
             {companyLinks.map((link) => (
-              <Link key={link.label} href={link.href} className="text-slate-700 transition hover:text-black">
+              <Link key={link.label} href={link.href} className="text-slate-700 font-semibold transition hover:text-black">
                 {link.label}
               </Link>
             ))}

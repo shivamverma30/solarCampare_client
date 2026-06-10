@@ -1235,43 +1235,197 @@ export const requestPasswordReset = async (req: AuthRequest, res: Response): Pro
       return;
     }
 
+    let account:
+      | { id: string; fullName?: string | null; ownerName?: string | null; name?: string | null; email: string }
+      | null = null;
+
     if (accountType === "user") {
-      const user = await prisma.user.findUnique({ where: { email } });
-      if (!user) {
-        res.status(404).json({ error: "User not found" });
-        return;
-      }
+      account = await prisma.user.findUnique({ where: { email }, select: { id: true, fullName: true, email: true } });
+    } else if (accountType === "vendor") {
+      account = await prisma.vendor.findUnique({ where: { email }, select: { id: true, ownerName: true, email: true } });
+    } else {
+      account = await prisma.admin.findUnique({ where: { email }, select: { id: true, name: true, email: true } });
+    }
 
-      const token = await issuePasswordResetToken({ email: user.email, accountType, userId: user.id });
-      await sendResetEmail(user.email, user.fullName, token, accountType);
-      res.status(200).json({ success: true, message: "Password reset email sent" });
+    if (!account) {
+      res.status(404).json({ error: accountType === "user" ? "User not found" : accountType === "vendor" ? "Vendor not found" : "Admin not found" });
       return;
     }
 
-    if (accountType === "vendor") {
-      const vendor = await prisma.vendor.findUnique({ where: { email } });
-      if (!vendor) {
-        res.status(404).json({ error: "Vendor not found" });
-        return;
-      }
+    const recentResetRequest = await prisma.emailVerificationToken.findFirst({
+      where: {
+        email,
+        purpose: "PASSWORD_RESET",
+        usedAt: null,
+        createdAt: { gte: new Date(Date.now() - 1000 * 60 * 2) },
+      },
+      orderBy: { createdAt: "desc" },
+    });
 
-      const token = await issuePasswordResetToken({ email: vendor.email, accountType, vendorId: vendor.id });
-      await sendResetEmail(vendor.email, vendor.ownerName, token, accountType);
-      res.status(200).json({ success: true, message: "Password reset email sent" });
+    if (recentResetRequest) {
+      res.status(429).json({ error: "Please wait a few minutes before requesting another verification code." });
       return;
     }
 
-    const admin = await prisma.admin.findUnique({ where: { email } });
-    if (!admin) {
-      res.status(404).json({ error: "Admin not found" });
-      return;
-    }
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
+    const hashedOtp = await hashPassword(otp);
+    const token = createOneTimeToken();
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 10);
 
-    const token = await issuePasswordResetToken({ email: admin.email, accountType, adminId: admin.id });
-    await sendResetEmail(admin.email, admin.name, token, accountType);
-    res.status(200).json({ success: true, message: "Password reset email sent" });
+    await prisma.emailVerificationToken.create({
+      data: {
+        token,
+        email,
+        purpose: "PASSWORD_RESET",
+        otpHash: hashedOtp,
+        userId: accountType === "user" ? account.id : undefined,
+        vendorId: accountType === "vendor" ? account.id : undefined,
+        adminId: accountType === "admin" ? account.id : undefined,
+        expiresAt,
+      },
+    });
+
+    const recipientName = accountType === "user"
+      ? account.fullName || account.email
+      : accountType === "vendor"
+        ? account.ownerName || account.email
+        : account.name || account.email;
+
+    await sendTransactionalEmail({
+      to: email,
+      subject: "Reset your password",
+      body: `Your verification code is ${otp}. It expires in 10 minutes.`,
+      html: otpTemplate(recipientName, otp, 10),
+    });
+
+    const respPayload: any = { success: true, message: "Verification code sent" };
+    if (process.env.NODE_ENV === "test") respPayload.debugOtp = otp;
+    res.status(200).json(respPayload);
   } catch (error) {
     console.error("Request password reset error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const verifyPasswordResetOtp = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { email, otp, accountType } = req.body as { email?: string; otp?: string; accountType?: "user" | "vendor" | "admin" };
+
+    if (!email || !otp || !accountType) {
+      res.status(400).json({ error: "Email, OTP, and account type are required" });
+      return;
+    }
+
+    const resetRecord = await prisma.emailVerificationToken.findFirst({
+      where: {
+        email,
+        purpose: "PASSWORD_RESET",
+        usedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (!resetRecord) {
+      res.status(400).json({ error: "Invalid or expired verification code" });
+      return;
+    }
+
+    if ((resetRecord.attempts || 0) >= 5) {
+      res.status(429).json({ error: "Too many invalid attempts. Request a new code." });
+      return;
+    }
+
+    const isOtpValid = resetRecord.otpHash ? await comparePassword(otp, resetRecord.otpHash) : false;
+
+    if (!isOtpValid) {
+      await prisma.emailVerificationToken.update({
+        where: { id: resetRecord.id },
+        data: { attempts: { increment: 1 } },
+      });
+      res.status(401).json({ error: "Invalid verification code" });
+      return;
+    }
+
+    await prisma.emailVerificationToken.update({
+      where: { id: resetRecord.id },
+      data: { attempts: 0 },
+    });
+
+    res.status(200).json({ success: true, message: "Verification code verified" });
+  } catch (error) {
+    console.error("Verify password reset OTP error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const completePasswordReset = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { email, otp, newPassword, accountType } = req.body as {
+      email?: string;
+      otp?: string;
+      newPassword?: string;
+      accountType?: "user" | "vendor" | "admin";
+    };
+
+    if (!email || !otp || !newPassword || !accountType) {
+      res.status(400).json({ error: "Email, OTP, password, and account type are required" });
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      res.status(400).json({ error: "Password must be at least 8 characters long" });
+      return;
+    }
+
+    const resetRecord = await prisma.emailVerificationToken.findFirst({
+      where: {
+        email,
+        purpose: "PASSWORD_RESET",
+        usedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (!resetRecord) {
+      res.status(400).json({ error: "Invalid or expired verification code" });
+      return;
+    }
+
+    if ((resetRecord.attempts || 0) >= 5) {
+      res.status(429).json({ error: "Too many invalid attempts. Request a new code." });
+      return;
+    }
+
+    const isOtpValid = resetRecord.otpHash ? await comparePassword(otp, resetRecord.otpHash) : false;
+    if (!isOtpValid) {
+      await prisma.emailVerificationToken.update({
+        where: { id: resetRecord.id },
+        data: { attempts: { increment: 1 } },
+      });
+      res.status(401).json({ error: "Invalid verification code" });
+      return;
+    }
+
+    const hashedPassword = await hashPassword(newPassword);
+
+    if (accountType === "user") {
+      await prisma.user.update({ where: { email }, data: { password: hashedPassword } });
+    } else if (accountType === "vendor") {
+      await prisma.vendor.update({ where: { email }, data: { password: hashedPassword } });
+    } else {
+      await prisma.admin.update({ where: { email }, data: { password: hashedPassword } });
+    }
+
+    await prisma.emailVerificationToken.update({
+      where: { id: resetRecord.id },
+      data: { usedAt: new Date(), attempts: 0 },
+    });
+
+    res.status(200).json({ success: true, message: "Password updated successfully" });
+  } catch (error) {
+    console.error("Complete password reset error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

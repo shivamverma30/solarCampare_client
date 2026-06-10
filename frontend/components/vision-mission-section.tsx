@@ -1,6 +1,11 @@
 "use client";
 
+import { useLocale } from "@/components/locale-provider";
+
 export default function VisionMissionSection() {
+  const { locale } = useLocale();
+  const isHindi = locale === "hi";
+
   return (
     <section className="mx-auto mt-16 w-full max-w-7xl px-4 md:px-8">
       <div className="relative overflow-hidden rounded-[36px] border border-slate-200 bg-linear-to-br from-white via-emerald-50/45 to-sky-50/55 p-6 shadow-[0_24px_58px_rgba(15,23,42,0.12)] md:p-8 lg:p-10">
@@ -15,17 +20,18 @@ export default function VisionMissionSection() {
         <div className="vm-spark vm-spark-c" />
 
         <div className="relative z-10 text-center">
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-900 md:text-4xl">✨ Our Vision &amp; Mission</h2>
+          <h2 className="text-2xl font-semibold tracking-tight text-slate-900 md:text-4xl">{isHindi ? "✨ हमारी दृष्टि और मिशन" : "✨ Our Vision &amp; Mission"}</h2>
         </div>
 
         <div className="relative z-10 mt-8 space-y-5 md:mt-10 md:space-y-0">
           <article className="vision-wrap bubble-wrap">
             <div className="bubble-shell bubble-shell-vision">
               <div className="bubble-core bubble-core-vision">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">🚀 Vision</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">🚀 {isHindi ? "दृष्टि" : "Vision"}</p>
                 <p className="mt-4 text-sm leading-7 text-slate-700 md:text-base md:leading-8">
-                  To accelerate India's transition to clean energy through technology, transparency, and trusted solar
-                  solutions.
+                  {isHindi
+                    ? "प्रौद्योगिकी, पारदर्शिता और भरोसेमंद सोलर समाधानों के माध्यम से भारत के स्वच्छ ऊर्जा परिवर्तन को गति देना।"
+                    : "To accelerate India's transition to clean energy through technology, transparency, and trusted solar solutions."}
                 </p>
               </div>
             </div>
@@ -34,10 +40,11 @@ export default function VisionMissionSection() {
           <article className="mission-wrap bubble-wrap">
             <div className="bubble-shell bubble-shell-mission">
               <div className="bubble-core bubble-core-mission">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-700">⚡ Mission</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-700">⚡ {isHindi ? "मिशन" : "Mission"}</p>
                 <p className="mt-4 text-sm leading-7 text-slate-700 md:text-base md:leading-8">
-                  To simplify solar adoption by connecting consumers with verified vendors, transparent pricing, subsidy
-                  support, financing, and energy management solutions through a single digital platform.
+                  {isHindi
+                    ? "एक ही डिजिटल प्लेटफ़ॉर्म पर सत्यापित विक्रेताओं, पारदर्शी मूल्य, सब्सिडी सहायता, फाइनेंसिंग और ऊर्जा प्रबंधन समाधानों के साथ सोलर अपनाने को आसान बनाना।"
+                    : "To simplify solar adoption by connecting consumers with verified vendors, transparent pricing, subsidy support, financing, and energy management solutions through a single digital platform."}
                 </p>
               </div>
             </div>

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Loader2, CheckCircle2 } from "lucide-react";
+import PrivacyNote from "@/components/privacy-note";
+import { useLocale } from "@/components/locale-provider";
 import { apiClient } from "@/lib/api-client";
 import { servicePages, type ServicePage } from "@/data/service-pages";
 
@@ -32,6 +34,7 @@ const initialFormState = (service: ServicePage): FormState => ({
 });
 
 export default function ServiceInquiryForm({ service }: ServiceInquiryFormProps) {
+  const { t } = useLocale();
   const [form, setForm] = useState<FormState>(initialFormState(service));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -80,8 +83,8 @@ export default function ServiceInquiryForm({ service }: ServiceInquiryFormProps)
     <form onSubmit={handleSubmit} className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_46px_rgba(15,23,42,0.08)] md:p-8">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Inquiry Form</p>
-          <h2 className="mt-2 text-2xl font-semibold text-slate-950">Request service details</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">{t("contact.eyebrow")}</p>
+          <h2 className="mt-2 text-2xl font-semibold text-slate-950">{t("contact.title")}</h2>
         </div>
         <CheckCircle2 className="h-6 w-6 text-slate-400" />
       </div>
@@ -124,6 +127,8 @@ export default function ServiceInquiryForm({ service }: ServiceInquiryFormProps)
           {feedback}
         </div>
       ) : null}
+
+      <PrivacyNote />
 
       <button
         type="submit"

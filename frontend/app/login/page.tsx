@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import BrandMark from "@/components/brand-mark";
+import PrivacyNote from "@/components/privacy-note";
 import { useLocale } from "@/components/locale-provider";
 import { apiClient } from "@/lib/api-client";
 import { setSessionProfile, setSessionRole, setToken, setUser, setVendor } from "@/lib/auth";
@@ -122,15 +123,22 @@ function LoginPageContent() {
                 <input type="checkbox" className="h-4 w-4 rounded border-slate-300 accent-emerald-500" />
                 {t("auth.rememberMe")}
               </label>
-              <Link href={signupHref} className="text-sm font-semibold text-emerald-700 transition hover:text-emerald-600">
-                {t("buttons.createAccount")}
-              </Link>
+              <div className="flex items-center gap-4">
+                <Link href="/forgot-password" className="text-sm font-semibold text-emerald-700 transition hover:text-emerald-600">
+                  {t("buttons.forgotPassword")}
+                </Link>
+                <Link href={signupHref} className="text-sm font-semibold text-emerald-700 transition hover:text-emerald-600">
+                  {t("buttons.createAccount")}
+                </Link>
+              </div>
             </div>
 
             <button type="submit" disabled={loading} className="mt-2 w-full rounded-xl border border-emerald-300/80 bg-emerald-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300 disabled:opacity-60">
               {loading ? "Signing in..." : t("buttons.login")}
             </button>
           </form>
+
+          <PrivacyNote />
 
           <p className="mt-5 text-sm text-slate-600">
             {t("auth.dontHaveAccount")} <Link href={signupHref} className="font-semibold text-emerald-700 transition hover:text-emerald-600">{t("buttons.signUp")}</Link>

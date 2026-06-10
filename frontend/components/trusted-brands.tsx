@@ -16,11 +16,11 @@ export default function TrustedBrands() {
         <div className="relative mt-6 overflow-hidden">
           <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-linear-to-r from-slate-950 via-slate-950/80 to-transparent" />
           <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-linear-to-l from-slate-950 via-slate-950/80 to-transparent" />
-          <div className="flex whitespace-nowrap py-1" style={{ animation: "brand-scroll 24s linear infinite" }}>
+          <div className="flex min-w-0 whitespace-nowrap py-1" style={{ animation: "brand-scroll 24s linear infinite" }}>
             {marqueeBrands.map((brand, index) => (
               <div
                 key={`${brand}-${index}`}
-                className="mx-2 flex items-center justify-center rounded-2xl border border-emerald-400/20 bg-white/8 px-4 py-3 text-sm font-semibold text-slate-100 shadow-[0_10px_30px_rgba(8,47,73,0.18)] backdrop-blur md:px-5"
+                className="mx-2 flex-shrink-0 flex items-center justify-center rounded-2xl border border-emerald-400/20 bg-white/8 px-4 py-3 text-sm font-semibold text-slate-100 shadow-[0_10px_30px_rgba(8,47,73,0.18)] backdrop-blur md:px-5"
               >
                 <span className="mr-2 h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(16,185,129,0.16)]" />
                 {brand}

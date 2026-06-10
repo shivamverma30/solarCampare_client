@@ -18,8 +18,8 @@ export default function Home() {
   return (
     <div>
       <HeroLocal />
-      <SubsidyCountdownSection />
       <IndustryStatsMarquee />
+      <SubsidyCountdownSection />
       <VisionMissionSection />
 
       <BenefitsSection />

@@ -16,6 +16,8 @@ interface LocaleContextValue {
   t: (key: string, vars?: Record<string, string | number>) => string
 }
 
+const LOCALE_COOKIE = "safwe:locale"
+
 const LocaleContext = createContext<LocaleContextValue | undefined>(undefined)
 
 const MESSAGES: Record<string, MessageMap> = {
@@ -23,23 +25,14 @@ const MESSAGES: Record<string, MessageMap> = {
   hi,
 }
 
-export const LocaleProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [locale, setLocaleState] = useState<string>(() => {
-    if (typeof window === "undefined") return "en"
-
-    try {
-      const stored = localStorage.getItem("safwe:locale")
-      return stored && MESSAGES[stored] ? stored : "en"
-    } catch {
-      return "en"
-    }
-  })
+export const LocaleProvider: React.FC<{ children: React.ReactNode; initialLocale?: string }> = ({ children, initialLocale = "hi" }) => {
+  const [locale, setLocaleState] = useState<string>(() => (MESSAGES[initialLocale] ? initialLocale : "hi"))
 
   const setLocale = (l: string) => {
     if (!MESSAGES[l]) return
     setLocaleState(l)
     try {
-      localStorage.setItem("safwe:locale", l)
+      document.cookie = `${LOCALE_COOKIE}=${l}; path=/; max-age=31536000; samesite=lax`
     } catch {
       // ignore
     }

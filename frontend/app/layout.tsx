@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { Viewport } from "next";
+import { cookies } from "next/headers";
 import { Manrope, Outfit } from "next/font/google";
 import "./globals.css";
 import AppShell from "@/components/app-shell";
@@ -38,15 +39,18 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const locale = cookieStore.get("safwe:locale")?.value === "en" ? "en" : "hi";
+
   return (
-      <html lang="en" className={`${manrope.variable} ${outfit.variable} h-full antialiased`}>
+      <html lang={locale} className={`${manrope.variable} ${outfit.variable} h-full antialiased`}>
       <body className="min-h-screen flex flex-col overflow-x-hidden bg-app text-app-fg">
-        <AppShell>{children}</AppShell>
+        <AppShell initialLocale={locale}>{children}</AppShell>
       </body>
     </html>
   );

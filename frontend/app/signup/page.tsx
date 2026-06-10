@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import BrandMark from "@/components/brand-mark";
+import PrivacyNote from "@/components/privacy-note";
 import { useLocale } from "@/components/locale-provider";
 import { apiClient } from "@/lib/api-client";
 import { setSessionProfile, setSessionRole, setToken, setUser } from "@/lib/auth";
@@ -150,6 +151,8 @@ export default function SignupPage() {
               </>
             )}
           </form>
+
+          <PrivacyNote />
 
           <div className="mt-5 flex flex-col gap-2 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
             <p>

@@ -10,9 +10,10 @@ import { LocaleProvider } from "@/components/locale-provider";
 
 type AppShellProps = {
   children: ReactNode;
+  initialLocale?: string;
 };
 
-export default function AppShell({ children }: AppShellProps) {
+export default function AppShell({ children, initialLocale }: AppShellProps) {
   const pathname = usePathname();
   const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
   const isHomePage = pathname === "/";
@@ -23,7 +24,7 @@ export default function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="relative min-h-screen flex flex-col overflow-x-hidden">
-      <LocaleProvider>
+      <LocaleProvider initialLocale={initialLocale}>
         <Navbar key={pathname} />
         <main className={isHomePage ? "pt-0" : "pt-24 flex-1"}>{children}</main>
         <Footer />

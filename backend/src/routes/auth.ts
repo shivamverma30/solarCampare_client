@@ -13,6 +13,8 @@ import {
   confirmEmailVerification,
   resendVerificationOtp,
   requestPasswordReset,
+  verifyPasswordResetOtp,
+  completePasswordReset,
   resetPassword,
   listAdminUsers,
 } from "../controllers/auth";
@@ -31,6 +33,8 @@ router.post("/verify-email/request", requestEmailVerification);
 router.post("/verify-email/confirm", confirmEmailVerification);
 router.post("/verify-email/resend", resendVerificationOtp);
 router.post("/forgot-password", requestPasswordReset);
+router.post("/forgot-password/verify", verifyPasswordResetOtp);
+router.post("/forgot-password/reset", completePasswordReset);
 router.post("/reset-password", resetPassword);
 router.get("/profile", authMiddleware, getProfile);
 router.put("/profile", authMiddleware, updateProfile);

@@ -4,71 +4,32 @@ export type ServicePage = {
   summary: string;
   heroTitle: string;
   heroDescription: string;
-  benefits: string[];
-  useCases: string[];
+  benefits: readonly string[];
+  useCases: readonly string[];
 };
 
-export const servicePages: ServicePage[] = [
-  {
-    slug: "residential-solar",
-    title: "Residential Solar",
-    summary: "Solar planning for homes that want lower electricity bills and a clean, reliable setup.",
-    heroTitle: "Residential solar built for Indian homes",
-    heroDescription:
-      "Compare rooftop options, understand likely savings, and submit a single inquiry for a tailored home solar recommendation.",
-    benefits: ["Lower monthly electricity cost", "Cleaner energy for everyday usage", "Clear subsidy and financing context"],
-    useCases: ["Independent houses", "Apartments with terrace access", "Family homes planning for net metering"],
-  },
-  {
-    slug: "industrial-solar",
-    title: "Industrial Solar",
-    summary: "High-capacity solar planning for factories, warehouses, and plants.",
-    heroTitle: "Industrial solar for high-load businesses",
-    heroDescription:
-      "Designed for large rooftops and high-consumption sites that need a practical path to energy cost control.",
-    benefits: ["Reduce operating expenses", "Plan large rooftop or ground-mounted systems", "Improve long-term energy stability"],
-    useCases: ["Factories", "Warehouses", "Logistics parks and processing units"],
-  },
-  {
-    slug: "solar-loan",
-    title: "Solar Loan",
-    summary: "Financing guidance for buyers who want to spread project cost through EMIs.",
-    heroTitle: "Solar loan support without the noise",
-    heroDescription:
-      "See how financing can fit your project before you commit, with a clear view of repayment and savings.",
-    benefits: ["Lower upfront burden", "Structured monthly payments", "Easier adoption for residential and commercial buyers"],
-    useCases: ["Budget-conscious homeowners", "SMEs planning staged capex", "Buyers comparing cash versus EMI"],
-  },
-  {
-    slug: "solar-cleaning",
-    title: "Solar Cleaning",
-    summary: "Maintenance support to keep panels performing at a healthy output level.",
-    heroTitle: "Solar cleaning that protects output",
-    heroDescription:
-      "A clean system performs better. Use this service when dust, debris, or weather exposure is affecting generation.",
-    benefits: ["Protects power generation", "Reduces output loss from dust", "Improves inspection readiness"],
-    useCases: ["Homes near dust-heavy roads", "Commercial rooftops", "Sites with seasonal soiling"],
-  },
-  {
-    slug: "ground-mounted-solar",
-    title: "Ground Mounted Solar",
-    summary: "Large-format solar deployments for sites with available land.",
-    heroTitle: "Ground mounted solar for larger sites",
-    heroDescription:
-      "Ideal when rooftop space is limited and land-based installation offers a better scale and layout.",
-    benefits: ["Better scaling for large projects", "Flexible layout planning", "Suitable for commercial and institutional land"],
-    useCases: ["Institutions", "Industries with open land", "Large campuses and storage yards"],
-  },
-  {
-    slug: "solar-maintenance",
-    title: "Solar Maintenance",
-    summary: "Ongoing upkeep for installed solar systems that need dependable care.",
-    heroTitle: "Maintenance that keeps systems dependable",
-    heroDescription:
-      "Use this service for inspection, performance checks, corrective work, and long-term system care.",
-    benefits: ["Health checks for system performance", "Better issue detection", "Supports long-term asset value"],
-    useCases: ["Existing solar owners", "Commercial asset managers", "Sites needing periodic inspection"],
-  },
-];
+const servicePagesByLocale = {
+  en: [
+    { slug: "residential-solar", title: "Residential Solar", summary: "Solar planning for homes that want lower electricity bills and a clean, reliable setup.", heroTitle: "Residential solar built for Indian homes", heroDescription: "Compare rooftop options, understand likely savings, and submit a single inquiry for a tailored home solar recommendation.", benefits: ["Lower monthly electricity cost", "Cleaner energy for everyday usage", "Clear subsidy and financing context"], useCases: ["Independent houses", "Apartments with terrace access", "Family homes planning for net metering"] },
+    { slug: "industrial-solar", title: "Industrial Solar", summary: "High-capacity solar planning for factories, warehouses, and plants.", heroTitle: "Industrial solar for high-load businesses", heroDescription: "Designed for large rooftops and high-consumption sites that need a practical path to energy cost control.", benefits: ["Reduce operating expenses", "Plan large rooftop or ground-mounted systems", "Improve long-term energy stability"], useCases: ["Factories", "Warehouses", "Logistics parks and processing units"] },
+    { slug: "solar-loan", title: "Solar Loan", summary: "Financing guidance for buyers who want to spread project cost through EMIs.", heroTitle: "Solar loan support without the noise", heroDescription: "See how financing can fit your project before you commit, with a clear view of repayment and savings.", benefits: ["Lower upfront burden", "Structured monthly payments", "Easier adoption for residential and commercial buyers"], useCases: ["Budget-conscious homeowners", "SMEs planning staged capex", "Buyers comparing cash versus EMI"] },
+    { slug: "solar-cleaning", title: "Solar Cleaning", summary: "Maintenance support to keep panels performing at a healthy output level.", heroTitle: "Solar cleaning that protects output", heroDescription: "A clean system performs better. Use this service when dust, debris, or weather exposure is affecting generation.", benefits: ["Protects power generation", "Reduces output loss from dust", "Improves inspection readiness"], useCases: ["Homes near dust-heavy roads", "Commercial rooftops", "Sites with seasonal soiling"] },
+    { slug: "ground-mounted-solar", title: "Ground Mounted Solar", summary: "Large-format solar deployments for sites with available land.", heroTitle: "Ground mounted solar for larger sites", heroDescription: "Ideal when rooftop space is limited and land-based installation offers a better scale and layout.", benefits: ["Better scaling for large projects", "Flexible layout planning", "Suitable for commercial and institutional land"], useCases: ["Institutions", "Industries with open land", "Large campuses and storage yards"] },
+    { slug: "solar-maintenance", title: "Solar Maintenance", summary: "Ongoing upkeep for installed solar systems that need dependable care.", heroTitle: "Maintenance that keeps systems dependable", heroDescription: "Use this service for inspection, performance checks, corrective work, and long-term system care.", benefits: ["Health checks for system performance", "Better issue detection", "Supports long-term asset value"], useCases: ["Existing solar owners", "Commercial asset managers", "Sites needing periodic inspection"] },
+  ],
+  hi: [
+    { slug: "residential-solar", title: "आवासीय सोलर", summary: "ऐसे घरों के लिए सोलर योजना जो बिजली बिल कम करना और भरोसेमंद सेटअप चाहते हैं।", heroTitle: "भारतीय घरों के लिए बनाया गया आवासीय सोलर", heroDescription: "रूफटॉप विकल्पों की तुलना करें, संभावित बचत समझें और अपने घर के लिए अनुकूलित सिफारिश पाने के लिए एक ही पूछताछ भेजें।", benefits: ["मासिक बिजली लागत कम", "रोजमर्रा के उपयोग के लिए स्वच्छ ऊर्जा", "स्पष्ट सब्सिडी और फाइनेंसिंग संदर्भ"], useCases: ["स्वतंत्र घर", "छत तक पहुँच वाले अपार्टमेंट", "नेट मीटरिंग के लिए योजना बना रहे परिवार"] },
+    { slug: "industrial-solar", title: "औद्योगिक सोलर", summary: "फैक्ट्रियों, वेयरहाउस और प्लांट्स के लिए उच्च क्षमता वाली सोलर योजना।", heroTitle: "उच्च लोड व्यवसायों के लिए औद्योगिक सोलर", heroDescription: "बड़े रूफटॉप और अधिक खपत वाले साइटों के लिए डिज़ाइन किया गया, जिन्हें ऊर्जा लागत नियंत्रण का व्यावहारिक रास्ता चाहिए।", benefits: ["संचालन व्यय कम करें", "बड़े रूफटॉप या ग्राउंड-माउंटेड सिस्टम की योजना बनाएं", "दीर्घकालिक ऊर्जा स्थिरता बेहतर करें"], useCases: ["फैक्ट्रियाँ", "वेयरहाउस", "लॉजिस्टिक्स पार्क और प्रोसेसिंग यूनिट्स"] },
+    { slug: "solar-loan", title: "सोलर लोन", summary: "EMI के माध्यम से प्रोजेक्ट लागत फैलाना चाहने वाले खरीदारों के लिए फाइनेंसिंग मार्गदर्शन।", heroTitle: "बिना शोर-शराबे के सोलर लोन सहायता", heroDescription: "कमिट करने से पहले देखें कि फाइनेंसिंग आपके प्रोजेक्ट में कैसे फिट बैठती है, repayment और savings का स्पष्ट दृश्य लेकर।", benefits: ["कम अग्रिम बोझ", "संरचित मासिक भुगतान", "आवासीय और वाणिज्यिक खरीदारों के लिए आसान अपनाना"], useCases: ["बजट-सचेत गृहस्वामी", "चरणबद्ध कैपेक्स योजना बना रहे SME", "कैश बनाम EMI की तुलना करने वाले खरीदार"] },
+    { slug: "solar-cleaning", title: "सोलर सफाई", summary: "पैनलों को अच्छे उत्पादन स्तर पर बनाए रखने के लिए मेंटेनेंस सहायता।", heroTitle: "उत्पादन की रक्षा करने वाली सोलर सफाई", heroDescription: "जब धूल, मलबा या मौसम का प्रभाव उत्पादन को प्रभावित कर रहा हो, तब इस सेवा का उपयोग करें।", benefits: ["ऊर्जा उत्पादन की सुरक्षा", "धूल से होने वाला आउटपुट नुकसान कम", "निरीक्षण तैयारी बेहतर"], useCases: ["धूल भरी सड़कों के पास घर", "वाणिज्यिक रूफटॉप", "मौसमी धूल जमाव वाले स्थल"] },
+    { slug: "ground-mounted-solar", title: "ग्राउंड-माउंटेड सोलर", summary: "उपलब्ध भूमि वाले स्थलों के लिए बड़े सोलर इंस्टॉलेशन।", heroTitle: "बड़े स्थलों के लिए ग्राउंड-माउंटेड सोलर", heroDescription: "जब रूफटॉप स्पेस सीमित हो और भूमि-आधारित इंस्टॉलेशन बेहतर स्केल और लेआउट दे सके।", benefits: ["बड़े प्रोजेक्ट के लिए बेहतर स्केल", "लचीली लेआउट योजना", "वाणिज्यिक और संस्थागत भूमि के लिए उपयुक्त"], useCases: ["संस्थाएँ", "खुली भूमि वाली इंडस्ट्रीज़", "बड़े परिसर और स्टोरेज यार्ड"] },
+    { slug: "solar-maintenance", title: "सोलर मेंटेनेंस", summary: "स्थापित सोलर सिस्टम की निरंतर देखभाल।", heroTitle: "ऐसा मेंटेनेंस जो सिस्टम को भरोसेमंद रखे", heroDescription: "निरीक्षण, प्रदर्शन जाँच, सुधारात्मक कार्य और दीर्घकालिक सिस्टम देखभाल के लिए इस सेवा का उपयोग करें।", benefits: ["सिस्टम प्रदर्शन के लिए स्वास्थ्य जाँच", "समस्या की बेहतर पहचान", "दीर्घकालिक संपत्ति मूल्य में सहायता"], useCases: ["मौजूदा सोलर मालिक", "वाणिज्यिक संपत्ति प्रबंधक", "आवधिक निरीक्षण की आवश्यकता वाले स्थल"] },
+  ],
+} as const;
 
-export const getServicePage = (slug: string) => servicePages.find((service) => service.slug === slug) || null;
+export const servicePages: readonly ServicePage[] = servicePagesByLocale.en;
+
+export const getServicePage = (slug: string, locale: string = "en") => {
+  const pages = locale === "hi" ? servicePagesByLocale.hi : servicePagesByLocale.en;
+  return pages.find((service) => service.slug === slug) || null;
+};

@@ -3,6 +3,7 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { Loader2 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
+import PrivacyNote from "@/components/privacy-note";
 
 type ContactFormState = {
   fullName: string;
@@ -126,6 +127,7 @@ export default function ContactEnquiryForm() {
           "Submit Enquiry"
         )}
       </button>
+      <PrivacyNote />
     </form>
   );
 }

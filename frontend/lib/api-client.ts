@@ -578,6 +578,26 @@ export const apiClient = {
       );
     },
 
+    async verifyPasswordResetOtp(email: string, otp: string, accountType: string) {
+      return apiClient.request(
+        "/auth/forgot-password/verify",
+        {
+          method: "POST",
+          body: JSON.stringify({ email, otp, accountType }),
+        }
+      );
+    },
+
+    async completePasswordReset(email: string, otp: string, newPassword: string, accountType: string) {
+      return apiClient.request(
+        "/auth/forgot-password/reset",
+        {
+          method: "POST",
+          body: JSON.stringify({ email, otp, newPassword, accountType }),
+        }
+      );
+    },
+
     async resetPassword(token: string, newPassword: string) {
       return apiClient.request(
         "/auth/reset-password",

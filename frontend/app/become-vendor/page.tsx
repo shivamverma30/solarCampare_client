@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import BrandMark from "@/components/brand-mark";
+import PrivacyNote from "@/components/privacy-note";
+import { useLocale } from "@/components/locale-provider";
 import { apiClient } from "@/lib/api-client";
 import { setSessionProfile, setSessionRole, setToken, setVendor } from "@/lib/auth";
 
@@ -31,6 +33,7 @@ const initialForm = {
 
 export default function BecomeVendorPage() {
   const router = useRouter();
+  const { t } = useLocale();
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -93,10 +96,10 @@ export default function BecomeVendorPage() {
         <div className="grid lg:grid-cols-[1fr_1.1fr]">
           <div className="bg-slate-950 p-6 text-white md:p-10">
             <BrandMark href="/" compact className="items-start" titleClassName="text-white" taglineClassName="text-amber-200/80" />
-            <p className="mt-8 text-xs font-semibold uppercase tracking-[0.26em] text-amber-300">Vendor onboarding</p>
-            <h1 className="mt-3 text-4xl md:text-5xl">Apply to become a vendor</h1>
+            <p className="mt-8 text-xs font-semibold uppercase tracking-[0.26em] text-amber-300">{t("vendors.eyebrow")}</p>
+            <h1 className="mt-3 text-4xl md:text-5xl">{t("vendors.becomeVendor")}</h1>
             <p className="mt-4 max-w-md text-sm leading-7 text-white/78">
-              Vendor contact details remain private. Applications are reviewed by superadmin before approval.
+              {t("vendors.description")}
             </p>
           </div>
 
@@ -188,6 +191,7 @@ export default function BecomeVendorPage() {
                 </>
               )}
             </form>
+            <PrivacyNote />
           </div>
         </div>
       </div>

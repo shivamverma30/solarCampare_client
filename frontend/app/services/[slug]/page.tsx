@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import ServiceInquiryForm from "@/components/service-inquiry-form";
 import { getServicePage, servicePages } from "@/data/service-pages";
@@ -29,7 +30,9 @@ export async function generateMetadata({ params }: ServicePageProps): Promise<Me
 
 export default async function ServicePage({ params }: ServicePageProps) {
   const { slug } = await params;
-  const service = getServicePage(slug);
+  const cookieStore = await cookies();
+  const locale = cookieStore.get("safwe:locale")?.value === "en" ? "en" : "hi";
+  const service = getServicePage(slug, locale);
 
   if (!service) {
     notFound();
@@ -49,7 +52,7 @@ export default async function ServicePage({ params }: ServicePageProps) {
           <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(2,6,23,0.95),rgba(2,6,23,0.4))]" />
           <div className="relative flex min-h-[420px] flex-col justify-between p-8 md:p-10 lg:p-12">
             <div className="max-w-3xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-200">Service</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-200">{locale === "hi" ? "सेवा" : "Service"}</p>
               <h1 className="mt-4 text-4xl font-semibold text-white md:text-5xl">{service.heroTitle}</h1>
               <p className="mt-4 max-w-2xl text-base leading-8 text-slate-100/90">{service.heroDescription}</p>
               <div className="mt-7 flex flex-wrap gap-3">
@@ -57,13 +60,13 @@ export default async function ServicePage({ params }: ServicePageProps) {
                   href="#inquiry-form"
                   className="rounded-full bg-emerald-500 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400"
                 >
-                  Request a callback
+                  {locale === "hi" ? "कॉलबैक का अनुरोध करें" : "Request a callback"}
                 </Link>
                 <Link
                   href="/calculator"
                   className="rounded-full border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20"
                 >
-                  Open calculator
+                  {locale === "hi" ? "कैलकुलेटर खोलें" : "Open calculator"}
                 </Link>
               </div>
             </div>
@@ -81,16 +84,18 @@ export default async function ServicePage({ params }: ServicePageProps) {
         <div className="grid gap-8 bg-white p-6 md:p-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.95fr)] lg:p-10">
           <div>
             <div className="rounded-[28px] border border-slate-200 bg-slate-50/80 p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Why it matters</p>
-              <h2 className="mt-3 text-2xl font-semibold text-slate-950">A structured, trustworthy path to better solar outcomes.</h2>
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">{locale === "hi" ? "यह क्यों महत्वपूर्ण है" : "Why it matters"}</p>
+              <h2 className="mt-3 text-2xl font-semibold text-slate-950">{locale === "hi" ? "बेहतर सोलर परिणामों के लिए एक संरचित, भरोसेमंद रास्ता।" : "A structured, trustworthy path to better solar outcomes."}</h2>
               <p className="mt-3 text-sm leading-7 text-slate-600">
-                This service page keeps the core guidance intact while presenting it in a more premium, decision-led format for modern solar buyers.
+                {locale === "hi"
+                  ? "यह सेवा पेज मूल मार्गदर्शन को बनाए रखते हुए उसे आधुनिक सोलर खरीदारों के लिए अधिक प्रीमियम, निर्णय-केंद्रित स्वरूप में प्रस्तुत करता है।"
+                  : "This service page keeps the core guidance intact while presenting it in a more premium, decision-led format for modern solar buyers."}
               </p>
             </div>
 
             <div className="mt-8 grid gap-4 md:grid-cols-2">
-              <Card title="Benefits" items={service.benefits} />
-              <Card title="Use cases" items={service.useCases} />
+              <Card title={locale === "hi" ? "लाभ" : "Benefits"} items={service.benefits} />
+              <Card title={locale === "hi" ? "उपयोग के मामले" : "Use cases"} items={service.useCases} />
             </div>
           </div>
 
@@ -103,7 +108,7 @@ export default async function ServicePage({ params }: ServicePageProps) {
   );
 }
 
-function Card({ title, items }: { title: string; items: string[] }) {
+function Card({ title, items }: { title: string; items: readonly string[] }) {
   return (
     <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
       <h2 className="text-lg font-semibold text-slate-950">{title}</h2>

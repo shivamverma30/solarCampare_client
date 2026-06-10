@@ -230,27 +230,32 @@
   },
   "howItWorks": {
     "eyebrow": "Process",
-    "title": "How It Works",
+    "title": "Go Solar in 5 Simple Steps",
     "description": "From inquiry to energized solar system — a simple, transparent process backed by quality promise.",
     "step1": {
       "num": "01",
-      "title": "Calculate & Explore",
-      "desc": "Use our solar calculator to find your ideal system size. Explore panel types, installation methods, and available subsidies."
+      "title": "Calculate Savings",
+      "desc": "Enter your usage profile and location to estimate system size, savings, subsidy, and payback potential."
     },
     "step2": {
       "num": "02",
-      "title": "Match with Vendor",
-      "desc": "We match you with verified vendors in your area. Receive transparent, comparable quotes — no haggling."
+      "title": "Compare Quotes",
+      "desc": "Review vendor quotes side-by-side to compare price and technical details clearly."
     },
     "step3": {
       "num": "03",
-      "title": "Site Survey & Design",
-      "desc": "Your chosen vendor conducts a free site survey and prepares a customized design using our 3D rooftop visualizer."
+      "title": "Financing & Subsidy",
+      "desc": "Explore financing options and subsidy support tailored to your eligibility to understand net project cost."
     },
     "step4": {
       "num": "04",
-      "title": "Install & Energize",
-      "desc": "Professional installation by MNRE-certified technicians. We handle subsidy paperwork and grid connection on your behalf."
+      "title": "Choose Verified Vendor",
+      "desc": "Select from pre-verified vendors who meet our quality and documentation standards for reliable execution."
+    },
+    "step5": {
+      "num": "05",
+      "title": "Install & Save",
+      "desc": "Finalize execution, monitor generation, and begin realizing monthly savings and long-term return from your rooftop asset."
     }
   },
   "contact": {
@@ -275,9 +280,22 @@
     "faqs": "FAQs",
     "subsidyInformation": "Subsidy Information",
     "whySolarCompare": "Why Solar Compare",
-    "howItWorks": "How It Works",
+    
     "vendorNetwork": "Vendor Network",
     "financingOptions": "Financing Options"
+  },
+
+  "marquee": {
+    "item1": "150 GW Solar Installed — Mar 2026",
+    "item2": "PM Surya Ghar Subsidy — ₹78,000 Available Now",
+    "item3": "40 Lakh+ Homes Solarised & Counting",
+    "item4": "Solar Tariff — ₹2.44/unit (Cheaper than Grid)",
+    "item5": "Collateral-Free Solar Loan @ 6.75% p.a.",
+    "item6": "India Ranked #3 Globally in Solar Production",
+    "item7": "210 GW Solar Module Manufacturing Capacity",
+    "item8": "MNRE Approved Vendors Network",
+    "item9": "Residential & Commercial Solar Solutions",
+    "item10": "Government Subsidy Support Available"
   },
   "services": {
     "residentialSolar": "Residential Solar",
@@ -286,5 +304,85 @@
     "solarCleaning": "Solar Cleaning",
     "groundMountedSolar": "Ground Mounted Solar",
     "solarMaintenance": "Solar Maintenance"
+  },
+  "home": {
+    "heroTitle": "Compare Solar with Confidence",
+    "heroDescription": "Compare quotes, track subsidies, explore financing, and connect with verified solar partners through one trusted platform.",
+    "heroBadge": "Powering India's Solar Future"
+  },
+  "calculator": {
+    "heroTitle": "Your roof. Our math. Real numbers.",
+    "heroSubtitle": "Powered by real Indian irradiance, DISCOM tariff averages and PM Surya Ghar subsidy logic.",
+    "estimateSystem": "Estimate your system",
+    "propertyType": "Property type",
+    "stateDiscom": "State / DISCOM",
+    "monthlyBill": "Average monthly electricity bill (₹)",
+    "calculating": "Calculating…",
+    "estimateSavings": "Estimate my savings",
+    "assumptions": "Assumptions: state-specific DISCOM tariff and solar irradiance, ₹55k/kW turnkey cost. PM Surya Ghar: ₹30k/kW for first 2 kW + ₹18k for next 1 kW (max ₹78k, residential only).",
+    "awaitingBill": "Awaiting your bill",
+    "awaitingBillDescription": "Enter your monthly bill on the left and we’ll render your full solar economics here.",
+    "recommendedSystem": "Recommended system",
+    "lifetimeSavings": "25-year lifetime savings",
+    "estimatedEmi": "Estimated EMI (7 yr loan): {amount}",
+    "detailedEmi": "Calculate detailed EMI",
+    "compareVendors": "Compare verified vendors",
+    "detailedProposal": "Get Detailed Proposal"
+  },
+  "forgotPassword": {
+    "title": "Forgot Password",
+    "description": "Enter your email address to receive a secure one-time verification code.",
+    "accountType": "Account type",
+    "user": "User",
+    "vendor": "Vendor",
+    "admin": "Admin",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "sendOtp": "Send OTP",
+    "sending": "Sending…",
+    "otpSent": "A secure verification code has been sent to your email.",
+    "otp": "Verification code",
+    "otpPlaceholder": "Enter 6-digit OTP",
+    "newPassword": "New password",
+    "passwordPlaceholder": "Create a new password",
+    "confirmPassword": "Confirm password",
+    "confirmPlaceholder": "Re-enter your password",
+    "updatePassword": "Update password",
+    "updating": "Updating…",
+    "success": "Your password has been changed successfully. You can now log in.",
+    "successDetails": "Your password has been changed successfully. You can now log in.",
+    "backToLogin": "Back to Login",
+    "passwordMismatch": "Passwords do not match.",
+    "passwordShort": "Password should be at least 8 characters long.",
+    "errorSend": "We could not send the verification code.",
+    "errorReset": "We could not update your password.",
+    "errorOtp": "Invalid or expired verification code."
+  },
+  "footer": {
+    "description": "Compare verified solar vendors, subsidy opportunities, and financing options through one trusted, India-focused platform.",
+    "social": "Social",
+    "platform": "Platform",
+    "learn": "Learn",
+    "company": "Company",
+    "compareQuotes": "Compare Quotes",
+    "subsidyCalculator": "Subsidy Calculator",
+    "suryaGharHelp": "PM Surya Ghar Help",
+    "financingEmi": "Financing & EMI",
+    "solarInsurance": "Solar Insurance",
+    "energyMonitor": "Energy Monitor",
+    "solarPanelTypes": "Solar Panel Types",
+    "inverterGuide": "Inverter Guide",
+    "dcrBrandList": "DCR Brand List",
+    "stateSubsidies": "State Subsidies",
+    "roiCalculator": "ROI Calculator",
+    "blog": "Blog",
+    "aboutUs": "About Us",
+    "vendorPartners": "Vendor Partners",
+    "careers": "Careers",
+    "contact": "Contact",
+    "privacyPolicy": "Privacy Policy"
+  },
+  "privacy": {
+    "note": "Your information is securely protected and will never be shared with third parties without your consent."
   }
 }

@@ -69,7 +69,7 @@ function LanguageSwitcher({
     <div className="relative" onClick={(event) => event.stopPropagation()}>
       <button
         type="button"
-        className={`inline-flex h-11 items-center gap-3 rounded-full border px-4 text-sm font-medium transition focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 ${
+        className={`inline-flex h-11 items-center gap-3 rounded-full border px-4 text-sm font-semibold transition focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 ${
           overlay
             ? "border-white/18 bg-white/10 text-white hover:bg-white/16 focus-visible:ring-white/30"
             : "border-slate-200 bg-white text-slate-900 shadow-sm hover:border-slate-300 hover:bg-slate-50"
@@ -146,7 +146,7 @@ function DropdownGroup({
     <div className="relative group">
       <button
         type="button"
-        className={`inline-flex h-11 items-center gap-1 rounded-full border px-4 text-sm font-medium transition focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${triggerStyles}`}
+        className={`inline-flex h-11 items-center gap-1 rounded-full border px-4 text-sm font-semibold transition focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${triggerStyles}`}
         aria-expanded={isOpen}
         onClick={(event) => {
           event.stopPropagation();
@@ -185,7 +185,7 @@ function DropdownGroup({
                       <item.icon className="h-4 w-4" />
                     </span>
                   ) : null}
-                  <span className="font-medium">{item.label}</span>
+                  <span className="font-semibold">{item.label}</span>
                 </span>
                 <ChevronDown className="h-4 w-4 -rotate-90 text-slate-600" />
               </Link>
@@ -306,7 +306,7 @@ export default function Navbar() {
           : "border-slate-200 bg-white text-slate-900 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur-sm"
       }`}
     >
-      <div className={`mx-auto flex w-full max-w-screen-2xl items-center gap-4 px-1 py-3 sm:px-3 lg:px-4 ${overlay ? "lg:py-4" : "lg:py-3.5"}`}>
+      <div className={`mx-auto flex min-w-0 w-full max-w-screen-2xl items-center gap-4 px-1 py-3 sm:px-3 lg:px-4 ${overlay ? "lg:py-4" : "lg:py-3.5"}`}>
         <div className="flex min-w-0 flex-1 items-center gap-8">
           <BrandMark
             href="/"
@@ -327,7 +327,7 @@ export default function Navbar() {
                 <Link
                   key={navKey}
                   href={link.href}
-                  className={`inline-flex h-11 items-center justify-center rounded-full px-5 py-2 text-sm font-medium transition focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${
+                  className={`inline-flex h-11 items-center justify-center rounded-full px-5 py-2 text-sm font-semibold transition focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${
                     overlay
                       ? isActive
                         ? "bg-white/16 text-white font-semibold ring-1 ring-white/20"
@@ -362,7 +362,7 @@ export default function Navbar() {
 
           <Link
             href="/login"
-            className={`inline-flex h-11 items-center rounded-full border px-5 text-sm font-medium transition focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 ${
+            className={`inline-flex h-11 items-center rounded-full border px-5 text-sm font-semibold transition focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 ${
               overlay
                 ? "border-white/18 bg-white/10 text-white hover:bg-white/16 focus-visible:ring-white/30"
                 : "border-slate-200 bg-white text-slate-900 shadow-sm hover:border-slate-300 hover:bg-slate-50"
@@ -378,7 +378,6 @@ export default function Navbar() {
             {t("buttons.getProposal")}
           </Link>
         </div>
-
         <button
           type="button"
           onClick={() => setMobileOpen((value) => !value)}
@@ -397,7 +396,7 @@ export default function Navbar() {
       <div
         className={`lg:hidden ${mobileOpen ? "max-h-[calc(100vh-4rem)] opacity-100" : "pointer-events-none max-h-0 opacity-0"} overflow-hidden border-t border-slate-200/80 bg-white/98 backdrop-blur-xl transition-all duration-300`}
       >
-        <div className="mx-auto w-full max-w-screen-2xl px-4 py-4 sm:px-6">
+        <div className="mx-auto w-full max-w-screen-2xl px-4 py-4 sm:px-6 max-h-[calc(100vh-4rem)] overflow-y-auto">
           <nav className="space-y-3">
             {primaryLinks.map((link) => {
               const navKey = `${link.href}-${link.label}`;
@@ -407,7 +406,7 @@ export default function Navbar() {
                   key={navKey}
                   href={link.href}
                   onClick={closeMenus}
-                  className="flex items-center justify-between rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900"
+                  className="flex items-center justify-between rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900"
                 >
                   <span>{link.label}</span>
                   <ChevronDown className="h-4 w-4 -rotate-90 text-slate-400" />
@@ -422,7 +421,7 @@ export default function Navbar() {
                 <div key={group.label} className="rounded-2xl border border-slate-200 bg-slate-50/80">
                   <button
                     type="button"
-                    className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium text-slate-800"
+                    className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-semibold text-slate-800"
                     onClick={() => setActiveGroup((current) => (current === group.label ? null : group.label))}
                     aria-expanded={isOpen}
                   >
@@ -447,7 +446,7 @@ export default function Navbar() {
                                 <item.icon className="h-4 w-4" />
                               </span>
                             ) : null}
-                            <span className="font-medium">{item.label}</span>
+                            <span className="font-semibold">{item.label}</span>
                           </span>
                           <ChevronDown className="h-4 w-4 -rotate-90 text-slate-400" />
                         </Link>

@@ -1,16 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { getInfoPage, infoPages } from "@/data/info-pages";
-import {
-  aboutOverview,
-  blogPosts,
-  businessBenefits,
-  homeownerBenefits,
-  howItWorksSteps,
-  platformStats,
-  whyChooseSolarCompare,
-} from "@/data/more-content";
+import { getMoreContent } from "@/data/more-content";
 import BlogCard from "@/components/more/blog-card";
 import ContactEnquiryForm from "@/components/more/contact-enquiry-form";
 import { BarChart3, Calculator, ClipboardCheck, Handshake, SearchCheck, Sparkles } from "lucide-react";
@@ -41,7 +34,10 @@ export async function generateMetadata({ params }: MorePageProps): Promise<Metad
 export default async function MorePage({ params, searchParams }: MorePageProps) {
   const { slug } = await params;
   const { article } = await searchParams;
-  const page = getInfoPage(slug);
+  const cookieStore = await cookies();
+  const locale = cookieStore.get("safwe:locale")?.value === "en" ? "en" : "hi";
+  const page = getInfoPage(slug, locale);
+  const content = getMoreContent(locale);
 
   if (!page) {
     notFound();
@@ -55,18 +51,18 @@ export default async function MorePage({ params, searchParams }: MorePageProps) 
     install: Sparkles,
   };
 
-  const totalReadMinutes = blogPosts.reduce((total, post) => {
+  const totalReadMinutes = content.blogPosts.reduce((total, post) => {
     const minutes = Number.parseInt(post.readTime, 10);
     return total + (Number.isFinite(minutes) ? minutes : 0);
   }, 0);
 
   const blogMetrics = [
-    { label: "Published Articles", value: `${blogPosts.length}` },
-    { label: "Editorial Categories", value: `${new Set(blogPosts.map((post) => post.category)).size}` },
-    { label: "Average Read Time", value: `${Math.max(1, Math.round(totalReadMinutes / blogPosts.length))} min` },
+    { label: locale === "hi" ? "प्रकाशित लेख" : "Published Articles", value: `${content.blogPosts.length}` },
+    { label: locale === "hi" ? "संपादकीय श्रेणियाँ" : "Editorial Categories", value: `${new Set(content.blogPosts.map((post) => post.category)).size}` },
+    { label: locale === "hi" ? "औसत पढ़ने का समय" : "Average Read Time", value: `${Math.max(1, Math.round(totalReadMinutes / content.blogPosts.length))} min` },
   ];
 
-  const selectedBlog = slug === "blogs" && article ? blogPosts.find((post) => post.slug === article) : null;
+  const selectedBlog = slug === "blogs" && article ? content.blogPosts.find((post) => post.slug === article) : null;
   const blogImportantData: Record<string, { summary: string; keyPoints: string[] }> = {
     "solar-subsidy-guide": {
       summary: "Subsidy awareness directly improves budget accuracy and prevents unrealistic payback expectations.",
@@ -179,15 +175,15 @@ export default async function MorePage({ params, searchParams }: MorePageProps) 
             <div className="grid gap-4 lg:grid-cols-3">
               <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
                 <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Company Overview</h3>
-                <p className="mt-3 text-sm leading-7 text-slate-600">{aboutOverview.companyOverview}</p>
+                <p className="mt-3 text-sm leading-7 text-slate-600">{content.aboutOverview.companyOverview}</p>
               </div>
               <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
                 <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Mission</h3>
-                <p className="mt-3 text-sm leading-7 text-slate-600">{aboutOverview.mission}</p>
+                <p className="mt-3 text-sm leading-7 text-slate-600">{content.aboutOverview.mission}</p>
               </div>
               <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
                 <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Vision</h3>
-                <p className="mt-3 text-sm leading-7 text-slate-600">{aboutOverview.vision}</p>
+                <p className="mt-3 text-sm leading-7 text-slate-600">{content.aboutOverview.vision}</p>
               </div>
             </div>
 
@@ -195,7 +191,7 @@ export default async function MorePage({ params, searchParams }: MorePageProps) 
               <div className="rounded-3xl border border-slate-200 bg-white p-5">
                 <h3 className="text-xl font-semibold text-slate-950">Why choose Solar Compare</h3>
                 <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
-                  {whyChooseSolarCompare.map((point) => (
+                  {content.whyChooseSolarCompare.map((point) => (
                     <li key={point} className="flex gap-3">
                       <span className="mt-2 h-1.5 w-1.5 rounded-full bg-slate-400" />
                       <span>{point}</span>
@@ -206,7 +202,7 @@ export default async function MorePage({ params, searchParams }: MorePageProps) 
               <div className="rounded-3xl border border-slate-200 bg-white p-5">
                 <h3 className="text-xl font-semibold text-slate-950">Platform statistics</h3>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {platformStats.map((item) => (
+                  {content.platformStats.map((item) => (
                     <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                       <p className="text-2xl font-semibold text-slate-950">{item.value}</p>
                       <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{item.label}</p>
@@ -220,7 +216,7 @@ export default async function MorePage({ params, searchParams }: MorePageProps) 
               <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
                 <h3 className="text-xl font-semibold text-slate-950">Benefits for homeowners</h3>
                 <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
-                  {homeownerBenefits.map((point) => (
+                  {content.homeownerBenefits.map((point) => (
                     <li key={point} className="flex gap-3">
                       <span className="mt-2 h-1.5 w-1.5 rounded-full bg-emerald-500" />
                       <span>{point}</span>
@@ -231,7 +227,7 @@ export default async function MorePage({ params, searchParams }: MorePageProps) 
               <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
                 <h3 className="text-xl font-semibold text-slate-950">Benefits for businesses</h3>
                 <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
-                  {businessBenefits.map((point) => (
+                  {content.businessBenefits.map((point) => (
                     <li key={point} className="flex gap-3">
                       <span className="mt-2 h-1.5 w-1.5 rounded-full bg-sky-500" />
                       <span>{point}</span>
@@ -329,7 +325,7 @@ export default async function MorePage({ params, searchParams }: MorePageProps) 
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {Array.from(new Set(blogPosts.map((post) => post.category))).map((category) => (
+              {Array.from(new Set(content.blogPosts.map((post) => post.category))).map((category) => (
                 <span
                   key={category}
                   className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-slate-600"
@@ -340,7 +336,7 @@ export default async function MorePage({ params, searchParams }: MorePageProps) 
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {blogPosts.map((post) => (
+              {content.blogPosts.map((post) => (
                 <BlogCard key={post.slug} post={post} />
               ))}
             </div>
@@ -349,14 +345,16 @@ export default async function MorePage({ params, searchParams }: MorePageProps) 
 
         {slug === "faq" ? (
           <div className="mt-8 rounded-3xl border border-slate-200 bg-slate-50 p-6 md:p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">FAQ Relocated</p>
-            <h3 className="mt-3 text-2xl font-semibold text-slate-950">FAQ is now available on the Home page</h3>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">{locale === "hi" ? "FAQ स्थानांतरित" : "FAQ Relocated"}</p>
+            <h3 className="mt-3 text-2xl font-semibold text-slate-950">{locale === "hi" ? "FAQ अब होम पेज पर उपलब्ध है" : "FAQ is now available on the Home page"}</h3>
             <p className="mt-3 text-sm leading-7 text-slate-600">
-              We moved frequently asked questions to the Home experience for faster buyer access during comparison and proposal workflows.
+              {locale === "hi"
+                ? "तुलना और प्रस्ताव वर्कफ़्लो के दौरान तेज़ पहुँच के लिए अक्सर पूछे जाने वाले प्रश्न होम अनुभव में स्थानांतरित किए गए हैं।"
+                : "We moved frequently asked questions to the Home experience for faster buyer access during comparison and proposal workflows."}
             </p>
             <div className="mt-5">
               <Link href="/#home-faq" className="inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-100">
-                Go to Home FAQ
+                {locale === "hi" ? "होम FAQ पर जाएँ" : "Go to Home FAQ"}
               </Link>
             </div>
           </div>
@@ -364,14 +362,14 @@ export default async function MorePage({ params, searchParams }: MorePageProps) 
 
         {slug === "how-it-works" ? (
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-            {howItWorksSteps.map((step, index) => {
+            {content.howItWorksSteps.map((step, index) => {
               const Icon = howIconByKey[step.key] || Sparkles;
               return (
                 <article key={step.key} className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
                   <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-900 ring-1 ring-slate-200">
                     <Icon className="h-4 w-4" />
                   </div>
-                  <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Step {index + 1}</p>
+                  <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{locale === "hi" ? `चरण ${index + 1}` : `Step ${index + 1}`}</p>
                   <h3 className="mt-2 text-lg font-semibold text-slate-950">{step.title}</h3>
                   <p className="mt-2 text-sm leading-6 text-slate-600">{step.description}</p>
                 </article>
@@ -382,10 +380,10 @@ export default async function MorePage({ params, searchParams }: MorePageProps) 
 
         <div className="mt-8 flex flex-wrap gap-3">
           <Link href="/services" className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
-            Browse services
+            {locale === "hi" ? "सेवाएँ देखें" : "Browse services"}
           </Link>
           <Link href="/calculator" className="rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition hover:border-slate-300 hover:bg-slate-50">
-            Open calculator
+            {locale === "hi" ? "कैलकुलेटर खोलें" : "Open calculator"}
           </Link>
         </div>
       </section>

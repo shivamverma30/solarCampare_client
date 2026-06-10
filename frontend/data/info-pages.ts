@@ -4,61 +4,30 @@ export type InfoPage = {
   summary: string;
   heroTitle: string;
   heroDescription: string;
-  highlights: string[];
-  details: string[];
+  highlights: readonly string[];
+  details: readonly string[];
 };
 
-export const infoPages: InfoPage[] = [
-  {
-    slug: "about-us",
-    title: "About Us",
-    summary: "Who we are and how Solar Compare helps buyers make better solar decisions.",
-    heroTitle: "Built to make solar buying transparent",
-    heroDescription:
-      "Solar Compare is a digital solar marketplace that helps homeowners and businesses evaluate options, estimate outcomes, and connect with verified vendors through a guided, data-led process.",
-    highlights: ["Buyer-first comparison", "Verified vendor ecosystem", "Actionable savings intelligence"],
-    details: ["Our platform combines calculator-led qualification, vendor discovery, and guided enquiry workflows into one practical journey.", "Every interaction is designed to reduce guesswork and improve decision confidence before installation."],
-  },
-  {
-    slug: "contact-us",
-    title: "Contact Us",
-    summary: "Reach the team for help with solar comparison, proposals, and service inquiries.",
-    heroTitle: "Talk to the Solar Compare team",
-    heroDescription:
-      "Connect with us for system comparison help, project planning, financing guidance, and proposal support across residential and commercial use cases.",
-    highlights: ["Proposal assistance", "Technical guidance", "Commercial support"],
-    details: ["Our operations team reviews each enquiry and routes it to the right specialist or admin desk.", "You can expect a structured follow-up with next steps based on your location and project intent."],
-  },
-  {
-    slug: "blogs",
-    title: "Blogs",
-    summary: "Solar education, buying guidance, and market updates in one place.",
-    heroTitle: "Solar intelligence for better buying decisions",
-    heroDescription:
-      "Explore practical, India-focused solar articles covering subsidies, ROI, net metering, financing, and implementation strategy.",
-    highlights: ["Buying guides", "Policy updates", "ROI planning"],
-    details: ["Each article is written to support real purchase and project decisions.", "We prioritize clarity, realism, and implementation-ready insight."],
-  },
-  {
-    slug: "faq",
-    title: "FAQ",
-    summary: "Short answers to the questions buyers ask most often.",
-    heroTitle: "Frequently asked solar questions",
-    heroDescription:
-      "Find concise answers to the most common questions buyers ask before going solar.",
-    highlights: ["Cost and subsidy", "Net metering", "Installation and maintenance"],
-    details: ["The FAQ section is designed to reduce uncertainty before raising a quote request.", "Answers are written for both first-time homeowners and commercial decision-makers."],
-  },
-  {
-    slug: "how-it-works",
-    title: "How It Works",
-    summary: "A simple explanation of the buyer journey from comparison to inquiry.",
-    heroTitle: "How Solar Compare works",
-    heroDescription:
-      "The workflow is designed to move from discovery to installation with minimal friction and full transparency.",
-    highlights: ["Calculate", "Compare", "Install"],
-    details: ["Each step is measurable and connected to the next action.", "Admin and vendor workflows are built to support timely follow-up and execution."],
-  },
-];
+const infoPagesByLocale = {
+  en: [
+    { slug: "about-us", title: "About Us", summary: "Who we are and how Solar Compare helps buyers make better solar decisions.", heroTitle: "Built to make solar buying transparent", heroDescription: "Solar Compare is a digital solar marketplace that helps homeowners and businesses evaluate options, estimate outcomes, and connect with verified vendors through a guided, data-led process.", highlights: ["Buyer-first comparison", "Verified vendor ecosystem", "Actionable savings intelligence"], details: ["Our platform combines calculator-led qualification, vendor discovery, and guided enquiry workflows into one practical journey.", "Every interaction is designed to reduce guesswork and improve decision confidence before installation."] },
+    { slug: "contact-us", title: "Contact Us", summary: "Reach the team for help with solar comparison, proposals, and service inquiries.", heroTitle: "Talk to the Solar Compare team", heroDescription: "Connect with us for system comparison help, project planning, financing guidance, and proposal support across residential and commercial use cases.", highlights: ["Proposal assistance", "Technical guidance", "Commercial support"], details: ["Our operations team reviews each enquiry and routes it to the right specialist or admin desk.", "You can expect a structured follow-up with next steps based on your location and project intent."] },
+    { slug: "blogs", title: "Blogs", summary: "Solar education, buying guidance, and market updates in one place.", heroTitle: "Solar intelligence for better buying decisions", heroDescription: "Explore practical, India-focused solar articles covering subsidies, ROI, net metering, financing, and implementation strategy.", highlights: ["Buying guides", "Policy updates", "ROI planning"], details: ["Each article is written to support real purchase and project decisions.", "We prioritize clarity, realism, and implementation-ready insight."] },
+    { slug: "faq", title: "FAQ", summary: "Short answers to the questions buyers ask most often.", heroTitle: "Frequently asked solar questions", heroDescription: "Find concise answers to the most common questions buyers ask before going solar.", highlights: ["Cost and subsidy", "Net metering", "Installation and maintenance"], details: ["The FAQ section is designed to reduce uncertainty before raising a quote request.", "Answers are written for both first-time homeowners and commercial decision-makers."] },
+    { slug: "how-it-works", title: "How It Works", summary: "A simple explanation of the buyer journey from comparison to inquiry.", heroTitle: "Go Solar in 5 Simple Steps", heroDescription: "The workflow is designed to move from discovery to installation with minimal friction and full transparency.", highlights: ["Calculate", "Compare", "Install"], details: ["Each step is measurable and connected to the next action.", "Admin and vendor workflows are built to support timely follow-up and execution."] },
+  ],
+  hi: [
+    { slug: "about-us", title: "हमारे बारे में", summary: "हम कौन हैं और Solar Compare खरीदारों को बेहतर सोलर निर्णय लेने में कैसे मदद करता है।", heroTitle: "सोलर खरीद को पारदर्शी बनाने के लिए बनाया गया", heroDescription: "Solar Compare एक डिजिटल सोलर मार्केटप्लेस है जो घरों और व्यवसायों को विकल्पों का मूल्यांकन करने, परिणामों का अनुमान लगाने और सत्यापित विक्रेताओं से जुड़ने में मदद करता है।", highlights: ["खरीदार-केंद्रित तुलना", "सत्यापित विक्रेता नेटवर्क", "कार्रवाई योग्य बचत जानकारी"], details: ["हमारा प्लेटफ़ॉर्म कैलकुलेटर-आधारित पात्रता, विक्रेता खोज और मार्गदर्शित पूछताछ वर्कफ़्लो को एक व्यावहारिक यात्रा में जोड़ता है।", "हर इंटरैक्शन इंस्टॉलेशन से पहले अनुमान की गुंजाइश कम करने और निर्णय आत्मविश्वास बढ़ाने के लिए डिज़ाइन किया गया है."] },
+    { slug: "contact-us", title: "संपर्क करें", summary: "सोलर तुलना, प्रस्ताव और सेवा पूछताछ में मदद के लिए टीम से संपर्क करें।", heroTitle: "Solar Compare टीम से बात करें", heroDescription: "सिस्टम तुलना सहायता, प्रोजेक्ट योजना, फाइनेंसिंग मार्गदर्शन और आवासीय व वाणिज्यिक उपयोग मामलों के लिए प्रस्ताव सहायता के लिए हमसे जुड़ें।", highlights: ["प्रस्ताव सहायता", "तकनीकी मार्गदर्शन", "वाणिज्यिक सहायता"], details: ["हमारी संचालन टीम हर पूछताछ की समीक्षा करती है और उसे सही विशेषज्ञ या प्रशासनिक डेस्क तक पहुँचाती है।", "आपके स्थान और प्रोजेक्ट इरादे के आधार पर अगले कदमों के साथ एक संरचित फॉलो-अप की उम्मीद कर सकते हैं।"] },
+    { slug: "blogs", title: "ब्लॉग", summary: "सोलर शिक्षा, खरीद मार्गदर्शन और बाज़ार अपडेट एक ही जगह।", heroTitle: "बेहतर खरीद निर्णयों के लिए सोलर इंटेलिजेंस", heroDescription: "सब्सिडी, ROI, नेट मीटरिंग, फाइनेंसिंग और कार्यान्वयन रणनीति को कवर करने वाले व्यावहारिक, भारत-केंद्रित लेखों का अन्वेषण करें।", highlights: ["खरीद गाइड", "नीति अपडेट", "ROI योजना"], details: ["हर लेख वास्तविक खरीद और प्रोजेक्ट निर्णयों का समर्थन करने के लिए लिखा गया है।", "हम स्पष्टता, यथार्थवाद और कार्यान्वयन-तैयार अंतर्दृष्टि को प्राथमिकता देते हैं।"] },
+    { slug: "faq", title: "सामान्य प्रश्न", summary: "खरीदारों द्वारा सबसे अधिक पूछे जाने वाले प्रश्नों के संक्षिप्त उत्तर।", heroTitle: "अक्सर पूछे जाने वाले सोलर प्रश्न", heroDescription: "सोलर अपनाने से पहले पूछे जाने वाले सामान्य प्रश्नों के संक्षिप्त उत्तर पाएं।", highlights: ["लागत और सब्सिडी", "नेट मीटरिंग", "इंस्टॉलेशन और मेंटेनेंस"], details: ["FAQ अनुभाग को कोटेशन अनुरोध से पहले अनिश्चितता कम करने के लिए डिज़ाइन किया गया है।", "उत्तर पहली बार खरीदने वाले घर मालिकों और वाणिज्यिक निर्णयकर्ताओं दोनों के लिए लिखे गए हैं।"] },
+    { slug: "how-it-works", title: "यह कैसे काम करता है", summary: "तुलना से पूछताछ तक खरीदार की यात्रा का सरल विवरण।", heroTitle: "5 आसान चरणों में सोलर अपनाएं", heroDescription: "यह वर्कफ़्लो खोज से इंस्टॉलेशन तक न्यूनतम घर्षण और पूर्ण पारदर्शिता के साथ आगे बढ़ने के लिए डिज़ाइन किया गया है।", highlights: ["गणना", "तुलना", "इंस्टॉल"], details: ["हर चरण मापने योग्य है और अगले कदम से जुड़ा हुआ है।", "प्रशासनिक और विक्रेता वर्कफ़्लो समय पर फॉलो-अप और निष्पादन का समर्थन करते हैं।"] },
+  ],
+} as const;
 
-export const getInfoPage = (slug: string) => infoPages.find((page) => page.slug === slug) || (slug === "faqs" ? infoPages.find((page) => page.slug === "faq") || null : null);
+export const infoPages: readonly InfoPage[] = infoPagesByLocale.en;
+
+export const getInfoPage = (slug: string, locale: string = "en") => {
+  const pages = locale === "hi" ? infoPagesByLocale.hi : infoPagesByLocale.en;
+  return pages.find((page) => page.slug === slug) || (slug === "faqs" ? pages.find((page) => page.slug === "faq") || null : null);
+};

@@ -14,6 +14,7 @@ import {
   validateSolarInputs,
 } from "@/lib/calculators";
 import { useAuth } from "@/lib/use-auth";
+import { useLocale } from "@/components/locale-provider";
 import { apiClient } from "@/lib/api-client";
 import { getSessionProfile, getToken } from "@/lib/auth";
 
@@ -33,6 +34,7 @@ function formatKw(value: number) {
 function CalculatorPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useLocale();
   const { isAuthenticated, role } = useAuth();
   const [monthlyBill, setMonthlyBill] = useState(3000);
   const [propertyType, setPropertyType] = useState<PropertyType>("residential");
@@ -234,22 +236,22 @@ function CalculatorPageContent() {
     <section className="hero-shell container-x">
       <div className="grid gap-8 lg:grid-cols-[402px_1fr] lg:items-start lg:gap-10">
         <div className="max-w-3xl">
-          <div className="overline mb-3">Solar Savings Engine</div>
+          <div className="overline mb-3">{t("calculator.eyebrow")}</div>
           <h1 className="text-[36px] font-bold leading-10 tracking-[-0.9px] text-slate-900 md:text-[36px]">
-            Your roof. Our math. Real numbers.
+            {t("calculator.heroTitle")}
           </h1>
           <p className="mt-4 max-w-2xl text-[16px] leading-7 text-slate-600">
-            Powered by real Indian irradiance, DISCOM tariff averages and PM Surya Ghar subsidy logic.
+            {t("calculator.heroSubtitle")}
           </p>
 
           <form onSubmit={handleSubmit} className="mt-8 rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-16px_rgba(15,23,42,0.08)] md:p-7">
             <div className="mb-5 flex items-center gap-2 text-sm font-semibold text-slate-900">
               <PanelTop className="h-4 w-4 text-emerald-600" />
-              <span>Estimate your system</span>
+              <span>{t("calculator.estimateSystem")}</span>
             </div>
 
             <div>
-              <div className="label-dark">Property type</div>
+              <div className="label-dark">{t("calculator.propertyType")}</div>
               <div className="grid grid-cols-3 gap-2">
                 {propertyOptions.map((option) => {
                   const Icon = option.icon;
@@ -274,7 +276,7 @@ function CalculatorPageContent() {
             </div>
 
             <div className="mt-5">
-              <div className="label-dark">State / DISCOM</div>
+              <div className="label-dark">{t("calculator.stateDiscom")}</div>
               <div ref={stateMenuRef} className="relative">
                 <button
                   type="button"
@@ -311,7 +313,7 @@ function CalculatorPageContent() {
             </div>
 
             <div className="mt-5">
-              <div className="label-dark">Average monthly electricity bill (₹)</div>
+              <div className="label-dark">{t("calculator.monthlyBill")}</div>
               <input
                 type="number"
                 min={500}
@@ -338,12 +340,12 @@ function CalculatorPageContent() {
             </div>
 
             <button type="submit" data-testid="calc-submit" className="btn-primary mt-7 h-12 w-full">
-              {submitted ? "Calculating…" : "Estimate my savings"}
+              {submitted ? t("calculator.calculating") : t("calculator.estimateSavings")}
             </button>
 
             {validationErrors.length > 0 ? <p className="mt-4 text-sm text-amber-700">{validationErrors[0]}</p> : null}
             <p className="mt-5 text-[14px] leading-7 text-slate-600">
-              Assumptions: state-specific DISCOM tariff & solar irradiance, ₹55k/kW turnkey cost. PM Surya Ghar: ₹30k/kW for first 2 kW + ₹18k for next 1 kW (max ₹78k, residential only).
+              {t("calculator.assumptions")}
             </p>
           </form>
         </div>
@@ -355,9 +357,9 @@ function CalculatorPageContent() {
                 <div className="flex h-20 w-20 items-center justify-center rounded-full bg-brand-500/10 text-brand-500">
                   <SunMedium className="h-9 w-9" />
                 </div>
-                <p className="mt-5 text-[22px] font-semibold tracking-[-0.03em] text-slate-900">Awaiting your bill</p>
+                <p className="mt-5 text-[22px] font-semibold tracking-[-0.03em] text-slate-900">{t("calculator.awaitingBill")}</p>
                 <p className="mt-2 max-w-md text-[15px] leading-7 text-slate-600">
-                  Enter your monthly bill on the left and we&apos;ll render your full solar economics here.
+                  {t("calculator.awaitingBillDescription")}
                 </p>
               </div>
             </div>
@@ -370,7 +372,7 @@ function CalculatorPageContent() {
                 </div>
 
                 <div className="mt-6">
-                  <div className="text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-500">Recommended system</div>
+                  <div className="text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-500">{t("calculator.recommendedSystem")}</div>
                   <div className="mt-2 flex items-baseline gap-2 text-slate-900">
                     <span className="text-[36px] font-bold leading-none tracking-[-0.04em]">{formatKw(estimate.recommendedKw)}</span>
                     <span className="text-[18px] font-semibold text-slate-700">kW rooftop solar</span>
@@ -388,25 +390,25 @@ function CalculatorPageContent() {
               </div>
 
               <div className="mt-4 rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-16px_rgba(15,23,42,0.08)] md:p-8">
-                <div className="text-[18px] font-semibold tracking-[-0.03em] text-slate-900">25-year lifetime savings</div>
+                <div className="text-[18px] font-semibold tracking-[-0.03em] text-slate-900">{t("calculator.lifetimeSavings")}</div>
                 <div className="mt-2 text-[28px] font-bold tracking-[-0.04em] text-slate-900">{lifetimeSavings}</div>
                 <div className="mt-2 text-[15px] leading-7 text-slate-600">
-                  Estimated EMI (7 yr loan): {formatCurrency(emiEstimate.emi)}/mo
+                  {t("calculator.estimatedEmi", { amount: `${formatCurrency(emiEstimate.emi)}/mo` })}
                 </div>
 
                 <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                   <Link href={`/emi?principal=${Math.round(estimate.netInvestment)}`} className="btn-primary h-12 flex-1">
-                    Calculate detailed EMI
+                    {t("calculator.detailedEmi")}
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                   <button type="button" onClick={handleCompareVendors} className="btn-ghost h-12 flex-1">
-                    Compare verified vendors
+                    {t("calculator.compareVendors")}
                     <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
 
                 <button type="button" onClick={handleOpenProposal} className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-md bg-emerald-600 px-5 text-sm font-semibold text-white transition hover:bg-emerald-700">
-                  Get Detailed Proposal
+                  {t("calculator.detailedProposal")}
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </div>

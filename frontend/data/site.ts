@@ -16,28 +16,79 @@ export const trustedBrands = [
   "Premier Energies",
 ];
 
-export const benefits = [
-  {
-    title: "Maximum Savings",
-    description:
-      "Cut up to 80% of your electricity costs with intelligent system sizing and high-yield panel recommendations.",
-  },
-  {
-    title: "Faster Payback",
-    description:
-      "Understand ROI instantly with transparent investment, subsidy assumptions, and future savings estimates.",
-  },
-  {
-    title: "Trusted Products",
-    description:
-      "Compare proven panel brands side-by-side on efficiency, warranty, and long-term value before you decide.",
-  },
-  {
-    title: "Dedicated Support",
-    description:
-      "From site assessment to installation planning, our experts guide you at each stage with clear communication.",
-  },
-];
+export type BenefitCard = {
+  title: string;
+  description: string;
+};
+
+const benefitsByLocale: Record<string, BenefitCard[]> = {
+  en: [
+    {
+      title: "Real price transparency — no more guessing",
+      description:
+        "See exactly what each quote includes: panel brand, inverter, mounting, warranty, and installation scope, so fair comparison becomes easy.",
+    },
+    {
+      title: "We handle your entire ₹78,000 subsidy claim",
+      description:
+        "Track subsidy support, paperwork, and approval status in real time while we guide the installation-to-claim workflow.",
+    },
+    {
+      title: "Every vendor passes a 27-point verification",
+      description:
+        "Verified panels, valid licenses, certified equipment, and documented experience are checked before a vendor is listed.",
+    },
+    {
+      title: "Know your real savings before you commit",
+      description:
+        "Compare payback, IRR, and long-term savings using practical assumptions tailored to your property and tariff context.",
+    },
+    {
+      title: "Post-install monitoring, O&M & solar insurance",
+      description:
+        "Stay supported after handover with monitoring, maintenance, insurance guidance, and escalation help when needed.",
+    },
+    {
+      title: "Zero commission — you pay the same as going direct",
+      description:
+        "The price you see is the price you get, with no hidden commission from homeowners and no markup on the platform.",
+    },
+  ],
+  hi: [
+    {
+      title: "सही कीमत की स्पष्टता - अब अंदाज़ा नहीं",
+      description:
+        "हर कोटेशन में क्या शामिल है - पैनल ब्रांड, इन्वर्टर, माउंटिंग, वारंटी और इंस्टॉलेशन दायरा - यह साफ़ तौर पर देखें।",
+    },
+    {
+      title: "₹78,000 तक की सब्सिडी प्रक्रिया हम संभालते हैं",
+      description:
+        "सब्सिडी सहायता, दस्तावेज़ और मंजूरी की स्थिति को रियल-टाइम में ट्रैक करें, जबकि हम इंस्टॉलेशन से क्लेम तक का मार्गदर्शन करते हैं।",
+    },
+    {
+      title: "हर विक्रेता 27-पॉइंट सत्यापन से गुजरता है",
+      description:
+        "सूची में शामिल होने से पहले पैनल, लाइसेंस, प्रमाणित उपकरण और दस्तावेज़ित अनुभव की जांच की जाती है।",
+    },
+    {
+      title: "कमिट करने से पहले असली बचत जानें",
+      description:
+        "अपने घर या व्यवसाय के लिए व्यावहारिक मान्यताओं के साथ पेबैक, IRR और दीर्घकालिक बचत की तुलना करें।",
+    },
+    {
+      title: "इंस्टॉलेशन के बाद भी निगरानी और सहायता",
+      description:
+        "मॉनिटरिंग, मेंटेनेंस, बीमा मार्गदर्शन और ज़रूरत पड़ने पर एस्केलेशन सपोर्ट के साथ हम जुड़े रहते हैं।",
+    },
+    {
+      title: "कोई कमीशन नहीं - सीधे जैसा ही मूल्य",
+      description:
+        "जो कीमत दिखती है, वही अंतिम कीमत होती है; घर मालिकों से कोई छिपा कमीशन नहीं और प्लेटफ़ॉर्म पर कोई मार्कअप नहीं।",
+    },
+  ],
+};
+
+export const getBenefits = (locale: string) => benefitsByLocale[locale === "hi" ? "hi" : "en"];
 
 export const testimonials = [
   {
