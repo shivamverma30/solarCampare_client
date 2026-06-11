@@ -209,11 +209,11 @@ function PublicReferralView({
 
   return (
     <>
-      <section className="relative min-h-[70vh] overflow-hidden rounded-4xl border border-slate-900/10 bg-slate-950 text-white shadow-[0_30px_90px_rgba(15,23,42,0.32)]">
+      <section className="relative min-h-[70vh] overflow-hidden rounded-l-none rounded-r-4xl border border-slate-900/10 bg-slate-950 text-white shadow-[0_30px_90px_rgba(15,23,42,0.32)]">
         <div className="absolute inset-0">
-          <Image src="/images/refral.png" alt="SolarCompare referral rewards hero background" fill priority sizes="100vw" className="object-cover object-center" />
-          <div className="absolute inset-0 bg-linear-to-r from-slate-950 via-slate-950/85 to-slate-900/35" />
-          <div className="absolute inset-0 bg-linear-to-b from-transparent via-transparent to-slate-950/35" />
+          <Image src="/images/refral.png" alt="SolarCompare referral rewards hero background" fill priority sizes="100vw" className="object-cover object-center brightness-110 contrast-105 saturate-110" />
+          <div className="absolute inset-0 bg-linear-to-r from-slate-950/70 via-slate-950/50 to-slate-900/20" />
+          <div className="absolute inset-0 bg-linear-to-b from-transparent via-transparent to-slate-950/20" />
         </div>
 
         <div className="relative z-10 flex min-h-[70vh] items-end">
