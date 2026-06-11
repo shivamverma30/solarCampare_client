@@ -9,26 +9,19 @@ import { apiClient } from "@/lib/api-client";
 import { setSessionProfile, setSessionRole, setToken, setVendor } from "@/lib/auth";
 
 const initialForm = {
-  fullName: "",
   businessName: "",
-  companyName: "",
   ownerName: "",
   email: "",
   phone: "",
   gst: "",
   serviceArea: "",
-  address: "",
   city: "",
   state: "",
   pincode: "",
-  logoUrl: "",
   businessType: "",
   experience: "",
-  services: "",
   password: "",
-  documentName: "",
-  documentUrl: "",
-  documentType: "",
+  confirmPassword: "",
 };
 
 export default function BecomeVendorPage() {
@@ -45,29 +38,27 @@ export default function BecomeVendorPage() {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
+
+    if (form.password !== form.confirmPassword) {
+      setError("Password and confirm password must match.");
+      return;
+    }
+
     setLoading(true);
 
     const response = await apiClient.auth.registerVendor({
-      companyName: form.companyName,
       ownerName: form.ownerName,
       businessName: form.businessName,
-      fullName: form.fullName,
       email: form.email,
       phone: form.phone,
       gst: form.gst || undefined,
       serviceArea: form.serviceArea,
-      address: form.address,
       city: form.city,
       state: form.state,
       pincode: form.pincode,
-      logoUrl: form.logoUrl || undefined,
       businessType: form.businessType,
       experience: Number(form.experience || 0),
-      services: form.services.split(",").map((service) => service.trim()).filter(Boolean),
       password: form.password,
-      documents: form.documentName && form.documentUrl && form.documentType
-        ? [{ documentName: form.documentName, fileUrl: form.documentUrl, fileType: form.documentType }]
-        : [],
     });
 
     if (!response.success) {
@@ -152,9 +143,7 @@ export default function BecomeVendorPage() {
                 </div>
               ) : (
                 <>
-              <Field label="Full Name" value={form.fullName} onChange={(value) => setForm({ ...form, fullName: value })} required />
               <Field label="Business/Shop Name" value={form.businessName} onChange={(value) => setForm({ ...form, businessName: value })} required />
-              <Field label="Company Name" value={form.companyName} onChange={(value) => setForm({ ...form, companyName: value })} required />
               <Field label="Owner Name" value={form.ownerName} onChange={(value) => setForm({ ...form, ownerName: value })} required />
               <Field label="Email" value={form.email} onChange={(value) => setForm({ ...form, email: value })} type="email" required />
               <Field label="Phone" value={form.phone} onChange={(value) => setForm({ ...form, phone: value })} type="tel" required />
@@ -165,25 +154,13 @@ export default function BecomeVendorPage() {
               <Field label="City" value={form.city} onChange={(value) => setForm({ ...form, city: value })} required />
               <Field label="State" value={form.state} onChange={(value) => setForm({ ...form, state: value })} required />
               <Field label="PIN Code" value={form.pincode} onChange={(value) => setForm({ ...form, pincode: value })} required />
-              <Field label="Logo URL (optional)" value={form.logoUrl} onChange={(value) => setForm({ ...form, logoUrl: value })} />
               <Field label="Password" value={form.password} onChange={(value) => setForm({ ...form, password: value })} type="password" required />
 
-              <label className="md:col-span-2 block text-sm font-medium text-slate-700">
-                Address
-                <textarea value={form.address} onChange={(event) => setForm({ ...form, address: event.target.value })} required className="mt-2 min-h-24 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-amber-400" />
-              </label>
+              <Field label="Confirm Password" value={form.confirmPassword} onChange={(value) => setForm({ ...form, confirmPassword: value })} type="password" required />
 
-              <label className="md:col-span-2 block text-sm font-medium text-slate-700">
-                Services offered (comma separated)
-                <input value={form.services} onChange={(event) => setForm({ ...form, services: event.target.value })} className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-amber-400" />
-              </label>
-
-              <Field label="Document Name" value={form.documentName} onChange={(value) => setForm({ ...form, documentName: value })} />
-              <Field label="Document Type" value={form.documentType} onChange={(value) => setForm({ ...form, documentType: value })} />
-              <label className="md:col-span-2 block text-sm font-medium text-slate-700">
-                Document URL
-                <input value={form.documentUrl} onChange={(event) => setForm({ ...form, documentUrl: event.target.value })} className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-amber-400" />
-              </label>
+              <div className="md:col-span-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs leading-6 text-slate-600">
+                * Please keep your verification documents ready. Our team may request them via email during vendor verification.
+              </div>
 
               <button type="submit" disabled={loading} className="md:col-span-2 mt-2 w-full rounded-xl border border-amber-300/80 bg-amber-400 px-5 py-3 text-sm font-semibold text-black transition hover:bg-amber-300 disabled:opacity-60">
                 {loading ? "Submitting application..." : "Submit Vendor Application"}

@@ -10,58 +10,88 @@ type Vendor = {
   ownerName: string;
   email: string;
   phone: string;
-  serviceArea: string;
+  city?: string | null;
+  state?: string | null;
+  pincode?: string | null;
   businessType: string;
   experience: number;
   services: string[];
   status: string;
-  rejectionReason?: string | null;
   createdAt: string;
-  documents?: Array<{ id: string; documentName: string; fileType: string }>;
+  updatedAt?: string;
 };
 
 export default function AdminVendorsPage() {
   const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [vendorName, setVendorName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [pincode, setPincode] = useState("");
+  const [status, setStatus] = useState("ALL");
+  const [companyName, setCompanyName] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [count, setCount] = useState(0);
+  const [activeCount, setActiveCount] = useState(0);
+  const [lastActivityAt, setLastActivityAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [notesMap, setNotesMap] = useState<Record<string, any[]>>({});
-  const [newNote, setNewNote] = useState<Record<string, string>>({});
-  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
+
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(count / pageSize)), [count, pageSize]);
+
+  const loadVendors = async () => {
+    const token = getToken();
+    if (!token) {
+      setError("Not authenticated");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    const response = await apiClient.vendors.getAdmin(token, {
+      vendorName,
+      companyName,
+      email,
+      phone,
+      city,
+      state,
+      pincode,
+      status,
+      page,
+      pageSize,
+    });
+
+    if (!response.success) {
+      setError(response.error || "Failed to load vendors");
+      setVendors([]);
+      setCount(0);
+      setActiveCount(0);
+      setLastActivityAt(null);
+    } else {
+      setError("");
+      setVendors((response.vendors as Vendor[]) || []);
+      setCount(response.count || 0);
+      setActiveCount(response.activeCount || 0);
+      setLastActivityAt(response.lastActivityAt || null);
+    }
+
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const load = async () => {
-      const token = getToken();
-      if (!token) {
-        setError("Not authenticated");
-        setLoading(false);
-        return;
-      }
-
-      const response = await apiClient.vendors.getAdmin(token);
-
-      if (!response.success) {
-        setError(response.error || "Failed to load vendors");
-      } else {
-        setVendors((response.vendors as Vendor[]) || []);
-      }
-
-      setLoading(false);
-    };
-
-    load();
-  }, []);
-
-  const counts = useMemo(() => ({
-    pending: vendors.filter((vendor) => vendor.status === "PENDING").length,
-    approved: vendors.filter((vendor) => vendor.status === "APPROVED").length,
-    rejected: vendors.filter((vendor) => vendor.status === "REJECTED").length,
-  }), [vendors]);
+    void loadVendors();
+  }, [city, companyName, email, page, pageSize, phone, pincode, state, status, vendorName]);
 
   const handleAction = async (id: string, action: "approve" | "reject") => {
     const token = getToken();
-    if (!token) return;
+    if (!token) {
+      setError("Not authenticated");
+      return;
+    }
 
     setBusyId(id);
     const response = action === "approve"
@@ -69,9 +99,7 @@ export default function AdminVendorsPage() {
       : await apiClient.vendors.reject(token, id, "Rejected from admin panel");
 
     if (response.success) {
-      setVendors((current) =>
-        current.map((vendor) => vendor.id === id ? { ...vendor, status: action === "approve" ? "APPROVED" : "REJECTED" } : vendor)
-      );
+      await loadVendors();
     } else {
       setError(response.error || `Failed to ${action} vendor`);
     }
@@ -81,193 +109,261 @@ export default function AdminVendorsPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-600">Vendor control</p>
-        <h1 className="mt-3 text-3xl text-slate-950 md:text-5xl">Vendor applications</h1>
-        <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 md:text-base">
-          Review vendor onboarding submissions and keep private contact details hidden from public users.
-        </p>
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_20px_50px_rgba(15,23,42,0.06)] md:p-8">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-600">Admin</p>
+            <h1 className="mt-3 text-3xl text-slate-950 md:text-5xl">Vendors</h1>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 md:text-base">
+              View vendor applications, search by identity or location, and track verification status without leaving the admin shell.
+            </p>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-4">
+            <StatChip label="Total Vendors" value={String(count)} />
+            <StatChip label="Active Vendors" value={String(activeCount)} />
+            <StatChip label="Current Page" value={`${page}/${totalPages}`} />
+            <StatChip label="Last Activity" value={lastActivityAt ? new Date(lastActivityAt).toLocaleString() : "-"} />
+          </div>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <SummaryCard title="Pending" value={counts.pending} />
-        <SummaryCard title="Approved" value={counts.approved} />
-        <SummaryCard title="Rejected" value={counts.rejected} />
-      </div>
+      {error ? <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">{error}</div> : null}
 
-      {error && <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">{error}</div>}
+      <div className="grid gap-3 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-2 xl:grid-cols-4 md:p-5">
+        <input
+          value={vendorName}
+          onChange={(event) => {
+            setPage(1);
+            setVendorName(event.target.value);
+          }}
+          placeholder="Search vendor name"
+          className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-slate-400 focus:bg-white"
+        />
+        <input
+          value={email}
+          onChange={(event) => {
+            setPage(1);
+            setEmail(event.target.value);
+          }}
+          placeholder="Search email"
+          className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-slate-400 focus:bg-white"
+        />
+        <input
+          value={phone}
+          onChange={(event) => {
+            setPage(1);
+            setPhone(event.target.value);
+          }}
+          placeholder="Search phone"
+          className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-slate-400 focus:bg-white"
+        />
+        <select
+          value={status}
+          onChange={(event) => {
+            setPage(1);
+            setStatus(event.target.value);
+          }}
+          className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-slate-400 focus:bg-white"
+        >
+          <option value="ALL">All verification statuses</option>
+          <option value="APPROVED">Approved</option>
+          <option value="PENDING">Pending</option>
+          <option value="REJECTED">Rejected</option>
+        </select>
+        <input
+          value={companyName}
+          onChange={(event) => {
+            setPage(1);
+            setCompanyName(event.target.value);
+          }}
+          placeholder="Filter by company name"
+          className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-slate-400 focus:bg-white"
+        />
+        <input
+          value={city}
+          onChange={(event) => {
+            setPage(1);
+            setCity(event.target.value);
+          }}
+          placeholder="Filter by city"
+          className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-slate-400 focus:bg-white"
+        />
+        <input
+          value={state}
+          onChange={(event) => {
+            setPage(1);
+            setState(event.target.value);
+          }}
+          placeholder="Filter by state"
+          className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-slate-400 focus:bg-white"
+        />
+        <input
+          value={pincode}
+          onChange={(event) => {
+            setPage(1);
+            setPincode(event.target.value);
+          }}
+          placeholder="Filter by pincode"
+          className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-slate-400 focus:bg-white"
+        />
+      </div>
 
       {loading ? (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="space-y-4">
           {[1, 2, 3].map((item) => (
-            <div key={item} className="h-60 animate-pulse rounded-2xl border border-slate-200 bg-white" />
+            <div key={item} className="h-24 animate-pulse rounded-3xl border border-slate-200 bg-white" />
           ))}
         </div>
       ) : (
-        <div className="grid gap-4 xl:grid-cols-2">
-          {vendors.map((vendor) => (
-            <article key={vendor.id} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-xl font-semibold text-slate-950">{vendor.companyName}</p>
-                  <p className="mt-1 text-sm text-slate-600">{vendor.ownerName} • {vendor.businessType}</p>
-                </div>
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{vendor.status}</span>
-              </div>
-
-              <div className="mt-5 grid gap-3 md:grid-cols-2 text-sm text-slate-600">
-                <InfoRow label="Service area" value={vendor.serviceArea} />
-                <InfoRow label="Experience" value={`${vendor.experience} years`} />
-                <InfoRow label="Phone" value={vendor.phone} />
-                <InfoRow label="Email" value={vendor.email} />
-                <InfoRow label="Address" value={(vendor as any).address || "-"} />
-                <InfoRow label="Pincode" value={(vendor as any).pincode || "-"} />
-                <InfoRow label="Registered" value={new Date(vendor.createdAt).toLocaleString()} />
-              </div>
-
-              {/* Documents */}
-              {vendor.documents && vendor.documents.length ? (
-                <div className="mt-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Documents</p>
-                  <ul className="mt-2 text-sm text-slate-700">
-                    {vendor.documents.map((d: any) => (
-                      <li key={d.id} className="mt-1">{d.documentName} • {d.fileType}</li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-
-              <div className="mt-4">
-                <button className="text-sm text-amber-600 underline" onClick={async () => {
-                  const id = vendor.id;
-                  const token = getToken();
-                  if (!token) { setError("Not authenticated"); return; }
-                  // open modal and fetch notes
-                  setModalOpen(true);
-                  setExpandedId(id);
-                  if (!notesMap[id]) {
-                    const res = await apiClient.vendors.getNotes(token, id);
-                    if (res.success) setNotesMap((m) => ({ ...m, [id]: res.notes || [] }));
-                  }
-                }}>{"View details & notes"}</button>
-              </div>
-              <div className="mt-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Services</p>
-                <p className="mt-2 text-sm text-slate-700">{vendor.services.join(", ") || "Not specified"}</p>
-              </div>
-
-              {vendor.rejectionReason ? (
-                <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
-                  Rejection reason: {vendor.rejectionReason}
-                </div>
-              ) : null}
-
-              {/* Modal for vendor details & notes */}
-              {modalOpen && expandedId === vendor.id ? (
-                <div className="fixed inset-0 z-50 flex items-center justify-center">
-                  <div className="absolute inset-0 bg-black/40" onClick={() => { setModalOpen(false); setExpandedId(null); }} />
-                  <div className="relative max-h-[80vh] w-full max-w-3xl overflow-auto rounded-2xl bg-white p-6 shadow-lg">
-                    <div className="flex items-start justify-between">
+        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left text-sm">
+              <thead className="bg-slate-100/90 text-slate-700">
+                <tr>
+                  <th className="px-4 py-3">Vendor</th>
+                  <th className="px-4 py-3">Phone</th>
+                  <th className="px-4 py-3">City / State / Pincode</th>
+                  <th className="px-4 py-3">Registered</th>
+                  <th className="px-4 py-3">Last Activity</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {vendors.map((vendor) => (
+                  <tr key={vendor.id} className="border-t border-slate-200">
+                    <td className="px-4 py-4">
                       <div>
-                        <p className="text-xl font-semibold text-slate-950">{vendor.companyName}</p>
-                        <p className="mt-1 text-sm text-slate-600">{vendor.ownerName} • {vendor.businessType}</p>
+                        <p className="font-semibold text-slate-950">{vendor.companyName}</p>
+                        <p className="mt-1 text-xs text-slate-500">{vendor.ownerName} • {vendor.email}</p>
+                        <p className="mt-1 text-xs text-slate-500">{vendor.businessType}</p>
                       </div>
-                      <button onClick={() => { setModalOpen(false); setExpandedId(null); }} className="text-sm text-slate-500">Close</button>
-                    </div>
-
-                    <div className="mt-4 grid gap-3 md:grid-cols-2 text-sm text-slate-600">
-                      <InfoRow label="Service area" value={vendor.serviceArea} />
-                      <InfoRow label="Experience" value={`${vendor.experience} years`} />
-                      <InfoRow label="Phone" value={vendor.phone} />
-                      <InfoRow label="Email" value={vendor.email} />
-                      <InfoRow label="Address" value={(vendor as any).address || "-"} />
-                      <InfoRow label="Pincode" value={(vendor as any).pincode || "-"} />
-                      <InfoRow label="Registered" value={new Date(vendor.createdAt).toLocaleString()} />
-                    </div>
-
-                    {vendor.documents && vendor.documents.length ? (
-                      <div className="mt-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Documents</p>
-                        <ul className="mt-2 text-sm text-slate-700">
-                          {vendor.documents.map((d: any) => (
-                            <li key={d.id} className="mt-1">{d.documentName} • {d.fileType}</li>
-                          ))}
-                        </ul>
+                    </td>
+                    <td className="px-4 py-4 text-slate-600">{vendor.phone || "-"}</td>
+                    <td className="px-4 py-4 text-slate-600">
+                      <p>{vendor.city || "-"}</p>
+                      <p className="text-xs text-slate-500">{vendor.state || "-"} • {vendor.pincode || "-"}</p>
+                    </td>
+                    <td className="px-4 py-4 text-slate-600">{new Date(vendor.createdAt).toLocaleString()}</td>
+                    <td className="px-4 py-4 text-slate-600">{vendor.updatedAt ? new Date(vendor.updatedAt).toLocaleString() : "-"}</td>
+                    <td className="px-4 py-4">
+                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{vendor.status}</span>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedVendor(vendor)}
+                          className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                        >
+                          Open Profile
+                        </button>
+                        <button
+                          type="button"
+                          disabled={busyId === vendor.id || vendor.status === "APPROVED"}
+                          onClick={() => void handleAction(vendor.id, "approve")}
+                          className="rounded-full bg-slate-950 px-3 py-2 text-xs font-semibold text-white transition disabled:opacity-50"
+                        >
+                          {busyId === vendor.id ? "Processing..." : "Approve"}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={busyId === vendor.id || vendor.status === "REJECTED"}
+                          onClick={() => void handleAction(vendor.id, "reject")}
+                          className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition disabled:opacity-50"
+                        >
+                          Reject
+                        </button>
                       </div>
-                    ) : null}
-
-                    <div className="mt-6">
-                      <p className="text-sm font-semibold">Internal notes</p>
-                      {(notesMap[vendor.id] || []).map((n: any) => (
-                        <div key={n.id} className="mt-2 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
-                          <div className="text-sm text-slate-700">{n.note}</div>
-                          <div className="mt-1 text-xs text-slate-500">By {n.createdByAdmin?.name || 'Admin'} • {new Date(n.createdAt).toLocaleString()}</div>
-                        </div>
-                      ))}
-
-                      <div className="mt-4">
-                        <textarea value={newNote[vendor.id] || ""} onChange={(e) => setNewNote((s) => ({ ...s, [vendor.id]: e.target.value }))} placeholder="Add internal note" className="w-full rounded-xl border border-slate-300 px-4 py-3" />
-                        <div className="mt-2">
-                          <button onClick={async () => {
-                            const token = getToken();
-                            if (!token) { setError("Not authenticated"); return; }
-                            const note = (newNote[vendor.id] || "").trim();
-                            if (!note) return;
-                            const res = await apiClient.vendors.addNote(token, vendor.id, note);
-                            if (res.success) {
-                              setNotesMap((m) => ({ ...m, [vendor.id]: [res.note, ...(m[vendor.id] || [])] }));
-                              setNewNote((s) => ({ ...s, [vendor.id]: "" }));
-                            } else {
-                              setError(res.error || "Failed to add note");
-                            }
-                          }} className="rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold">Add note</button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-
-              <div className="mt-5 flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  disabled={busyId === vendor.id || vendor.status === "APPROVED"}
-                  onClick={() => handleAction(vendor.id, "approve")}
-                  className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition disabled:opacity-50"
-                >
-                  {busyId === vendor.id ? "Processing..." : "Approve"}
-                </button>
-                <button
-                  type="button"
-                  disabled={busyId === vendor.id || vendor.status === "REJECTED"}
-                  onClick={() => handleAction(vendor.id, "reject")}
-                  className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition disabled:opacity-50"
-                >
-                  Reject
-                </button>
-              </div>
-            </article>
-          ))}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
+
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
+        <p className="text-sm text-slate-600">
+          Showing {(page - 1) * pageSize + 1} to {Math.min(page * pageSize, count)} of {count} vendors
+        </p>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setPage((current) => Math.max(1, current - 1))}
+            disabled={page === 1}
+            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+            disabled={page >= totalPages}
+            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+
+      {selectedVendor ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <button type="button" className="absolute inset-0 bg-black/40" onClick={() => setSelectedVendor(null)} />
+          <div className="relative w-full max-w-2xl rounded-3xl bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-600">Vendor Profile</p>
+                <h2 className="mt-2 text-2xl font-semibold text-slate-950">{selectedVendor.companyName}</h2>
+                <p className="mt-1 text-sm text-slate-600">{selectedVendor.ownerName} • {selectedVendor.email}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedVendor(null)}
+                className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="mt-6 grid gap-3 md:grid-cols-2">
+              <InfoTile label="Phone" value={selectedVendor.phone || "-"} />
+              <InfoTile label="City" value={selectedVendor.city || "-"} />
+              <InfoTile label="State" value={selectedVendor.state || "-"} />
+              <InfoTile label="Pincode" value={selectedVendor.pincode || "-"} />
+              <InfoTile label="Business Type" value={selectedVendor.businessType} />
+              <InfoTile label="Experience" value={`${selectedVendor.experience} years`} />
+              <InfoTile label="Registered" value={new Date(selectedVendor.createdAt).toLocaleString()} />
+              <InfoTile label="Last Activity" value={selectedVendor.updatedAt ? new Date(selectedVendor.updatedAt).toLocaleString() : "-"} />
+            </div>
+
+            <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Services</p>
+              <p className="mt-2 text-sm leading-7 text-slate-700">{selectedVendor.services.length ? selectedVendor.services.join(", ") : "Not specified"}</p>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
 
-function SummaryCard({ title, value }: { title: string; value: number }) {
+function StatChip({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{title}</p>
-      <p className="mt-2 text-3xl font-semibold text-slate-950">{value}</p>
+    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</p>
+      <p className="mt-1 text-2xl font-semibold text-slate-950">{value}</p>
     </div>
   );
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
+function InfoTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</p>
-      <p className="mt-1 text-sm font-medium text-slate-900">{value}</p>
+      <p className="mt-2 text-sm font-semibold text-slate-950">{value}</p>
     </div>
   );
 }

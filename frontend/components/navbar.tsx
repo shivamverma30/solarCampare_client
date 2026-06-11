@@ -13,6 +13,7 @@ import {
   Globe,
   HandCoins,
   Info,
+  Gift,
   Menu,
   PanelsTopLeft,
   Phone,
@@ -258,6 +259,11 @@ export default function Navbar() {
           label: "DCR vs Non-DCR",
           href: "/compare",
           icon: BadgeCheck,
+        },
+        {
+          label: "🎉 Referral Rewards Program",
+          href: "/referral-rewards",
+          icon: Gift,
         },
       ];
     },

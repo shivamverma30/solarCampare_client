@@ -59,6 +59,7 @@ import leadRoutes from "./routes/lead";
 import dashboardRoutes from "./routes/dashboard";
 import calculatorRoutes from "./routes/calculator";
 import notificationRoutes from "./routes/notification";
+import referralRoutes from "./routes/referral";
 import uploadRoutes from "./routes/upload";
 import quoteRoutes from "./routes/quote";
 
@@ -69,6 +70,7 @@ app.use("/api/leads", leadRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/calculators", calculatorRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/referrals", referralRoutes);
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/quotes", quoteRoutes);
 

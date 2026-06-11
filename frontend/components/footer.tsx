@@ -113,7 +113,7 @@ export default function Footer() {
       </div>
 
       <div className="mx-auto mt-8 w-full max-w-7xl border-t border-slate-200 px-4 py-5 text-xs text-slate-500 md:px-8">
-        <p>{t("footer.copyright", { year: new Date().getFullYear() })}</p>
+        <p>{t("© 2026 Solar Compare. All Rights Reserved.", { year: new Date().getFullYear() })}</p>
       </div>
     </footer>
   );

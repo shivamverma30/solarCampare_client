@@ -28,8 +28,8 @@ export default function Home() {
       <SolarDiscoveryFlow />
       <SolarTypes />
       <HowSolarCompareWorks />
-      <HomeFaqSection />
       <SolarCtaSection />
+      <HomeFaqSection />
       <TrustedBrands />
       <StickyLeadCTA />
     </div>

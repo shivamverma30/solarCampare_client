@@ -26,6 +26,7 @@
     "heroDescription": "Built for Indian homes and businesses that want a clearer solar decision: compare panel options, estimate savings, understand subsidy support, and explore financing with confidence."
   },
   "home": {
+    "trustHeadline": "Compare Solar. Save More. Choose Smarter.",
     "ourProducts": "Our Products",
     "topProducts": "Top Solar Products",
     "productsDescription": "Compare premium solar brands with transparent specifications and trusted performance.",
@@ -36,8 +37,30 @@
     "powerOutput": "Power Output",
     "bestFor": "Best For"
   },
+  "aboutPage": {
+    "eyebrow": "About Solar Compare",
+    "storyLabel": "Our story",
+    "storyTitle": "Built for clarity, not pressure",
+    "missionLabel": "Mission",
+    "visionLabel": "Vision",
+    "whyLabel": "Why Solar Compare",
+    "whyTitle": "Why buyers trust the platform",
+    "journeyLabel": "Journey",
+    "journeyTitle": "A clearer path from first question to installation",
+    "trustLabel": "Trust",
+    "trustTitle": "What we stand for",
+    "closingLabel": "Complete support",
+    "ctaPrimary": "Compare now",
+    "ctaSecondary": "Estimate savings"
+  },
   "benefits": {
+    "eyebrow": "Why choose us",
     "title": "Why Smart Buyers Choose Solar Compare"
+  },
+  "faq": {
+    "eyebrow": "FAQ",
+    "title": "Frequently Asked Questions",
+    "description": "Clear answers to common questions about subsidy, installation, financing, savings, and vendor support."
   },
   "cta": {
     "eyebrow": "Ready to go solar?",

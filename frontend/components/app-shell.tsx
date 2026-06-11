@@ -6,6 +6,7 @@ import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import FloatingWhatsApp from "@/components/floating-whatsapp";
 import ChatbotPopup from "@/components/chatbot-popup";
+import ReferralPromptModal from "@/components/referral-prompt-modal";
 import { LocaleProvider } from "@/components/locale-provider";
 
 type AppShellProps = {
@@ -29,6 +30,7 @@ export default function AppShell({ children, initialLocale }: AppShellProps) {
         <main className={isHomePage ? "pt-0" : "pt-24 flex-1"}>{children}</main>
         <Footer />
         <ChatbotPopup />
+        <ReferralPromptModal />
         <FloatingWhatsApp />
       </LocaleProvider>
     </div>

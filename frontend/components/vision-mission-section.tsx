@@ -20,7 +20,7 @@ export default function VisionMissionSection() {
         <div className="vm-spark vm-spark-c" />
 
         <div className="relative z-10 text-center">
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-900 md:text-4xl">{isHindi ? "✨ हमारी दृष्टि और मिशन" : "✨ Our Vision &amp; Mission"}</h2>
+          <h2 className="text-2xl font-semibold tracking-tight text-slate-900 md:text-4xl">{isHindi ? "✨ हमारी दृष्टि और मिशन" : "✨ Our Vision & Mission"}</h2>
         </div>
 
         <div className="relative z-10 mt-8 space-y-5 md:mt-10 md:space-y-0">

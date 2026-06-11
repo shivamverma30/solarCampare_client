@@ -141,17 +141,103 @@ export const listPublicVendors = async (_req: AuthRequest, res: Response): Promi
 
 export const listAdminVendors = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const vendors = await prisma.vendor.findMany({
-      orderBy: { createdAt: "desc" },
-      include: {
-        documents: true,
-        approvedByAdmin: { select: { id: true, name: true, email: true } },
-        rejectedByAdmin: { select: { id: true, name: true, email: true } },
-        statusLogs: true,
-      },
-    });
+    if (!_req.adminId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
 
-    res.status(200).json({ success: true, vendors });
+    const search = String(_req.query.search || "").trim();
+    const vendorName = String(_req.query.vendorName || "").trim();
+    const companyName = String(_req.query.companyName || "").trim();
+    const email = String(_req.query.email || "").trim();
+    const phone = String(_req.query.phone || "").trim();
+    const city = String(_req.query.city || "").trim();
+    const state = String(_req.query.state || "").trim();
+    const pincode = String(_req.query.pincode || "").trim();
+    const status = String(_req.query.status || "").trim().toUpperCase();
+    const page = Math.max(1, Number(_req.query.page || 1));
+    const pageSize = Math.min(50, Math.max(5, Number(_req.query.pageSize || 10)));
+
+    const filters: any[] = [];
+
+    if (status && status !== "ALL") {
+      filters.push({ status: status as "PENDING" | "APPROVED" | "REJECTED" });
+    }
+
+    if (vendorName) {
+      filters.push({
+        OR: [
+          { ownerName: { contains: vendorName, mode: "insensitive" as const } },
+          { companyName: { contains: vendorName, mode: "insensitive" as const } },
+        ],
+      });
+    }
+
+    if (companyName) filters.push({ companyName: { contains: companyName, mode: "insensitive" as const } });
+    if (email) filters.push({ email: { contains: email, mode: "insensitive" as const } });
+    if (phone) filters.push({ phone: { contains: phone, mode: "insensitive" as const } });
+    if (city) filters.push({ city: { contains: city, mode: "insensitive" as const } });
+    if (state) filters.push({ state: { contains: state, mode: "insensitive" as const } });
+    if (pincode) filters.push({ pincode: { contains: pincode, mode: "insensitive" as const } });
+
+    if (search) {
+      filters.push({
+        OR: [
+          { ownerName: { contains: search, mode: "insensitive" as const } },
+          { companyName: { contains: search, mode: "insensitive" as const } },
+          { email: { contains: search, mode: "insensitive" as const } },
+          { phone: { contains: search, mode: "insensitive" as const } },
+          { serviceArea: { contains: search, mode: "insensitive" as const } },
+          { city: { contains: search, mode: "insensitive" as const } },
+          { state: { contains: search, mode: "insensitive" as const } },
+          { pincode: { contains: search, mode: "insensitive" as const } },
+          { businessType: { contains: search, mode: "insensitive" as const } },
+        ],
+      });
+    }
+
+    const where = filters.length ? { AND: filters } : {};
+
+    const [count, activeCount, vendors, activitySummary] = await Promise.all([
+      prisma.vendor.count({ where }),
+      prisma.vendor.count({ where: { ...where, status: "APPROVED" } }),
+      prisma.vendor.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        select: {
+          id: true,
+          companyName: true,
+          ownerName: true,
+          email: true,
+          phone: true,
+          city: true,
+          state: true,
+          pincode: true,
+          businessType: true,
+          experience: true,
+          services: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      }),
+      prisma.vendor.aggregate({
+        where,
+        _max: { updatedAt: true },
+      }),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      vendors,
+      count,
+      activeCount,
+      page,
+      pageSize,
+      lastActivityAt: activitySummary._max.updatedAt?.toISOString() || null,
+    });
   } catch (error) {
     console.error("List admin vendors error:", error);
     res.status(500).json({ error: "Internal server error" });

@@ -22,15 +22,60 @@ const moreContentByLocale = {
   en: {
     aboutOverview: {
       companyOverview:
-        "Solar Compare is an India-focused solar marketplace platform that helps homeowners and businesses evaluate solar feasibility, compare quality equipment options, and connect with verified vendors through transparent workflows.",
-      mission: "To simplify the solar buying journey with trustworthy data, practical guidance, and accountable execution support.",
-      vision: "To become the most trusted digital decision platform for distributed solar adoption across Indian cities and growth regions.",
+        "Solar Compare is a buyer-first solar decision platform that helps homeowners and businesses compare verified options, understand real project costs, and move from research to installation with less friction.",
+      mission: "To simplify the solar journey with transparent comparisons, trusted guidance, and accountable execution support.",
+      vision: "To become India's most trusted place for confident, informed solar decisions.",
     },
     whyChooseSolarCompare: [
-      "Verified vendor ecosystem with quality screening and service-area mapping.",
-      "Calculator-led discovery so users understand savings, subsidy, and payback before taking action.",
-      "Structured lead and notification workflows that improve response quality and turnaround.",
-      "Transparent, practical guidance built for real Indian tariff and policy conditions.",
+      "Buyer-first comparison with verified vendors and practical pricing context.",
+      "Subsidy, financing, and savings guidance before you commit.",
+      "Clear handoff and post-install support from enquiry to execution.",
+      "Built for Indian rooftops, tariffs, and approval workflows.",
+    ],
+    aboutJourney: [
+      {
+        key: "understand",
+        title: "Understand your needs",
+        description: "We start with load, roof, budget, and location so the recommendation fits real usage.",
+      },
+      {
+        key: "compare",
+        title: "Compare verified options",
+        description: "See vendors, panels, and proposal inputs side by side with a cleaner decision path.",
+      },
+      {
+        key: "support",
+        title: "Review subsidy and finance",
+        description: "We surface practical subsidy and EMI context before the project moves forward.",
+      },
+      {
+        key: "document",
+        title: "Handle approvals and documents",
+        description: "Our workflow keeps paperwork, milestones, and follow-ups organized and visible.",
+      },
+      {
+        key: "install",
+        title: "Install and stay supported",
+        description: "After installation, we keep support active for monitoring, service, and escalation.",
+      },
+    ],
+    aboutTrustPillars: [
+      {
+        title: "Trust first",
+        description: "Every recommendation is designed to reduce guesswork and protect buyer confidence.",
+      },
+      {
+        title: "Full transparency",
+        description: "Pricing, scope, and expectations stay visible so the conversation stays honest.",
+      },
+      {
+        title: "Education before selling",
+        description: "We explain the trade-offs first so buyers can decide with context, not pressure.",
+      },
+      {
+        title: "Support after installation",
+        description: "The relationship continues after handover with monitoring and escalation help.",
+      },
     ],
     homeownerBenefits: [
       "Understand likely monthly savings before speaking to vendors.",
@@ -79,15 +124,60 @@ const moreContentByLocale = {
   hi: {
     aboutOverview: {
       companyOverview:
-        "Solar Compare भारत-केंद्रित सोलर मार्केटप्लेस प्लेटफ़ॉर्म है, जो घरों और व्यवसायों को सोलर व्यवहार्यता आँकने, गुणवत्ता विकल्पों की तुलना करने और पारदर्शी वर्कफ़्लो के माध्यम से सत्यापित विक्रेताओं से जुड़ने में मदद करता है।",
-      mission: "विश्वसनीय डेटा, व्यावहारिक मार्गदर्शन और जवाबदेह निष्पादन सहायता के साथ सोलर खरीद यात्रा को सरल बनाना।",
-      vision: "भारतीय शहरों और विकासशील क्षेत्रों में वितरित सोलर अपनाने के लिए सबसे भरोसेमंद डिजिटल निर्णय प्लेटफ़ॉर्म बनना।",
+        "Solar Compare एक खरीदार-केंद्रित सोलर निर्णय प्लेटफ़ॉर्म है, जो घरों और व्यवसायों को सत्यापित विकल्पों की तुलना करने, वास्तविक प्रोजेक्ट लागत समझने और शोध से इंस्टॉलेशन तक कम घर्षण के साथ आगे बढ़ने में मदद करता है।",
+      mission: "पारदर्शी तुलना, भरोसेमंद मार्गदर्शन और जवाबदेह निष्पादन सहायता के साथ सोलर यात्रा को सरल बनाना।",
+      vision: "भारत में आत्मविश्वासपूर्ण और सूचित सोलर निर्णयों के लिए सबसे भरोसेमंद स्थान बनना।",
     },
     whyChooseSolarCompare: [
-      "गुणवत्ता जांच और सेवा-क्षेत्र मैपिंग के साथ सत्यापित विक्रेता नेटवर्क।",
-      "कैलकुलेटर-आधारित खोज ताकि उपयोगकर्ता कार्रवाई से पहले बचत, सब्सिडी और पेबैक समझें।",
-      "संरचित लीड और सूचना वर्कफ़्लो जो प्रतिक्रिया गुणवत्ता और गति बढ़ाते हैं।",
-      "वास्तविक भारतीय टैरिफ और नीति परिस्थितियों पर आधारित पारदर्शी, व्यावहारिक मार्गदर्शन।",
+      "खरीदार-केंद्रित तुलना, सत्यापित विक्रेताओं और व्यावहारिक मूल्य संदर्भ के साथ।",
+      "कमिट करने से पहले सब्सिडी, फाइनेंसिंग और बचत का स्पष्ट मार्गदर्शन।",
+      "पूछताछ से निष्पादन तक स्पष्ट हैंडऑफ और पोस्ट-इंस्टॉल सपोर्ट।",
+      "भारतीय छतों, टैरिफ और अनुमोदन वर्कफ़्लो के लिए बनाया गया।",
+    ],
+    aboutJourney: [
+      {
+        key: "understand",
+        title: "अपनी ज़रूरतें समझें",
+        description: "लोड, छत, बजट और स्थान के आधार पर हम शुरुआत करते हैं ताकि सुझाव वास्तविक उपयोग से मेल खाए।",
+      },
+      {
+        key: "compare",
+        title: "सत्यापित विकल्पों की तुलना करें",
+        description: "विक्रेताओं, पैनलों और प्रस्ताव इनपुट को साथ-साथ देखकर निर्णय आसान होता है।",
+      },
+      {
+        key: "support",
+        title: "सब्सिडी और फाइनेंस देखें",
+        description: "प्रोजेक्ट आगे बढ़ने से पहले हम व्यावहारिक सब्सिडी और EMI संदर्भ दिखाते हैं।",
+      },
+      {
+        key: "document",
+        title: "मंज़ूरी और दस्तावेज़ संभालें",
+        description: "हमारा वर्कफ़्लो कागज़ी काम, माइलस्टोन और फॉलो-अप को व्यवस्थित और स्पष्ट रखता है।",
+      },
+      {
+        key: "install",
+        title: "इंस्टॉल करें और सपोर्ट पाते रहें",
+        description: "इंस्टॉलेशन के बाद भी मॉनिटरिंग, सेवा और एस्केलेशन मदद के लिए सपोर्ट बना रहता है।",
+      },
+    ],
+    aboutTrustPillars: [
+      {
+        title: "Trust first",
+        description: "हर सुझाव का लक्ष्य अनुमान कम करना और खरीदार का भरोसा मजबूत करना है।",
+      },
+      {
+        title: "पूर्ण पारदर्शिता",
+        description: "मूल्य, दायरा और अपेक्षाएँ स्पष्ट रहती हैं ताकि बातचीत ईमानदार रहे।",
+      },
+      {
+        title: "सेल से पहले शिक्षा",
+        description: "हम पहले अंतर समझाते हैं ताकि निर्णय दबाव नहीं, संदर्भ के साथ हो।",
+      },
+      {
+        title: "इंस्टॉलेशन के बाद भी सहायता",
+        description: "हैंडओवर के बाद भी मॉनिटरिंग और एस्केलेशन सहायता के साथ संबंध जारी रहता है।",
+      },
     ],
     homeownerBenefits: [
       "विक्रेताओं से बात करने से पहले संभावित मासिक बचत समझें।",

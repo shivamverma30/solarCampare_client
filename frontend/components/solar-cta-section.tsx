@@ -19,7 +19,7 @@ export default function SolarCtaSection() {
         <div className="relative z-10 flex flex-col items-center gap-6 text-center">
           {/* Badge */}
           <span className="inline-flex items-center rounded-full border border-emerald-400/35 bg-emerald-500/10 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-700 ring-1 ring-emerald-400/20 backdrop-blur-sm">
-            Start Free. No Credit Card.
+            Start Free...
           </span>
 
           {/* Heading */}
@@ -61,6 +61,14 @@ export default function SolarCtaSection() {
               className="inline-flex items-center gap-2 rounded-full border border-emerald-300/70 bg-white/70 px-7 py-3.5 text-sm font-semibold text-emerald-900 backdrop-blur-sm transition hover:border-emerald-400 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/50"
             >
               See How It Works
+            </button>
+
+            <button
+              type="button"
+              onClick={() => router.push("/referral-rewards")}
+              className="inline-flex items-center gap-2 rounded-full border border-cyan-300/70 bg-cyan-50/70 px-7 py-3.5 text-sm font-semibold text-cyan-950 backdrop-blur-sm transition hover:border-cyan-400 hover:bg-cyan-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/50"
+            >
+              🎉 Referral Rewards Program
             </button>
           </div>
         </div>

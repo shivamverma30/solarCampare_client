@@ -294,61 +294,6 @@ export default function UserDashboardPage() {
         </div>
       </section>
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_20px_50px_rgba(15,23,42,0.06)] md:p-6">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className="text-xl font-semibold text-slate-950">Nearby Vendors</h2>
-            <p className="mt-1 text-sm text-slate-600">Matched by your pincode first, then city/state proximity.</p>
-          </div>
-          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Premium match list</div>
-        </div>
-
-        <div className="mt-4 space-y-3">
-          {loading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((item) => (
-                <div key={item} className="h-20 animate-pulse rounded-2xl border border-slate-200 bg-slate-50" />
-              ))}
-            </div>
-          ) : stats?.nearbyVendors?.length ? (
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
-              {stats.nearbyVendors.map((vendor, index) => (
-                <article key={vendor.id} className={`grid gap-3 px-4 py-4 sm:grid-cols-[1.2fr_0.9fr_0.9fr_0.7fr] sm:items-center ${index !== stats.nearbyVendors.length - 1 ? "border-b border-slate-200" : ""}`}>
-                  <div>
-                    <p className="font-semibold text-slate-950">{vendor.companyName}</p>
-                    <p className="mt-1 text-sm text-slate-600">{vendor.ownerName}</p>
-                    <p className="mt-2 text-xs text-slate-500">{vendor.services.slice(0, 3).join(", ") || "Services not listed"}</p>
-                  </div>
-                  <div className="text-sm text-slate-600">
-                    <p>{vendor.businessType}</p>
-                    <p className="mt-1 text-xs text-slate-500">{vendor.experience} years experience</p>
-                    <p className="mt-1 text-xs text-slate-500">Installs: {vendor.installationCount}</p>
-                  </div>
-                  <div className="text-sm text-slate-600">
-                    <span className="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
-                      {vendor.city || "-"}, {vendor.state || "-"}
-                    </span>
-                    <p className="mt-2 text-xs text-slate-500">Warranty support: {vendor.warrantySupport ? "Yes" : "No"}</p>
-                    <p className="mt-1 text-xs text-slate-500">Response: {vendor.responseTimeHours ? `${vendor.responseTimeHours} hrs` : "-"}</p>
-                  </div>
-                  <div className="flex flex-col gap-2 sm:items-end">
-                    <button type="button" onClick={() => toggleSavedVendor(vendor.id)} className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
-                      {savedVendorIds.includes(vendor.id) ? "Saved" : "Save Vendor"}
-                    </button>
-                    <button type="button" onClick={() => void requestConsultation(vendor.id)} disabled={Boolean(requestingVendorId)} className="rounded-full bg-slate-950 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60">
-                      {requestingVendorId === vendor.id ? "Sending..." : "Request Consultation"}
-                    </button>
-                  </div>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-sm text-slate-600">
-              No nearby vendors found yet. Add your pincode in profile for better results.
-            </div>
-          )}
-        </div>
-      </section>
     </div>
   );
 }

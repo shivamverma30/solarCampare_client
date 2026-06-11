@@ -385,9 +385,7 @@ export const loginUser = async (req: AuthRequest, res: Response): Promise<void> 
 export const registerVendor = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const {
-      fullName,
       businessName,
-      companyName,
       ownerName,
       email,
       phone,
@@ -405,10 +403,11 @@ export const registerVendor = async (req: AuthRequest, res: Response): Promise<v
       documents = [],
     } = req.body;
 
-    const normalizedCompanyName = String(businessName || companyName || "").trim();
-    const normalizedOwnerName = String(fullName || ownerName || "").trim();
+    const normalizedCompanyName = String(businessName || "").trim();
+    const normalizedOwnerName = String(ownerName || "").trim();
+    const normalizedAddress = String(address || serviceArea || [city, state].filter(Boolean).join(", ")).trim();
 
-    if (!normalizedCompanyName || !normalizedOwnerName || !email || !phone || !serviceArea || !address || !city || !state || !pincode || !businessType || experience === undefined || !password) {
+    if (!normalizedCompanyName || !normalizedOwnerName || !email || !phone || !serviceArea || !city || !state || !pincode || !businessType || experience === undefined || !password) {
       res.status(400).json({ error: "Missing required vendor fields" });
       return;
     }
@@ -442,7 +441,7 @@ export const registerVendor = async (req: AuthRequest, res: Response): Promise<v
           phone,
           gst,
           serviceArea,
-          address,
+          address: normalizedAddress,
           city,
           state,
           pincode,

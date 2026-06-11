@@ -1,4 +1,5 @@
 import { frontendEnv } from "./env";
+import { REFERRAL_PROMPT_EVENT } from "./referral";
 
 function normalizeApiUrl(baseUrl: string): string {
   const trimmed = baseUrl.trim().replace(/\/+$/, "");
@@ -25,6 +26,8 @@ interface ApiResponse<T> {
   count?: number;
   page?: number;
   pageSize?: number;
+  activeCount?: number;
+  lastActivityAt?: string | null;
   products?: T[];
   stats?: T;
   user?: T;
@@ -250,8 +253,25 @@ export const apiClient = {
       return apiClient.request("/vendors");
     },
 
-    async getAdmin(token: string) {
-      return apiClient.request("/vendors/admin/all", {}, token);
+    async getAdmin(
+      token: string,
+      params: { search?: string; vendorName?: string; companyName?: string; email?: string; phone?: string; city?: string; state?: string; pincode?: string; status?: string; page?: number; pageSize?: number } = {}
+    ) {
+      const search = new URLSearchParams();
+      if (params.search) search.set("search", params.search);
+      if (params.vendorName) search.set("vendorName", params.vendorName);
+      if (params.companyName) search.set("companyName", params.companyName);
+      if (params.email) search.set("email", params.email);
+      if (params.phone) search.set("phone", params.phone);
+      if (params.city) search.set("city", params.city);
+      if (params.state) search.set("state", params.state);
+      if (params.pincode) search.set("pincode", params.pincode);
+      if (params.status) search.set("status", params.status);
+      if (params.page) search.set("page", String(params.page));
+      if (params.pageSize) search.set("pageSize", String(params.pageSize));
+
+      const query = search.toString();
+      return apiClient.request(`/vendors/admin/all${query ? `?${query}` : ""}`, {}, token);
     },
 
     async approve(token: string, id: string, note?: string) {
@@ -450,13 +470,19 @@ export const apiClient = {
 
   quotes: {
     async createQuote(payload: JsonObject) {
-      return apiClient.request(
+      const response = await apiClient.request(
         "/quotes/request",
         {
           method: "POST",
           body: JSON.stringify(payload),
         }
       );
+
+      if (response.success && typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent(REFERRAL_PROMPT_EVENT, { detail: { source: "quote" } }));
+      }
+
+      return response;
     },
 
     async listQuotes(token: string) {
@@ -505,6 +531,23 @@ export const apiClient = {
         `/notifications/${id}`,
         {
           method: "DELETE",
+        },
+        token
+      );
+    },
+  },
+
+  referrals: {
+    async getMyRewards(token: string) {
+      return apiClient.request("/referrals/me", {}, token);
+    },
+
+    async share(token: string, payload: JsonObject = {}) {
+      return apiClient.request(
+        "/referrals/share",
+        {
+          method: "POST",
+          body: JSON.stringify(payload),
         },
         token
       );

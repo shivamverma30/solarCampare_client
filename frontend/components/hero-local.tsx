@@ -23,6 +23,10 @@ export default function HeroLocal() {
 
       <div className="relative z-10 mx-auto flex min-h-[72vh] max-w-7xl flex-col items-center justify-center text-center">
         <div className="w-full max-w-5xl space-y-8 sm:space-y-9 md:space-y-10">
+          <p className="mx-auto inline-flex max-w-full items-center rounded-full border border-white/20 bg-white/10 px-4 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.28em] text-white/95 shadow-[0_8px_24px_rgba(2,6,23,0.15)] backdrop-blur-md sm:px-5 sm:py-2.5 sm:text-sm">
+            Compare Solar. Save More. Choose Smarter.
+          </p>
+
           <motion.h1
             {...fadeUp}
             className="mx-auto max-w-5xl text-4xl font-extrabold leading-[1.02] tracking-[-0.02em] text-white drop-shadow-[0_10px_28px_rgba(2,6,23,0.3)] sm:text-5xl md:text-6xl lg:text-7xl"
@@ -39,7 +43,7 @@ export default function HeroLocal() {
           </motion.p>
         </div>
 
-        <div className="pointer-events-none absolute bottom-6 left-6 z-20 max-w-[220px] text-left sm:bottom-8 sm:left-8 sm:max-w-[280px]">
+        <div className="pointer-events-none absolute bottom-6 left-6 z-20 max-w-55 text-left sm:bottom-8 sm:left-8 sm:max-w-70">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/90 drop-shadow-[0_2px_8px_rgba(2,6,23,0.35)] sm:text-xs">
             {t("home.heroBadge")}
           </p>

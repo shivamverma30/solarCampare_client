@@ -6,6 +6,7 @@ import { getInfoPage, infoPages } from "@/data/info-pages";
 import { getMoreContent } from "@/data/more-content";
 import BlogCard from "@/components/more/blog-card";
 import ContactEnquiryForm from "@/components/more/contact-enquiry-form";
+import AboutPageContent from "@/components/about-page-content";
 import { BarChart3, Calculator, ClipboardCheck, Handshake, SearchCheck, Sparkles } from "lucide-react";
 
 type MorePageProps = {
@@ -41,6 +42,10 @@ export default async function MorePage({ params, searchParams }: MorePageProps) 
 
   if (!page) {
     notFound();
+  }
+
+  if (slug === "about-us") {
+    return <AboutPageContent page={page} />;
   }
 
   const howIconByKey: Record<string, typeof Calculator> = {
@@ -169,75 +174,6 @@ export default async function MorePage({ params, searchParams }: MorePageProps) 
             </div>
           </div>
         </div>
-
-        {slug === "about-us" ? (
-          <div className="mt-8 space-y-6">
-            <div className="grid gap-4 lg:grid-cols-3">
-              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Company Overview</h3>
-                <p className="mt-3 text-sm leading-7 text-slate-600">{content.aboutOverview.companyOverview}</p>
-              </div>
-              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Mission</h3>
-                <p className="mt-3 text-sm leading-7 text-slate-600">{content.aboutOverview.mission}</p>
-              </div>
-              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Vision</h3>
-                <p className="mt-3 text-sm leading-7 text-slate-600">{content.aboutOverview.vision}</p>
-              </div>
-            </div>
-
-            <div className="grid gap-4 lg:grid-cols-2">
-              <div className="rounded-3xl border border-slate-200 bg-white p-5">
-                <h3 className="text-xl font-semibold text-slate-950">Why choose Solar Compare</h3>
-                <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
-                  {content.whyChooseSolarCompare.map((point) => (
-                    <li key={point} className="flex gap-3">
-                      <span className="mt-2 h-1.5 w-1.5 rounded-full bg-slate-400" />
-                      <span>{point}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="rounded-3xl border border-slate-200 bg-white p-5">
-                <h3 className="text-xl font-semibold text-slate-950">Platform statistics</h3>
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {content.platformStats.map((item) => (
-                    <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                      <p className="text-2xl font-semibold text-slate-950">{item.value}</p>
-                      <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{item.label}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="grid gap-4 lg:grid-cols-2">
-              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-                <h3 className="text-xl font-semibold text-slate-950">Benefits for homeowners</h3>
-                <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
-                  {content.homeownerBenefits.map((point) => (
-                    <li key={point} className="flex gap-3">
-                      <span className="mt-2 h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                      <span>{point}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-                <h3 className="text-xl font-semibold text-slate-950">Benefits for businesses</h3>
-                <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
-                  {content.businessBenefits.map((point) => (
-                    <li key={point} className="flex gap-3">
-                      <span className="mt-2 h-1.5 w-1.5 rounded-full bg-sky-500" />
-                      <span>{point}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        ) : null}
 
         {slug === "contact-us" ? (
           <div className="mt-8 grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
