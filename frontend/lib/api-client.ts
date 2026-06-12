@@ -11,7 +11,10 @@ function normalizeApiUrl(baseUrl: string): string {
   return `${trimmed}/api`;
 }
 
-const API_URL = normalizeApiUrl(frontendEnv.NEXT_PUBLIC_API_URL);
+const API_BASE_URL = normalizeApiUrl(frontendEnv.NEXT_PUBLIC_API_URL);
+
+console.log("API_BASE", API_BASE_URL);
+console.log("REFERRAL_URL", `${API_BASE_URL}/referrals/me`);
 
 type JsonObject = Record<string, unknown>;
 
@@ -70,7 +73,7 @@ export const apiClient = {
     }
 
     try {
-      const response = await fetch(`${API_URL}${endpoint}`, {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         ...options,
         headers,
       });
@@ -578,7 +581,7 @@ export const apiClient = {
     },
 
     async uploadFile(token: string, formData: FormData) {
-      return fetch(`${API_URL}/uploads/file`, {
+      return fetch(`${API_BASE_URL}/uploads/file`, {
         method: "POST",
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         body: formData,
