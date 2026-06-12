@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Search, MapPin, Sparkles, ShieldAlert } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api-client";
 import { getToken } from "@/lib/auth";
 
@@ -16,6 +17,7 @@ type NearbyVendor = {
   installationCount: number;
   warrantySupport: boolean;
   responseTimeHours?: number | null;
+  serviceArea?: string | null;
   city?: string | null;
   state?: string | null;
   pincode?: string | null;
@@ -32,13 +34,39 @@ type MatchResponse = {
 };
 
 export default function NearbyVendorsPage() {
+  const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [vendors, setVendors] = useState<NearbyVendor[]>([]);
   const [query, setQuery] = useState("");
-  const [pincode, setPincode] = useState("");
+  const [selectedCompareVendors, setSelectedCompareVendors] = useState<NearbyVendor[]>([]);
+  const [compareSelectionReady, setCompareSelectionReady] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem("solar-compare-vendors");
+      if (!stored) {
+        return;
+      }
+
+      const parsed = JSON.parse(stored) as NearbyVendor[];
+      setSelectedCompareVendors(Array.isArray(parsed) ? parsed.slice(0, 3) : []);
+    } catch {
+      setSelectedCompareVendors([]);
+    }
+
+    setCompareSelectionReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!compareSelectionReady) {
+      return;
+    }
+
+    window.localStorage.setItem("solar-compare-vendors", JSON.stringify(selectedCompareVendors));
+  }, [compareSelectionReady, selectedCompareVendors]);
 
   useEffect(() => {
     const run = async () => {
@@ -54,17 +82,6 @@ export default function NearbyVendorsPage() {
         setStats(payload);
         setVendors(payload.nearbyVendors || []);
 
-        if (payload.user.pincode || payload.user.city || payload.user.state) {
-          const matched = await apiClient.vendors.matchByPincode({
-            pincode: payload.user.pincode || undefined,
-            city: payload.user.city || undefined,
-            state: payload.user.state || undefined,
-          });
-
-          if (matched.success) {
-            setVendors(((matched as MatchResponse).vendors || []) as NearbyVendor[]);
-          }
-        }
       } else {
         setMessage(response.error || "Failed to load nearby vendors");
       }
@@ -87,6 +104,7 @@ export default function NearbyVendorsPage() {
         vendor.companyName,
         vendor.ownerName,
         vendor.businessType,
+        vendor.serviceArea,
         vendor.city,
         vendor.state,
         vendor.pincode,
@@ -101,27 +119,60 @@ export default function NearbyVendorsPage() {
     });
   }, [query, vendors]);
 
-  const handleSearch = async () => {
-    const token = getToken();
-    if (!token) return;
-
-    setSearching(true);
-    setMessage("");
-
-    const response = await apiClient.vendors.matchByPincode({
-      pincode: pincode.trim() || stats?.user.pincode || undefined,
-      city: stats?.user.city || undefined,
-      state: stats?.user.state || undefined,
-    });
-
-    if (response.success) {
-      setVendors(((response as MatchResponse).vendors || []) as NearbyVendor[]);
-      setMessage(pincode.trim() ? `Showing matches for ${pincode.trim()}.` : "Showing the strongest available local matches.");
-    } else {
-      setMessage(response.error || "No nearby vendors found for that location.");
+  const openComparePage = () => {
+    if (!selectedCompareVendors.length) {
+      setMessage("Select up to 3 vendors to compare.");
+      return;
     }
 
-    setSearching(false);
+    router.push("/compare");
+  };
+
+  const toggleCompareVendor = (vendor: NearbyVendor) => {
+    setSelectedCompareVendors((current) => {
+      const exists = current.some((item) => item.id === vendor.id);
+
+      if (exists) {
+        return current.filter((item) => item.id !== vendor.id);
+      }
+
+      if (current.length >= 3) {
+        setMessage("You can compare up to 3 vendors at a time.");
+        return current;
+      }
+
+      return [...current, vendor];
+    });
+  };
+
+  const requestConsultation = async (vendor: NearbyVendor) => {
+    const token = getToken();
+    if (!token) {
+      setMessage("Please sign in to request a consultation.");
+      return;
+    }
+
+    setSearching(true);
+    try {
+      const response = await apiClient.leads.requestConsultation(token, vendor.id);
+
+      if (!response.success) {
+        setMessage(response.error || "Could not send consultation request.");
+        return;
+      }
+
+      setMessage(`Consultation request sent to ${vendor.companyName}.`);
+    } catch {
+      setMessage("Could not send consultation request.");
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleSearch = async () => {
+    setSearching(true);
+    setMessage(query.trim() ? `Filtering results for ${query.trim()}.` : "Showing all approved vendors.");
+    window.setTimeout(() => setSearching(false), 0);
   };
 
   return (
@@ -146,23 +197,13 @@ export default function NearbyVendorsPage() {
           </div>
         </div>
 
-        <div className="mt-6 grid gap-3 lg:grid-cols-[1.2fr_0.7fr_auto]">
+        <div className="mt-6 grid gap-3 lg:grid-cols-[1.3fr_auto]">
           <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
             <Search className="h-4 w-4 text-slate-400" />
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search by vendor, business type, city, or service"
-              className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
-            />
-          </label>
-
-          <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-            <MapPin className="h-4 w-4 text-slate-400" />
-            <input
-              value={pincode}
-              onChange={(event) => setPincode(event.target.value)}
-              placeholder={stats?.user.pincode || "Enter pincode"}
+              placeholder="Search by vendor name, service, city, state, or pincode"
               className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
             />
           </label>
@@ -176,6 +217,30 @@ export default function NearbyVendorsPage() {
             <Sparkles className="h-4 w-4" />
             {searching ? "Searching..." : "Filter vendors"}
           </button>
+        </div>
+
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-slate-600">
+            Compare up to 3 approved vendors, or request consultation directly from a vendor card.
+          </p>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={openComparePage}
+              className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-cyan-300 hover:text-cyan-800"
+            >
+              Compare selected ({selectedCompareVendors.length})
+            </button>
+            {selectedCompareVendors.length ? (
+              <button
+                type="button"
+                onClick={() => setSelectedCompareVendors([])}
+                className="inline-flex items-center justify-center rounded-full border border-transparent px-4 py-2 text-sm font-semibold text-slate-500 transition hover:text-slate-800"
+              >
+                Clear selection
+              </button>
+            ) : null}
+          </div>
         </div>
 
         {message ? <div className="mt-4 rounded-2xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-cyan-900">{message}</div> : null}
@@ -214,10 +279,34 @@ export default function NearbyVendorsPage() {
                     <p className="mt-2 text-xs text-slate-500">{vendor.services.slice(0, 4).join(", ") || "Services not listed"}</p>
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-3 lg:min-w-90">
-                    <DetailPill label="Installations" value={String(vendor.installationCount)} />
-                    <DetailPill label="Warranty" value={vendor.warrantySupport ? "Yes" : "No"} />
-                    <DetailPill label="Response" value={vendor.responseTimeHours ? `${vendor.responseTimeHours} hrs` : "-"} />
+                  <div className="space-y-3 lg:min-w-90">
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <DetailPill label="Installations" value={String(vendor.installationCount)} />
+                      <DetailPill label="Warranty" value={vendor.warrantySupport ? "Yes" : "No"} />
+                      <DetailPill label="Response" value={vendor.responseTimeHours ? `${vendor.responseTimeHours} hrs` : "-"} />
+                    </div>
+
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        onClick={() => toggleCompareVendor(vendor)}
+                        className={`inline-flex items-center justify-center rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                          selectedCompareVendors.some((item) => item.id === vendor.id)
+                            ? "border-cyan-300 bg-cyan-50 text-cyan-800"
+                            : "border-slate-200 bg-white text-slate-700 hover:border-cyan-300 hover:text-cyan-800"
+                        }`}
+                      >
+                        {selectedCompareVendors.some((item) => item.id === vendor.id) ? "Selected for compare" : "Compare vendor"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void requestConsultation(vendor)}
+                        disabled={searching}
+                        className="inline-flex items-center justify-center rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        Request consultation
+                      </button>
+                    </div>
                   </div>
                 </div>
               </article>

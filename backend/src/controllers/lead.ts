@@ -38,6 +38,19 @@ const consultationTrackerNotificationBody: Record<ConsultationTrackingStatus, st
   INSTALLATION_COMPLETED: "Installation has been completed successfully.",
 };
 
+const consultationTrackerDisplayLabel: Record<ConsultationTrackingStatus, string> = {
+  CONSULTATION_REQUESTED: "Request Submitted",
+  REQUEST_REVIEWED: "Contacted",
+  VENDOR_ASSIGNED: "Vendor Assigned",
+  APPOINTMENT_SCHEDULED: "Site Visit Scheduled",
+  SITE_VISIT_COMPLETED: "Site Visit Completed",
+  PROPOSAL_SHARED: "Quotation Shared",
+  NEGOTIATION: "Negotiation",
+  PROJECT_CONFIRMED: "Project Confirmed",
+  INSTALLATION_IN_PROGRESS: "Installation In Progress",
+  INSTALLATION_COMPLETED: "Installation Completed",
+};
+
 function trackerStatusIndex(status: ConsultationTrackingStatus): number {
   return consultationTrackerFlow.indexOf(status);
 }
@@ -432,6 +445,9 @@ export const updateConsultationTrackerStatus = async (req: AuthRequest, res: Res
         consultationTracking: {
           orderBy: { createdAt: "asc" },
         },
+        user: {
+          select: { id: true, fullName: true },
+        },
         vendor: {
           select: { id: true, companyName: true },
         },
@@ -487,19 +503,112 @@ export const updateConsultationTrackerStatus = async (req: AuthRequest, res: Res
       },
     });
 
+    if (status === "INSTALLATION_COMPLETED") {
+      const referral = await prisma.referral.findUnique({
+        where: { referredUserId: consultation.userId },
+        include: {
+          referrer: {
+            select: { id: true, fullName: true, email: true },
+          },
+          referredUser: {
+            select: { id: true, fullName: true, email: true },
+          },
+        },
+      });
+
+      if (referral && referral.installationStatus !== "COMPLETED") {
+        await prisma.referral.update({
+          where: { referredUserId: consultation.userId },
+          data: { installationStatus: "COMPLETED" },
+        });
+
+        const completedAt = tracking.createdAt.toISOString();
+
+        await createNotification(prisma, {
+          audience: "ADMIN",
+          type: "SYSTEM",
+          priority: "MEDIUM",
+          title: `Referral reward milestone completed for ${referral.referrer.fullName}`,
+          body: [
+            `Referrer Name: ${referral.referrer.fullName}`,
+            `Referred User Name: ${referral.referredUser.fullName}`,
+            `Date/Time: ${completedAt}`,
+          ].join("\n"),
+          metadata: {
+            category: "referral",
+            referrerId: referral.referrer.id,
+            referrerName: referral.referrer.fullName,
+            referredUserId: referral.referredUser.id,
+            referredUserName: referral.referredUser.fullName,
+            installationStatus: "COMPLETED",
+            completedAt,
+          },
+        });
+
+        await createNotification(prisma, {
+          audience: "USER",
+          userId: referral.referrer.id,
+          type: "SYSTEM",
+          priority: "MEDIUM",
+          title: `Referral reward milestone completed for ${referral.referrer.fullName}`,
+          body: `${referral.referredUser.fullName} reached Installation Completed.`,
+          metadata: {
+            category: "referral",
+            referrerId: referral.referrer.id,
+            referrerName: referral.referrer.fullName,
+            referredUserId: referral.referredUser.id,
+            referredUserName: referral.referredUser.fullName,
+            installationStatus: "COMPLETED",
+            completedAt,
+          },
+        });
+      }
+    }
+
     if (consultation.userId) {
       await createNotification(prisma, {
         audience: "USER",
-        type: "CONSULTATION_REQUEST",
+        type: "LEAD_UPDATED",
         priority: "MEDIUM",
         title: "Application Tracker Update",
-        body: consultationTrackerNotificationBody[status],
+        body: [
+          `Status: ${consultationTrackerDisplayLabel[status]}`,
+          consultationTrackerNotificationBody[status],
+          `Vendor: ${consultation.vendor?.companyName || "-"}`,
+          `Notes: ${notes || "-"}`,
+        ].join("\n"),
         userId: consultation.userId,
         vendorId: consultation.vendorId,
         metadata: {
           consultationId: consultation.id,
           vendorId: consultation.vendorId,
           status,
+          statusLabel: consultationTrackerDisplayLabel[status],
+          notes,
+          updatedBy: tracking.updatedBy,
+          updatedAt: tracking.createdAt,
+        },
+      });
+    }
+
+    if (consultation.vendorId) {
+      await createNotification(prisma, {
+        audience: "VENDOR",
+        type: "LEAD_UPDATED",
+        priority: "MEDIUM",
+        title: "Application Tracker Update",
+        body: [
+          `Status: ${consultationTrackerDisplayLabel[status]}`,
+          consultationTrackerNotificationBody[status],
+          `Customer: ${consultation.user?.fullName || consultation.userId || "-"}`,
+          `Notes: ${notes || "-"}`,
+        ].join("\n"),
+        vendorId: consultation.vendorId,
+        metadata: {
+          consultationId: consultation.id,
+          vendorId: consultation.vendorId,
+          status,
+          statusLabel: consultationTrackerDisplayLabel[status],
           notes,
           updatedBy: tracking.updatedBy,
           updatedAt: tracking.createdAt,
@@ -576,6 +685,10 @@ export const requestConsultation = async (req: AuthRequest, res: Response): Prom
       userName: user.fullName,
       userEmail: user.email,
       userPhone: user.phone,
+      userCity: user.city,
+      userState: user.state,
+      userPincode: user.pincode,
+      serviceRequirement: "Consultation Request",
       vendorName: vendor.ownerName,
       businessName: vendor.companyName,
       vendorEmail: vendor.email,
@@ -594,6 +707,20 @@ export const requestConsultation = async (req: AuthRequest, res: Response): Prom
       userId: user.id,
       metadata: {
         ...(notification.admin.metadata as Record<string, unknown>),
+        leadId: lead.id,
+      },
+    });
+
+    await createNotification(prisma, {
+      audience: "USER",
+      type: notification.user.type,
+      priority: notification.user.priority,
+      title: notification.user.title,
+      body: notification.user.body,
+      userId: user.id,
+      vendorId: vendor.id,
+      metadata: {
+        ...(notification.user.metadata as Record<string, unknown>),
         leadId: lead.id,
       },
     });

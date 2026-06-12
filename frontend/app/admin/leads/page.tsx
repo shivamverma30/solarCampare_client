@@ -49,6 +49,19 @@ const trackerStatuses = [
   "INSTALLATION_COMPLETED",
 ];
 
+const trackerStatusLabels: Record<string, string> = {
+  CONSULTATION_REQUESTED: "Request Submitted",
+  REQUEST_REVIEWED: "Contacted",
+  VENDOR_ASSIGNED: "Vendor Assigned",
+  APPOINTMENT_SCHEDULED: "Site Visit Scheduled",
+  SITE_VISIT_COMPLETED: "Site Visit Completed",
+  PROPOSAL_SHARED: "Quotation Shared",
+  NEGOTIATION: "Negotiation",
+  PROJECT_CONFIRMED: "Project Confirmed",
+  INSTALLATION_IN_PROGRESS: "Installation In Progress",
+  INSTALLATION_COMPLETED: "Installation Completed",
+};
+
 export default function AdminLeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [quoteLeads, setQuoteLeads] = useState<QuoteLead[]>([]);
@@ -282,7 +295,7 @@ export default function AdminLeadsPage() {
                     className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
                   >
                     {trackerStatuses.map((status) => (
-                      <option key={`${lead.id}-${status}`} value={status}>{status}</option>
+                      <option key={`${lead.id}-${status}`} value={status}>{trackerStatusLabels[status] || status}</option>
                     ))}
                   </select>
                   <textarea
@@ -306,7 +319,7 @@ export default function AdminLeadsPage() {
                   <div className="mt-4 grid gap-2 sm:grid-cols-2">
                     {lead.consultationTracking.slice(-4).reverse().map((entry) => (
                       <div key={entry.id} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
-                        <p className="font-semibold text-slate-900">{entry.status}</p>
+                        <p className="font-semibold text-slate-900">{trackerStatusLabels[entry.status] || entry.status}</p>
                         <p className="mt-1">{entry.notes || "No notes"}</p>
                         <p className="mt-1 text-[11px] text-slate-500">{new Date(entry.createdAt).toLocaleString()}</p>
                       </div>

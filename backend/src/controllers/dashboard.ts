@@ -179,45 +179,35 @@ export const getUserStats = async (req: AuthRequest, res: Response): Promise<voi
       prisma.calculatorHistory.count({ where: { userId: req.userId } }),
       prisma.quoteRequest.count({ where: { userId: req.userId } }),
       prisma.notification.count({ where: { audience: "USER", OR: [{ userId: req.userId }, { userId: null }] } }),
-      user.pincode
-        ? prisma.vendor.findMany({
-            where: {
-              status: "APPROVED",
-              OR: [
-                { pincode: user.pincode },
-                { serviceAreas: { some: { pincode: user.pincode } } },
-                ...(user.city ? [{ city: user.city }, { serviceAreas: { some: { city: user.city } } }] : []),
-                ...(user.state ? [{ state: user.state }, { serviceAreas: { some: { state: user.state } } }] : []),
-              ],
-            },
+      prisma.vendor.findMany({
+        where: { status: "APPROVED" },
+        select: {
+          id: true,
+          companyName: true,
+          ownerName: true,
+          serviceArea: true,
+          city: true,
+          state: true,
+          pincode: true,
+          logoUrl: true,
+          experience: true,
+          businessType: true,
+          services: true,
+          certifications: true,
+          installationCount: true,
+          warrantySupport: true,
+          responseTimeHours: true,
+          serviceAreas: {
             select: {
-              id: true,
-              companyName: true,
-              ownerName: true,
-              serviceArea: true,
               city: true,
               state: true,
               pincode: true,
-              logoUrl: true,
-              experience: true,
-              businessType: true,
-              services: true,
-              certifications: true,
-              installationCount: true,
-              warrantySupport: true,
-              responseTimeHours: true,
-              serviceAreas: {
-                select: {
-                  city: true,
-                  state: true,
-                  pincode: true,
-                  coverageRank: true,
-                  isPrimary: true,
-                },
-              },
+              coverageRank: true,
+              isPrimary: true,
             },
-          })
-        : Promise.resolve([]),
+          },
+        },
+      }),
       prisma.calculatorHistory.findMany({
         where: { userId: req.userId },
         orderBy: { createdAt: "desc" },
@@ -260,7 +250,10 @@ export const getUserStats = async (req: AuthRequest, res: Response): Promise<voi
         if (right.experience !== left.experience) return right.experience - left.experience;
         return String(right.createdAt).localeCompare(String(left.createdAt));
       })
-      .slice(0, 12);
+      .map((vendor) => ({
+        ...vendor,
+        matchScore: vendor.matchPriority,
+      }));
 
     res.status(200).json({
       success: true,

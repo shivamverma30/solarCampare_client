@@ -88,6 +88,7 @@ function CalculatorPageContent() {
   const stateProfile = solarStateProfiles[state] || solarStateProfiles.other;
   const stateSummary = `${state} • ${stateProfile.discom} • ₹${Math.round(stateProfile.tariff)}/kWh`;
   const systemCost = formatCurrency(estimate.investment);
+  const subsidyLabel = propertyType === "agriculture" ? "PM-KUSUM Subsidy" : "Govt Subsidy";
   const subsidy = formatCurrency(estimate.totalSubsidy);
   const netInvestment = formatCurrency(estimate.netInvestment);
   const monthlySavings = formatCurrency(estimate.monthlySavings);
@@ -234,7 +235,7 @@ function CalculatorPageContent() {
 
   return (
     <section className="hero-shell container-x">
-      <div className="grid gap-8 lg:grid-cols-[402px_1fr] lg:items-start lg:gap-10">
+      <div className="grid gap-8 lg:grid-cols-[390px_minmax(0,1.12fr)] lg:items-start lg:gap-10">
         <div className="max-w-3xl">
           <div className="overline mb-3">{t("calculator.eyebrow")}</div>
           <h1 className="text-[36px] font-bold leading-10 tracking-[-0.9px] text-slate-900 md:text-[36px]">
@@ -350,7 +351,7 @@ function CalculatorPageContent() {
           </form>
         </div>
 
-        <div className="lg:pt-18.5">
+        <div className="lg:pt-16.5">
           {!submitted ? (
             <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-16px_rgba(15,23,42,0.08)] md:p-8">
               <div className="flex min-h-75 flex-col items-center justify-center text-center md:min-h-90">
@@ -365,7 +366,7 @@ function CalculatorPageContent() {
             </div>
           ) : (
             <>
-              <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-16px_rgba(15,23,42,0.08)] md:p-8">
+              <div className="rounded-[28px] border border-emerald-200 bg-linear-to-br from-emerald-50/70 via-white to-sky-50/70 p-6 shadow-[0_18px_48px_rgba(15,23,42,0.08)] md:p-8">
                 <div className="flex items-center gap-2 text-[14px] font-medium text-slate-600">
                   <SunMedium className="h-4 w-4 text-emerald-600" />
                   <span>{stateSummary}</span>
@@ -374,14 +375,14 @@ function CalculatorPageContent() {
                 <div className="mt-6">
                   <div className="text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-500">{t("calculator.recommendedSystem")}</div>
                   <div className="mt-2 flex items-baseline gap-2 text-slate-900">
-                    <span className="text-[36px] font-bold leading-none tracking-[-0.04em]">{formatKw(estimate.recommendedKw)}</span>
+                    <span className="text-[38px] font-bold leading-none tracking-[-0.04em] text-emerald-700">{formatKw(estimate.recommendedKw)}</span>
                     <span className="text-[18px] font-semibold text-slate-700">kW rooftop solar</span>
                   </div>
                 </div>
 
                 <div className="mt-6 grid gap-3 sm:grid-cols-2">
                   <Stat label="System cost" value={systemCost} />
-                  <Stat label="PM Surya Ghar subsidy" value={subsidy} />
+                  <Stat label={subsidyLabel} value={subsidy} />
                   <Stat label="Net investment" value={netInvestment} />
                   <Stat label="Payback" value={`${paybackYears.toFixed(1)} yr`} />
                   <Stat label="Monthly savings" value={monthlySavings} />
@@ -389,9 +390,9 @@ function CalculatorPageContent() {
                 </div>
               </div>
 
-              <div className="mt-4 rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-16px_rgba(15,23,42,0.08)] md:p-8">
+              <div className="mt-4 rounded-[28px] border border-emerald-100 bg-white p-6 shadow-[0_12px_30px_rgba(16,185,129,0.08)] md:p-8">
                 <div className="text-[18px] font-semibold tracking-[-0.03em] text-slate-900">{t("calculator.lifetimeSavings")}</div>
-                <div className="mt-2 text-[28px] font-bold tracking-[-0.04em] text-slate-900">{lifetimeSavings}</div>
+                <div className="mt-2 text-[30px] font-bold tracking-[-0.04em] text-emerald-700">{lifetimeSavings}</div>
                 <div className="mt-2 text-[15px] leading-7 text-slate-600">
                   {t("calculator.estimatedEmi", { amount: `${formatCurrency(emiEstimate.emi)}/mo` })}
                 </div>
@@ -438,7 +439,7 @@ function CalculatorPageContent() {
               <p><span className="font-semibold">Monthly bill:</span> {formatCurrency(monthlyBill)}</p>
               <p><span className="font-semibold">System size:</span> {formatKw(estimate.recommendedKw)} kW</p>
               <p><span className="font-semibold">Annual savings:</span> {formatCurrency(estimate.annualSavings)}</p>
-              <p><span className="font-semibold">Subsidy:</span> {formatCurrency(estimate.totalSubsidy)}</p>
+              <p><span className="font-semibold">{subsidyLabel}:</span> {formatCurrency(estimate.totalSubsidy)}</p>
               <p><span className="font-semibold">Net investment:</span> {formatCurrency(estimate.netInvestment)}</p>
               <p><span className="font-semibold">Payback period:</span> {(estimate.paybackMonths / 12).toFixed(1)} years</p>
               <p><span className="font-semibold">State:</span> {state}</p>
@@ -514,9 +515,9 @@ function FieldInput({
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-4">
+    <div className="rounded-[20px] border border-emerald-100 bg-white px-4 py-4 shadow-[0_10px_24px_rgba(16,185,129,0.06)]">
       <div className="text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500">{label}</div>
-      <div className="mt-2 text-[24px] font-semibold leading-none tracking-[-0.03em] text-slate-900">{value}</div>
+      <div className="mt-2 text-[24px] font-semibold leading-none tracking-[-0.03em] text-slate-950">{value}</div>
     </div>
   );
 }

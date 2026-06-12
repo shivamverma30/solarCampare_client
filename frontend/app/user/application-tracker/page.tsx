@@ -38,13 +38,13 @@ type UserConsultation = {
 };
 
 const trackerFlow: Array<{ key: TrackerStatus; label: string }> = [
-  { key: "CONSULTATION_REQUESTED", label: "Consultation Requested" },
-  { key: "REQUEST_REVIEWED", label: "Request Reviewed" },
+  { key: "CONSULTATION_REQUESTED", label: "Request Submitted" },
   { key: "VENDOR_ASSIGNED", label: "Vendor Assigned" },
-  { key: "APPOINTMENT_SCHEDULED", label: "Appointment Scheduled" },
+  { key: "REQUEST_REVIEWED", label: "Contacted" },
+  { key: "APPOINTMENT_SCHEDULED", label: "Site Visit Scheduled" },
   { key: "SITE_VISIT_COMPLETED", label: "Site Visit Completed" },
-  { key: "PROPOSAL_SHARED", label: "Proposal Shared" },
-  { key: "NEGOTIATION", label: "Negotiation / Discussion" },
+  { key: "PROPOSAL_SHARED", label: "Quotation Shared" },
+  { key: "NEGOTIATION", label: "Negotiation" },
   { key: "PROJECT_CONFIRMED", label: "Project Confirmed" },
   { key: "INSTALLATION_IN_PROGRESS", label: "Installation In Progress" },
   { key: "INSTALLATION_COMPLETED", label: "Installation Completed" },

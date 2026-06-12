@@ -9,12 +9,12 @@ import { useAuth } from "@/lib/use-auth";
 
 const links = [
   { href: "/user/dashboard", label: "Dashboard", icon: "📊" },
-  { href: "/user/profile", label: "Profile", icon: "👤" },
   { href: "/user/nearby-vendors", label: "Nearby Vendors", icon: "📍" },
   { href: "/user/notifications", label: "Notifications", icon: "🔔" },
   { href: "/user/application-tracker", label: "Application Tracker", icon: "🧭" },
-  { href: "/user/change-password", label: "Change Password", icon: "🔐" },
   { href: "/user/referral-rewards", label: "Referral Rewards", icon: "🎉" },
+  { href: "/user/profile", label: "Profile", icon: "👤" },
+  { href: "/user/change-password", label: "Change Password", icon: "🔐" },
 ];
 
 export default function UserLayout({ children }: { children: React.ReactNode }) {

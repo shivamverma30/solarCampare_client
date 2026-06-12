@@ -18,7 +18,9 @@ const sidebarLinks: SidebarLink[] = [
   { name: "Notifications", href: "/admin/notifications", icon: "🔔" },
   { name: "Vendors", href: "/admin/vendors", icon: "🏢" },
   { name: "Leads", href: "/admin/leads", icon: "🧭" },
+  { name: "Application Tracker", href: "/admin/application-tracker", icon: "📍" },
   { name: "Users", href: "/admin/users", icon: "👥" },
+  { name: "Referrals", href: "/admin/referrals", icon: "🎁" },
   { name: "Profile", href: "/admin/profile", icon: "👤" },
   { name: "Change Password", href: "/admin/change-password", icon: "🔐" },
 ];

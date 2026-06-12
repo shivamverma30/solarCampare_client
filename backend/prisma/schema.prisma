@@ -107,6 +107,15 @@ enum ConsultationTrackingStatus {
   INSTALLATION_COMPLETED
 }
 
+enum ReferralSignupStatus {
+  DONE
+}
+
+enum ReferralInstallationStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
 enum AuditEntityType {
   ADMIN
   USER
@@ -192,6 +201,8 @@ model User {
   notificationReceipts NotificationReadState[]
   quoteRequests     QuoteRequest[]
   consultationTracking ConsultationTracking[]
+  referralsGiven    Referral[]          @relation("ReferralReferrer")
+  referredBy        Referral?           @relation("ReferralReferredUser")
   emailVerificationTokens EmailVerificationToken[]
   passwordResetTokens PasswordResetToken[]
   uploads           UploadAsset[]
@@ -370,6 +381,22 @@ model ConsultationTracking {
   @@index([consultationId])
   @@index([status])
   @@map("consultation_tracking")
+}
+
+model Referral {
+  id                    String                    @id @default(cuid())
+  referrerId            String
+  referredUserId        String                    @unique
+  signupStatus          ReferralSignupStatus      @default(DONE)
+  installationStatus     ReferralInstallationStatus @default(IN_PROGRESS)
+  createdAt             DateTime                  @default(now())
+  updatedAt             DateTime                  @updatedAt
+  referrer             User                      @relation("ReferralReferrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referredUser         User                      @relation("ReferralReferredUser", fields: [referredUserId], references: [id], onDelete: Cascade)
+
+  @@index([referrerId])
+  @@index([referredUserId])
+  @@map("referrals")
 }
 
 model LeadStatusLog {

@@ -100,14 +100,20 @@ export const notificationTemplates = {
     userName: string;
     userEmail: string;
     userPhone?: string | null;
+    userCity?: string | null;
+    userState?: string | null;
+    userPincode?: string | null;
+    serviceRequirement?: string;
     vendorName: string;
     businessName: string;
     vendorEmail: string;
     vendorPhone: string;
     timestamp?: Date | string;
     status?: string;
-  }): { admin: NotificationTemplate; vendor: NotificationTemplate } {
+  }): { admin: NotificationTemplate; vendor: NotificationTemplate; user: NotificationTemplate } {
     const timestamp = formatTimestamp(input.timestamp);
+    const location = [input.userCity, input.userState, input.userPincode].filter(Boolean).join(", ") || "-";
+    const requirement = input.serviceRequirement || "Consultation Request";
 
     return {
       admin: {
@@ -117,6 +123,8 @@ export const notificationTemplates = {
           `Name: ${input.userName}`,
           `Email: ${input.userEmail}`,
           `Phone: ${input.userPhone || "-"}`,
+          `Location: ${location}`,
+          `Requirement: ${requirement}`,
           "",
           "VENDOR",
           `Vendor Name: ${input.vendorName}`,
@@ -136,11 +144,41 @@ export const notificationTemplates = {
       },
       vendor: {
         title: "New Consultation Request",
-        body: `Description: ${input.userName} is interested in discussing a solar project.`,
+        body: [
+          `Description: ${input.userName} requested a ${requirement.toLowerCase()}.`,
+          `Location: ${location}`,
+          `Status: ${input.status || "NEW"}`,
+          `Submitted: ${timestamp}`,
+        ].join("\n"),
         type: "CONSULTATION_REQUEST",
         priority: "HIGH",
         metadata: {
           userName: input.userName,
+          userCity: input.userCity,
+          userState: input.userState,
+          userPincode: input.userPincode,
+          serviceRequirement: requirement,
+          vendorName: input.vendorName,
+          businessName: input.businessName,
+          timestamp,
+        },
+      },
+      user: {
+        title: "Consultation Request Submitted",
+        body: [
+          `Your ${requirement.toLowerCase()} for ${input.vendorName} has been received.`,
+          `Location: ${location}`,
+          `Status: ${input.status || "NEW"}`,
+          `Submitted: ${timestamp}`,
+        ].join("\n"),
+        type: "CONSULTATION_REQUEST",
+        priority: "MEDIUM",
+        metadata: {
+          userName: input.userName,
+          userCity: input.userCity,
+          userState: input.userState,
+          userPincode: input.userPincode,
+          serviceRequirement: requirement,
           vendorName: input.vendorName,
           businessName: input.businessName,
           timestamp,

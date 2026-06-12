@@ -24,6 +24,13 @@ type Lead = {
 
 const vendorTrackerStatuses = ["APPOINTMENT_SCHEDULED", "SITE_VISIT_COMPLETED", "PROPOSAL_SHARED", "NEGOTIATION"];
 
+const vendorTrackerStatusLabels: Record<string, string> = {
+  APPOINTMENT_SCHEDULED: "Site Visit Scheduled",
+  SITE_VISIT_COMPLETED: "Site Visit Completed",
+  PROPOSAL_SHARED: "Quotation Shared",
+  NEGOTIATION: "Negotiation",
+};
+
 export default function VendorLeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [error, setError] = useState("");
@@ -148,7 +155,7 @@ export default function VendorLeadsPage() {
                   className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
                 >
                   {vendorTrackerStatuses.map((status) => (
-                    <option key={`${lead.id}-${status}`} value={status}>{status}</option>
+                    <option key={`${lead.id}-${status}`} value={status}>{vendorTrackerStatusLabels[status] || status}</option>
                   ))}
                 </select>
                 <textarea
@@ -172,7 +179,7 @@ export default function VendorLeadsPage() {
                 <div className="mt-3 space-y-2">
                   {lead.consultationTracking.slice(-3).reverse().map((entry) => (
                     <div key={entry.id} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
-                      <p className="font-semibold text-slate-900">{entry.status}</p>
+                      <p className="font-semibold text-slate-900">{vendorTrackerStatusLabels[entry.status] || entry.status}</p>
                       <p className="mt-1">{entry.notes || "No notes"}</p>
                     </div>
                   ))}

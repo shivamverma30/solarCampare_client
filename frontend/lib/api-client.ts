@@ -34,6 +34,8 @@ interface ApiResponse<T> {
   users?: T[];
   vendor?: T;
   vendors?: T[];
+  referrer?: T;
+  referrals?: T[];
   lead?: T;
   leads?: T[];
   inquiry?: T;
@@ -149,12 +151,12 @@ export const apiClient = {
       );
     },
 
-    async registerUser(fullName: string, email: string, password: string, phone?: string, city?: string, state?: string, pincode?: string) {
+    async registerUser(fullName: string, email: string, password: string, phone?: string, city?: string, state?: string, pincode?: string, referralCode?: string | null) {
       return apiClient.request(
         "/auth/user/register",
         {
           method: "POST",
-          body: JSON.stringify({ fullName, email, password, phone, city, state, pincode }),
+          body: JSON.stringify({ fullName, email, password, phone, city, state, pincode, referralCode }),
         }
       );
     },
@@ -343,11 +345,12 @@ export const apiClient = {
       );
     },
 
-    async matchByPincode(params: { pincode?: string; city?: string; state?: string }) {
+    async matchByPincode(params: { pincode?: string; city?: string; state?: string; search?: string }) {
       const search = new URLSearchParams();
       if (params.pincode) search.set("pincode", params.pincode);
       if (params.city) search.set("city", params.city);
       if (params.state) search.set("state", params.state);
+      if (params.search) search.set("search", params.search);
       return apiClient.request(`/vendors/match?${search.toString()}`);
     },
   },
@@ -540,6 +543,14 @@ export const apiClient = {
   referrals: {
     async getMyRewards(token: string) {
       return apiClient.request("/referrals/me", {}, token);
+    },
+
+    async resolve(referralCode: string) {
+      return apiClient.request(`/referrals/resolve?ref=${encodeURIComponent(referralCode)}`);
+    },
+
+    async listAdmin(token: string) {
+      return apiClient.request("/referrals/admin", {}, token);
     },
 
     async share(token: string, payload: JsonObject = {}) {

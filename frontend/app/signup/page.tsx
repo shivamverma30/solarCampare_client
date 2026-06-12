@@ -28,10 +28,31 @@ export default function SignupPage() {
   const [otp, setOtp] = useState("");
   const [resendLoading, setResendLoading] = useState(false);
   const [redirectPath, setRedirectPath] = useState<string | null>(null);
+  const [referralCode, setReferralCode] = useState("");
+  const [referrerName, setReferrerName] = useState("");
+  const [referralLookupState, setReferralLookupState] = useState<"idle" | "loading" | "resolved" | "error">("idle");
 
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
     setRedirectPath(query.get("redirect"));
+    const incomingReferral = query.get("ref") || "";
+    setReferralCode(incomingReferral);
+
+    if (!incomingReferral) {
+      setReferralLookupState("idle");
+      return;
+    }
+
+    setReferralLookupState("loading");
+    void (async () => {
+      const response = await apiClient.referrals.resolve(incomingReferral);
+      if (response.success && response.referrer && typeof (response.referrer as { fullName?: string }).fullName === "string") {
+        setReferrerName((response.referrer as { fullName: string }).fullName);
+        setReferralLookupState("resolved");
+      } else {
+        setReferralLookupState("error");
+      }
+    })();
   }, []);
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -51,7 +72,8 @@ export default function SignupPage() {
       formData.phone || undefined,
       formData.city || undefined,
       formData.state || undefined,
-      formData.pincode || undefined
+      formData.pincode || undefined,
+      referralCode || undefined
     );
     if (!response.success) {
       setError(response.error || "Unable to create account");
@@ -83,6 +105,19 @@ export default function SignupPage() {
           <BrandMark href="/" compact className="items-start" titleClassName="text-slate-900" taglineClassName="text-slate-500" />
           <p className="text-xs font-semibold uppercase tracking-[0.26em] text-amber-500">{t("auth.signup")}</p>
           <h1 className="mt-3 text-4xl text-slate-900">{t("auth.createAccountTitle")}</h1>
+
+          {referralCode ? (
+            <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+              {referralLookupState === "loading"
+                ? "Checking your referral link..."
+                : referrerName
+                  ? `🎉 You were referred by ${referrerName}`
+                  : "You joined through this referral link."}
+              <div className="mt-1 text-xs text-emerald-700/80">
+                ref={referralCode || "-"} · resolved={referrerName || "pending"} · banner={referralLookupState === "loading" ? "loading" : referralLookupState === "resolved" ? "visible" : "hidden"}
+              </div>
+            </div>
+          ) : null}
 
           {error && <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 

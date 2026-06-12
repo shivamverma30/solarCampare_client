@@ -24,10 +24,10 @@ import { useAuth } from "@/lib/use-auth";
 
 type ReferralHistoryItem = {
   id: string;
-  title: string;
-  description?: string;
+  referredUser: string;
+  signupStatus: string;
+  installationStatus: string;
   createdAt: string;
-  channel: string;
 };
 
 type ReferralDetails = {
@@ -427,7 +427,7 @@ function PublicReferralView({
                 ))}
               </div>
             ) : history.length ? (
-              history.map((item, index) => <HistoryCard key={item.id} item={item} index={index} />)
+              <ReferralHistoryTable history={history} />
             ) : (
               <EmptyReferralState />
             )}
@@ -563,7 +563,7 @@ function DashboardReferralView({
                 ))}
               </div>
             ) : history.length ? (
-              history.map((item, index) => <HistoryCard key={item.id} item={item} index={index} />)
+              <ReferralHistoryTable history={history} />
             ) : (
               <EmptyReferralState />
             )}
@@ -583,16 +583,14 @@ function HeroStatCard({ label, value, detail, tone, icon: Icon }: { label: strin
   };
 
   return (
-    <div className={`rounded-3xl border bg-linear-to-br p-4 shadow-sm ${styles[tone]}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div>
+    <div className={`relative rounded-3xl border bg-linear-to-br p-4 pt-12 shadow-sm md:pt-14 ${styles[tone]}`}>
+      <div className="absolute right-4 top-4 z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/75 shadow-sm ring-1 ring-black/5">
+        <Icon className="h-4 w-4" />
+      </div>
+      <div className="min-w-0 pr-14">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] opacity-70">{label}</p>
           <p className="mt-2 text-lg font-semibold">{value}</p>
         </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/75 shadow-sm ring-1 ring-black/5">
-          <Icon className="h-4 w-4" />
-        </div>
-      </div>
       <p className="mt-2 text-xs leading-6 opacity-75">{detail}</p>
     </div>
   );
@@ -600,16 +598,14 @@ function HeroStatCard({ label, value, detail, tone, icon: Icon }: { label: strin
 
 function MiniStat({ label, value, detail, tone, icon: Icon }: { label: string; value: string; detail: string; tone: Tone; icon: ComponentType<{ className?: string }> }) {
   return (
-    <div className={`rounded-3xl border bg-linear-to-br p-4 shadow-sm ${label === "Progress" ? "from-violet-50 to-white text-violet-900 border-violet-100" : tone === "cyan" ? "from-cyan-50 to-white text-cyan-900 border-cyan-100" : tone === "amber" ? "from-amber-50 to-white text-amber-900 border-amber-100" : "from-emerald-50 to-white text-emerald-900 border-emerald-100"}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div>
+    <div className={`relative rounded-3xl border bg-linear-to-br p-4 pt-12 shadow-sm md:pt-14 ${label === "Progress" ? "from-violet-50 to-white text-violet-900 border-violet-100" : tone === "cyan" ? "from-cyan-50 to-white text-cyan-900 border-cyan-100" : tone === "amber" ? "from-amber-50 to-white text-amber-900 border-amber-100" : "from-emerald-50 to-white text-emerald-900 border-emerald-100"}`}>
+      <div className="absolute right-4 top-4 z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/75 shadow-sm ring-1 ring-black/5">
+        <Icon className="h-4 w-4" />
+      </div>
+      <div className="min-w-0 pr-14">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] opacity-70">{label}</p>
           <p className="mt-2 text-lg font-semibold">{value}</p>
         </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/75 shadow-sm ring-1 ring-black/5">
-          <Icon className="h-4 w-4" />
-        </div>
-      </div>
       <p className="mt-2 text-xs leading-6 opacity-75">{detail}</p>
     </div>
   );
@@ -722,11 +718,11 @@ function MetricCard({ label, value, icon: Icon, tone }: { label: string; value: 
   return (
     <div className={`rounded-3xl border bg-linear-to-br p-4 shadow-sm ring-1 ${styles[tone]}`}>
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] opacity-70">{label}</p>
           <p className="mt-2 text-lg font-semibold text-slate-950">{value}</p>
         </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/80 shadow-sm ring-1 ring-black/5">
+        <div className="relative z-10 ml-2 flex h-10 w-10 shrink-0 items-center justify-center self-start rounded-2xl bg-white/80 shadow-sm ring-1 ring-black/5">
           <Icon className="h-4 w-4 text-slate-700" />
         </div>
       </div>
@@ -734,26 +730,41 @@ function MetricCard({ label, value, icon: Icon, tone }: { label: string; value: 
   );
 }
 
-function HistoryCard({ item, index }: { item: ReferralHistoryItem; index: number }) {
-  const chips = ["bg-cyan-500", "bg-emerald-500", "bg-amber-500", "bg-violet-500"];
-
+function ReferralHistoryTable({ history }: { history: ReferralHistoryItem[] }) {
   return (
-    <article className="rounded-3xl border border-slate-200 bg-slate-50 p-4 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
-      <div className="flex items-start gap-4">
-        <div className={`mt-1 h-3 w-3 rounded-full ${chips[index % chips.length]} shadow-[0_0_0_6px_rgba(148,163,184,0.1)]`} />
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="font-semibold text-slate-950">{item.title}</p>
-              <p className="mt-1 text-sm text-slate-600">{item.description || "Referral activity logged"}</p>
-            </div>
-            <span className="inline-flex w-fit rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 ring-1 ring-slate-200">{item.channel}</span>
-          </div>
-          <p className="mt-3 text-xs text-slate-500">{new Date(item.createdAt).toLocaleString()}</p>
-        </div>
+    <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-x-auto">
+        <table className="min-w-full border-separate border-spacing-0 text-left">
+          <thead>
+            <tr className="bg-slate-50">
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Referred User</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Signup Status</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Installation Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {history.map((item) => (
+              <tr key={item.id} className="border-t border-slate-200">
+                <td className="px-4 py-4 text-sm font-semibold text-slate-950">{item.referredUser}</td>
+                <td className="px-4 py-4 text-sm text-slate-600">{formatReferralStatus(item.signupStatus)}</td>
+                <td className="px-4 py-4 text-sm text-slate-600">{formatReferralStatus(item.installationStatus)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-    </article>
+      <div className="border-t border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+        After completing successful referrals, send a screenshot of your completed referrals to the admin email and claim your reward voucher.
+      </div>
+    </div>
   );
+}
+
+function formatReferralStatus(status: string): string {
+  if (status === "DONE") return "Done";
+  if (status === "IN_PROGRESS") return "In Progress";
+  if (status === "COMPLETED") return "Completed";
+  return status;
 }
 
 function EmptyReferralState() {

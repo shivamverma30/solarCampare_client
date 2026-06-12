@@ -24,12 +24,48 @@ const vendorSafeSelect = {
   createdAt: true,
 } as const;
 
-function calculateMatchScore(input: { pincode?: string; city?: string; state?: string }, vendor: { serviceArea: string; serviceAreas?: Array<{ pincode: string; city?: string | null; state?: string | null; isPrimary: boolean; coverageRank: number }> }) {
+function buildVendorSearchText(vendor: {
+  companyName: string;
+  ownerName: string;
+  businessType: string;
+  serviceArea: string;
+  city?: string | null;
+  state?: string | null;
+  pincode?: string | null;
+  services: string[];
+  certifications?: string[] | null;
+  serviceAreas?: Array<{ pincode: string; city?: string | null; state?: string | null }>;
+}) {
+  return [
+    vendor.companyName,
+    vendor.ownerName,
+    vendor.businessType,
+    vendor.serviceArea,
+    vendor.city,
+    vendor.state,
+    vendor.pincode,
+    vendor.services.join(" "),
+    (vendor.certifications || []).join(" "),
+    (vendor.serviceAreas || [])
+      .map((serviceArea) => [serviceArea.pincode, serviceArea.city, serviceArea.state].filter(Boolean).join(" "))
+      .join(" "),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
+function calculateMatchScore(
+  input: { pincode?: string; city?: string; state?: string; search?: string },
+  vendor: { serviceArea: string; companyName: string; ownerName: string; businessType: string; city?: string | null; state?: string | null; pincode?: string | null; services: string[]; certifications?: string[] | null; serviceAreas?: Array<{ pincode: string; city?: string | null; state?: string | null; isPrimary: boolean; coverageRank: number }> }
+) {
   let score = 0;
 
   const normalizedPincode = input.pincode?.trim();
   const normalizedCity = input.city?.trim().toLowerCase();
   const normalizedState = input.state?.trim().toLowerCase();
+  const normalizedSearch = input.search?.trim().toLowerCase();
+  const searchTokens = normalizedSearch?.split(/\s+/).filter(Boolean) || [];
 
   const serviceAreas = vendor.serviceAreas || [];
 
@@ -71,15 +107,24 @@ function calculateMatchScore(input: { pincode?: string; city?: string; state?: s
     score += 10;
   }
 
+  if (searchTokens.length > 0) {
+    const searchText = buildVendorSearchText(vendor);
+    const matchesSearch = searchTokens.every((token) => searchText.includes(token));
+
+    if (matchesSearch) {
+      score += 45 + Math.min(20, searchTokens.length * 5);
+    }
+  }
+
   return score;
 }
 
 export const matchVendorsByPincode = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { pincode, city, state } = req.query as { pincode?: string; city?: string; state?: string };
+    const { pincode, city, state, search } = req.query as { pincode?: string; city?: string; state?: string; search?: string };
 
-    if (!pincode && !city && !state) {
-      res.status(400).json({ error: "At least one location field is required" });
+    if (!pincode && !city && !state && !search) {
+      res.status(400).json({ error: "At least one search field is required" });
       return;
     }
 
@@ -109,7 +154,7 @@ export const matchVendorsByPincode = async (req: AuthRequest, res: Response): Pr
     const rankedVendors = vendors
       .map((vendor) => ({
         ...vendor,
-        matchScore: calculateMatchScore({ pincode, city, state }, vendor),
+        matchScore: calculateMatchScore({ pincode, city, state, search }, vendor),
       }))
       .filter((vendor) => vendor.matchScore > 0)
       .sort((left, right) => {

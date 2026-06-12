@@ -1,5 +1,4 @@
-import { Response } from "express";
-import { Prisma } from "@prisma/client";
+import { Request, Response } from "express";
 import prisma from "../lib/prisma";
 import { AuthRequest } from "../middleware/auth";
 import { createNotification } from "../lib/workflow";
@@ -25,6 +24,16 @@ function getReferralCode(userId: string): string {
   return Buffer.from(userId, "utf8").toString("base64url");
 }
 
+export function decodeReferralCode(referralCode: string): string | null {
+  try {
+    const trimmed = referralCode.trim();
+    if (!trimmed) return null;
+    return Buffer.from(trimmed, "base64url").toString("utf8");
+  } catch {
+    return null;
+  }
+}
+
 function getReferralLink(userId: string): string {
   return `${getFrontendBaseUrl()}/signup?ref=${getReferralCode(userId)}`;
 }
@@ -42,38 +51,32 @@ function getProgress(count: number) {
   return { current: count, target: 5, percentage: Math.min(100, Math.round((count / 5) * 100)) };
 }
 
-function isReferralMetadata(metadata: Prisma.JsonValue | null): metadata is Prisma.JsonObject {
-  return Boolean(metadata && typeof metadata === "object" && !Array.isArray(metadata) && (metadata as Record<string, unknown>).category === "referral");
-}
-
 async function buildReferralStats(userId: string) {
   const [user, notifications] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       select: { id: true, fullName: true, email: true },
     }),
-    prisma.notification.findMany({
-      where: { audience: "USER", userId },
+    prisma.referral.findMany({
+      where: { referrerId: userId },
       orderBy: { createdAt: "desc" },
-      take: 100,
-      select: { id: true, title: true, body: true, metadata: true, createdAt: true },
+      include: {
+        referredUser: {
+          select: { id: true, fullName: true, email: true, createdAt: true },
+        },
+      },
     }),
   ]);
 
   if (!user) return null;
 
-  const history = notifications
-    .filter((notification) => isReferralMetadata(notification.metadata))
-    .map((notification) => {
-      const metadata = notification.metadata as Prisma.JsonObject;
-      return {
-        id: notification.id,
-        title: notification.title,
-        description: notification.body,
-        createdAt: notification.createdAt.toISOString(),
-        channel: typeof metadata.channel === "string" ? metadata.channel : "copy",
-      };
-    });
+  const history = notifications.map((referral) => ({
+    id: referral.id,
+    referredUser: referral.referredUser.fullName,
+    signupStatus: referral.signupStatus,
+    installationStatus: referral.installationStatus,
+    createdAt: referral.createdAt.toISOString(),
+  }));
 
   const totalReferrals = history.length;
   const currentRewardTier = getTier(totalReferrals);
@@ -88,6 +91,29 @@ async function buildReferralStats(userId: string) {
     rewardTiers: referralTiers,
     referralHistory: history,
   };
+}
+
+async function buildAdminReferrals() {
+  const referrals = await prisma.referral.findMany({
+    orderBy: { createdAt: "desc" },
+    include: {
+      referrer: {
+        select: { id: true, fullName: true, email: true },
+      },
+      referredUser: {
+        select: { id: true, fullName: true, email: true, createdAt: true },
+      },
+    },
+  });
+
+  return referrals.map((referral) => ({
+    id: referral.id,
+    referrerName: referral.referrer.fullName,
+    referredUserName: referral.referredUser.fullName,
+    signupStatus: referral.signupStatus,
+    installationStatus: referral.installationStatus,
+    createdAt: referral.createdAt.toISOString(),
+  }));
 }
 
 export const getMyReferralRewards = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -107,6 +133,48 @@ export const getMyReferralRewards = async (req: AuthRequest, res: Response): Pro
     res.status(200).json({ success: true, referral });
   } catch (error) {
     console.error("Get referral rewards error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const resolveReferralCode = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const referralCode = String(req.query?.ref || "");
+    const referrerId = decodeReferralCode(referralCode);
+
+    if (!referrerId) {
+      res.status(404).json({ error: "Invalid referral code" });
+      return;
+    }
+
+    const referrer = await prisma.user.findUnique({
+      where: { id: referrerId },
+      select: { id: true, fullName: true },
+    });
+
+    if (!referrer) {
+      res.status(404).json({ error: "Invalid referral code" });
+      return;
+    }
+
+    res.status(200).json({ success: true, referrer });
+  } catch (error) {
+    console.error("Resolve referral code error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const listAdminReferrals = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.adminId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const referrals = await buildAdminReferrals();
+    res.status(200).json({ success: true, referrals });
+  } catch (error) {
+    console.error("List admin referrals error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

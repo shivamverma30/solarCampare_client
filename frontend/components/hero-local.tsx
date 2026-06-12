@@ -43,8 +43,8 @@ export default function HeroLocal() {
           </motion.p>
         </div>
 
-        <div className="pointer-events-none absolute bottom-6 left-6 z-20 max-w-55 text-left sm:bottom-8 sm:left-8 sm:max-w-70">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/90 drop-shadow-[0_2px_8px_rgba(2,6,23,0.35)] sm:text-xs">
+        <div className="pointer-events-none absolute bottom-6 left-6 z-20 text-left sm:bottom-8 sm:left-8">
+          <p className="whitespace-nowrap text-sm font-semibold uppercase tracking-[0.28em] text-white/90 drop-shadow-[0_2px_8px_rgba(2,6,23,0.35)] sm:text-base md:text-lg">
             {t("home.heroBadge")}
           </p>
         </div>

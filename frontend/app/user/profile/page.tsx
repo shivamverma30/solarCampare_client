@@ -71,7 +71,6 @@ export default function UserProfilePage() {
         <Input label="City" value={profile.city || ""} onChange={(value) => setProfile({ ...profile, city: value })} />
         <Input label="State" value={profile.state || ""} onChange={(value) => setProfile({ ...profile, state: value })} />
         <Input label="PIN Code" value={profile.pincode || ""} onChange={(value) => setProfile({ ...profile, pincode: value })} />
-        <Input label="Avatar URL" value={profile.avatarUrl || ""} onChange={(value) => setProfile({ ...profile, avatarUrl: value })} />
         <button type="submit" disabled={loading} className="md:col-span-2 rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white">
           {loading ? "Saving..." : "Save Profile"}
         </button>

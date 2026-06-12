@@ -7,6 +7,7 @@ import { AuthRequest } from "../middleware/auth";
 import { createAuditLog, createNotification, safeEmailDispatch, sendTransactionalEmail, welcomeTemplate, otpTemplate } from "../lib/workflow";
 import { notificationTemplates } from "../lib/notification-templates";
 import { getEnv } from "../lib/env";
+import { decodeReferralCode } from "./referral";
 
 const env = getEnv();
 const frontendUrl = (env.FRONTEND_URL.split(",").map((origin) => origin.trim()).find(Boolean) || "http://localhost:3000").replace(/\/$/, "");
@@ -245,7 +246,7 @@ export const login = async (req: AuthRequest, res: Response): Promise<void> => {
 export const registerUser = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // New OTP-first registration flow: store registration payload in an EmailVerificationToken
-    const { fullName, email, password, phone, city, state, pincode } = req.body;
+    const { fullName, email, password, phone, city, state, pincode, referralCode } = req.body;
 
     if (!fullName || !email || !password) {
       res.status(400).json({ error: "Full name, email, and password are required" });
@@ -285,6 +286,7 @@ export const registerUser = async (req: AuthRequest, res: Response): Promise<voi
           city,
           state,
           pincode,
+          referralCode,
         },
         expiresAt,
       },
@@ -1080,6 +1082,52 @@ export const confirmEmailVerification = async (req: AuthRequest, res: Response):
             emailVerifiedAt: new Date(),
           },
         });
+
+        const referralCode = typeof payload.referralCode === "string" ? payload.referralCode : "";
+        const referrerId = referralCode ? decodeReferralCode(referralCode) : null;
+
+        if (referrerId && referrerId !== user.id) {
+          const referrer = await prisma.user.findUnique({
+            where: { id: referrerId },
+            select: { id: true, fullName: true, email: true },
+          });
+
+          if (referrer) {
+            await prisma.referral.upsert({
+              where: { referredUserId: user.id },
+              update: {
+                referrerId: referrer.id,
+                signupStatus: "DONE",
+              },
+              create: {
+                referrerId: referrer.id,
+                referredUserId: user.id,
+                signupStatus: "DONE",
+                installationStatus: "IN_PROGRESS",
+              },
+            });
+
+            await createNotification(prisma, {
+              audience: "ADMIN",
+              type: "SYSTEM",
+              priority: "MEDIUM",
+              title: `${referrer.fullName} referred ${user.fullName}`,
+              body: [
+                `Referrer Name: ${referrer.fullName}`,
+                `Referred User Name: ${user.fullName}`,
+                `Date/Time: ${new Date().toISOString()}`,
+              ].join("\n"),
+              metadata: {
+                category: "referral",
+                referrerId: referrer.id,
+                referrerName: referrer.fullName,
+                referredUserId: user.id,
+                referredUserName: user.fullName,
+                referralCode,
+              },
+            });
+          }
+        }
 
         await createAuditLog(prisma, {
           actorType: "user",

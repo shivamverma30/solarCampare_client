@@ -110,7 +110,8 @@ export function calculateSolarEstimate(inputs: SolarInputs): SolarEstimate {
 
   const firstTwoKw = Math.min(recommendedKw, 2);
   const nextOneKw = Math.min(Math.max(recommendedKw - 2, 0), 1);
-  const totalSubsidy = Math.min(78000, Math.round(firstTwoKw * 30000 + nextOneKw * 18000));
+  const calculatedSubsidy = Math.min(78000, Math.round(firstTwoKw * 30000 + nextOneKw * 18000));
+  const totalSubsidy = inputs.propertyType === "commercial" ? 0 : calculatedSubsidy;
 
   const netInvestment = Math.max(0, investment - totalSubsidy);
   const annualSavings = annualEnergyValue;
