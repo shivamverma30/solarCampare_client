@@ -1,4 +1,4 @@
-import type { ChatRole } from "../types/ai.types.js";
+import type { ChatRole } from "../types/ai.types";
 
 export type ProviderMessage = {
   role: ChatRole;

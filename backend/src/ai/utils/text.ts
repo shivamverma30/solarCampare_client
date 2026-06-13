@@ -1,4 +1,4 @@
-import { AI_CHAT_MAX_LENGTH, AI_LEAD_SNIPPET_LENGTH } from "../constants/assistant.constants.js";
+import { AI_CHAT_MAX_LENGTH, AI_LEAD_SNIPPET_LENGTH } from "../constants/assistant.constants";
 
 export function normalizeText(value: string): string {
   return value.replace(/\s+/g, " ").trim();

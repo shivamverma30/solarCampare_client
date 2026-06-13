@@ -7,6 +7,7 @@ dotenv.config();
 
 // validate environment early
 import {getEnv} from "./lib/env";
+import { aiChatRouter, initializeAiDatabase } from "./ai";
 const env = getEnv();
 
 const app = express();
@@ -73,6 +74,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/referrals", referralRoutes);
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/quotes", quoteRoutes);
+app.use("/api", aiChatRouter);
 
 // Health check
 app.get("/api/health", (req, res) => {
@@ -84,9 +86,17 @@ app.use((req, res) => {
   res.status(404).json({ error: "Route not found" });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
-  console.log(`🔗 Frontend URL(s): ${Array.from(allowedOrigins).join(", ")}`);
-  console.log(`📊 Database: ${process.env.DATABASE_URL?.substring(0, 40)}...`);
+async function main() {
+  await initializeAiDatabase();
+
+  app.listen(PORT, () => {
+    console.log(`✅ Server running on port ${PORT}`);
+    console.log(`🔗 Frontend URL(s): ${Array.from(allowedOrigins).join(", ")}`);
+    console.log(`📊 Database: ${process.env.DATABASE_URL?.substring(0, 40)}...`);
+  });
+}
+
+main().catch((error) => {
+  console.error("Failed to start server:", error);
+  process.exit(1);
 });

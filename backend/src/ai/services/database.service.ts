@@ -1,7 +1,7 @@
-import { query } from "../utils/db.js";
+import { execute } from "../utils/db";
 
 export async function initializeDatabase(): Promise<void> {
-  await query(`
+  await execute(`
     CREATE TABLE IF NOT EXISTS ai_chat_conversations (
       id TEXT PRIMARY KEY,
       source TEXT NOT NULL DEFAULT 'solar-ai-assistant',
@@ -16,11 +16,13 @@ export async function initializeDatabase(): Promise<void> {
       metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
+    )
+  `);
 
-    CREATE INDEX IF NOT EXISTS ai_chat_conversations_created_at_idx ON ai_chat_conversations (created_at DESC);
-    CREATE INDEX IF NOT EXISTS ai_chat_conversations_status_idx ON ai_chat_conversations (status);
+  await execute(`CREATE INDEX IF NOT EXISTS ai_chat_conversations_created_at_idx ON ai_chat_conversations (created_at DESC)`);
+  await execute(`CREATE INDEX IF NOT EXISTS ai_chat_conversations_status_idx ON ai_chat_conversations (status)`);
 
+  await execute(`
     CREATE TABLE IF NOT EXISTS ai_chat_messages (
       id TEXT PRIMARY KEY,
       conversation_id TEXT NOT NULL REFERENCES ai_chat_conversations(id) ON DELETE CASCADE,
@@ -29,10 +31,12 @@ export async function initializeDatabase(): Promise<void> {
       confidence NUMERIC(4,3),
       metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
+    )
+  `);
 
-    CREATE INDEX IF NOT EXISTS ai_chat_messages_conversation_id_idx ON ai_chat_messages (conversation_id, created_at ASC);
+  await execute(`CREATE INDEX IF NOT EXISTS ai_chat_messages_conversation_id_idx ON ai_chat_messages (conversation_id, created_at ASC)`);
 
+  await execute(`
     CREATE TABLE IF NOT EXISTS ai_chat_leads (
       id TEXT PRIMARY KEY,
       conversation_id TEXT REFERENCES ai_chat_conversations(id) ON DELETE SET NULL,
@@ -46,9 +50,9 @@ export async function initializeDatabase(): Promise<void> {
       status TEXT NOT NULL DEFAULT 'NEW',
       metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-
-    CREATE INDEX IF NOT EXISTS ai_chat_leads_created_at_idx ON ai_chat_leads (created_at DESC);
-    CREATE INDEX IF NOT EXISTS ai_chat_leads_status_idx ON ai_chat_leads (status);
+    )
   `);
+
+  await execute(`CREATE INDEX IF NOT EXISTS ai_chat_leads_created_at_idx ON ai_chat_leads (created_at DESC)`);
+  await execute(`CREATE INDEX IF NOT EXISTS ai_chat_leads_status_idx ON ai_chat_leads (status)`);
 }

@@ -1,12 +1,12 @@
-import { getEnv } from "../config/env.js";
-import { AI_CTA_SUGGESTIONS, AI_DEFAULT_MODEL } from "../constants/assistant.constants.js";
-import { extractJsonObject, isLikelySalesLead, limitSentences, normalizeText } from "../utils/text.js";
-import type { AiProvider, ProviderMessage, ProviderReply } from "./ai-provider.js";
+import { getEnv } from "../../lib/env";
+import { AI_CTA_SUGGESTIONS, AI_DEFAULT_MODEL } from "../constants/assistant.constants";
+import { extractJsonObject, isLikelySalesLead, limitSentences } from "../utils/text";
+import type { AiProvider, ProviderMessage, ProviderReply } from "./ai-provider";
 
-type GeminiResponse = {
-  candidates?: Array<{
-    content?: {
-      parts?: Array<{ text?: string }>;
+type GroqResponse = {
+  choices?: Array<{
+    message?: {
+      content?: string;
     };
   }>;
 };
@@ -17,34 +17,25 @@ function buildRequestBody(systemPrompt: string, messages: ProviderMessage[]) {
     .join("\n");
 
   return {
-    systemInstruction: {
-      parts: [{ text: systemPrompt }],
-    },
-    contents: [
+    model: getEnv().GROQ_MODEL || AI_DEFAULT_MODEL,
+    messages: [
+      { role: "system", content: systemPrompt },
       {
         role: "user",
-        parts: [
-          {
-            text: [
-              "Return only valid JSON with keys: reply, confidence, shouldEscalate, ctaSuggestions.",
-              "confidence must be a number between 0 and 1.",
-              "shouldEscalate must be true if the user is asking for pricing, a quotation, site survey, vendor-specific advice, or anything you cannot answer confidently.",
-              `Allowed CTA suggestions are: ${AI_CTA_SUGGESTIONS.join(", ")}.`,
-              "Keep the reply to 3-4 sentences max. Start with the direct answer, stay friendly, and avoid marketing text.",
-              "Never include raw JSON in the reply field.",
-              "Conversation history follows.",
-              conversation,
-            ].join("\n\n"),
-          },
-        ],
+        content: [
+          "Return only valid JSON with keys: reply, confidence, shouldEscalate, ctaSuggestions.",
+          "confidence must be a number between 0 and 1.",
+          "shouldEscalate must be true if the user is asking for pricing, a quotation, site survey, vendor-specific advice, or anything you cannot answer confidently.",
+          `Allowed CTA suggestions are: ${AI_CTA_SUGGESTIONS.join(", ")}.`,
+          "Keep the reply to 3-4 sentences max. Start with the direct answer, stay friendly, and avoid marketing text.",
+          "Never include raw JSON in the reply field.",
+          "Conversation history follows.",
+          conversation,
+        ].join("\n\n"),
       },
     ],
-    generationConfig: {
-      temperature: 0.4,
-      topP: 0.9,
-      maxOutputTokens: 260,
-      responseMimeType: "application/json",
-    },
+    temperature: 0.4,
+    max_tokens: 260,
   };
 }
 
@@ -84,24 +75,27 @@ function parseReply(rawText: string): ProviderReply {
   }
 }
 
-class GeminiProvider implements AiProvider {
+class GroqProvider implements AiProvider {
   async generateReply(input: { systemPrompt: string; messages: ProviderMessage[]; userMessage: string }): Promise<ProviderReply> {
     const env = getEnv();
-    const model = env.AI_MODEL || AI_DEFAULT_MODEL;
     const requestBody = buildRequestBody(input.systemPrompt, input.messages);
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${env.GEMINI_API_KEY}`, {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${env.GROQ_API_KEY}`,
+      },
       body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
-      throw new Error(`Gemini request failed with status ${response.status}`);
+      const errorText = await response.text().catch(() => "");
+      throw new Error(`Groq request failed with status ${response.status}${errorText ? `: ${errorText}` : ""}`);
     }
 
-    const data = (await response.json()) as GeminiResponse;
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    const data = (await response.json()) as GroqResponse;
+    const text = data.choices?.[0]?.message?.content || "";
     const parsed = parseReply(text);
 
     if (isLikelySalesLead(input.userMessage)) {
@@ -120,4 +114,4 @@ class GeminiProvider implements AiProvider {
   }
 }
 
-export const geminiProvider = new GeminiProvider();
+export const groqProvider = new GroqProvider();

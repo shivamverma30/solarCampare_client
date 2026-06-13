@@ -18,9 +18,4 @@ export const frontendEnv = {
     "NEXT_PUBLIC_API_URL",
     "http://localhost:3001/api"
   ),
-  NEXT_PUBLIC_AI_SERVICE_URL: getClientEnv(
-    process.env.NEXT_PUBLIC_AI_SERVICE_URL,
-    "NEXT_PUBLIC_AI_SERVICE_URL",
-    "http://localhost:3002"
-  ),
 };

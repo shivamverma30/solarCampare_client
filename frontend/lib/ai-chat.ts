@@ -1,6 +1,6 @@
 import { frontendEnv } from "./env";
 
-const AI_SERVICE_URL = frontendEnv.NEXT_PUBLIC_AI_SERVICE_URL;
+const AI_SERVICE_URL = frontendEnv.NEXT_PUBLIC_API_URL.replace(/\/api\/?$/, "");
 
 type AiMessagePayload = {
   message: string;

@@ -1,7 +1,9 @@
-import { Request, Response } from "express";
-import { aiChatService } from "../../services/ai-chat.service.js";
-import { messageSchema, leadSchema } from "../../validators/ai.validators.js";
-import { rateLimit } from "../../middleware/rate-limit.middleware.js";
+import { Router, type Request, type Response } from "express";
+import { aiChatService } from "../services/ai-chat.service";
+import { messageSchema, leadSchema } from "../validators/ai.validators";
+import { rateLimit } from "../middleware/rate-limit.middleware";
+
+export const aiChatRouter = Router();
 
 export const healthHandler = (_req: Request, res: Response) => {
   res.status(200).json({
@@ -62,3 +64,7 @@ export const leadHandler = [
     }
   },
 ];
+
+aiChatRouter.get("/ai-chat/health", healthHandler);
+aiChatRouter.post("/ai-chat/message", messageHandler);
+aiChatRouter.post("/ai-chat/lead", leadHandler);

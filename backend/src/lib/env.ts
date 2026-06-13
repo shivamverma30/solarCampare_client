@@ -5,7 +5,8 @@ type EnvConfig = {
   JWT_SECRET: string;
   JWT_EXPIRES_IN: string;
   FRONTEND_URL: string;
-  AI_SERVICE_URL: string;
+  GROQ_API_KEY: string;
+  GROQ_MODEL: string;
   EMAIL_LOGO_URL?: string;
   SMTP_HOST?: string;
   SMTP_PORT?: string;
@@ -30,7 +31,8 @@ export function getEnv(): EnvConfig {
     JWT_SECRET: process.env.JWT_SECRET || "dev-only-jwt-secret-change-in-production",
     JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "7d",
     FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:3000",
-    AI_SERVICE_URL: process.env.AI_SERVICE_URL || "http://localhost:3002",
+    GROQ_API_KEY: process.env.GROQ_API_KEY || "",
+    GROQ_MODEL: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
     EMAIL_LOGO_URL: process.env.EMAIL_LOGO_URL,
     SMTP_HOST: process.env.SMTP_HOST,
     SMTP_PORT: process.env.SMTP_PORT,
@@ -46,7 +48,7 @@ export function getEnv(): EnvConfig {
   };
 
   // Strict validation in production while keeping development bootstrapping easy.
-  const requiredInProd = ["DATABASE_URL", "JWT_SECRET", "FRONTEND_URL", "AI_SERVICE_URL", "EMAIL_FROM", "ADMIN_EMAIL"];
+  const requiredInProd = ["DATABASE_URL", "JWT_SECRET", "FRONTEND_URL", "GROQ_API_KEY", "EMAIL_FROM", "ADMIN_EMAIL"];
   if (cfg.NODE_ENV === "production") {
     for (const key of requiredInProd) {
       if (!(cfg as any)[key]) {

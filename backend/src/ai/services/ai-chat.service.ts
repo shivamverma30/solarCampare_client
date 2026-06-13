@@ -1,12 +1,13 @@
-import { getEnv } from "../config/env.js";
-import { AI_CONFIDENCE_THRESHOLD } from "../constants/assistant.constants.js";
-import type { AiChatResponse, AiLeadInput, AiLeadResponse, AiMessageInput, CtaSuggestion } from "../types/ai.types.js";
-import { buildConversationSnippet, clampText, limitSentences, normalizeText } from "../utils/text.js";
-import { query } from "../utils/db.js";
-import { geminiProvider } from "../providers/gemini.provider.js";
-import { createAdminNotification } from "./notification.service.js";
-import { buildLeadNotificationTemplate } from "../templates/lead-notification.template.js";
-import { SYSTEM_PROMPT } from "../prompts/system.prompt.js";
+import { getEnv } from "../../lib/env";
+import { createNotification } from "../../lib/workflow";
+import prisma from "../../lib/prisma";
+import { AI_CONFIDENCE_THRESHOLD } from "../constants/assistant.constants";
+import type { AiChatResponse, AiLeadInput, AiLeadResponse, AiMessageInput, CtaSuggestion } from "../types/ai.types";
+import { buildConversationSnippet, clampText, limitSentences, normalizeText } from "../utils/text";
+import { query } from "../utils/db";
+import { groqProvider } from "../providers/groq.provider";
+import { buildLeadNotificationTemplate } from "../templates/lead-notification.template";
+import { SYSTEM_PROMPT } from "../prompts/system.prompt";
 
 type ConversationRow = {
   id: string;
@@ -162,7 +163,7 @@ export const aiChatService = {
 
     const recentMessages = await loadRecentMessages(conversationId);
 
-    const providerReply = await geminiProvider.generateReply({
+    const providerReply = await groqProvider.generateReply({
       systemPrompt: SYSTEM_PROMPT,
       messages: recentMessages.map((entry: ChatMessageRow) => ({
         role: entry.role === "assistant" ? "assistant" : "user",
@@ -270,7 +271,7 @@ export const aiChatService = {
         conversationSnippet,
         JSON.stringify({
           source: "AI_CHAT_ASSISTANT",
-          model: getEnv().AI_MODEL,
+          model: getEnv().GROQ_MODEL,
           name: input.name,
           email: input.email,
           phone: input.phone,
@@ -284,11 +285,12 @@ export const aiChatService = {
 
     await query(`UPDATE ai_chat_conversations SET status = 'LEAD_CAPTURED', updated_at = NOW() WHERE id = $1`, [conversationId]);
 
-    await createAdminNotification({
-      title: leadNotification.title,
-      body: leadNotification.body,
+    await createNotification(prisma, {
+      audience: "ADMIN",
       type: leadNotification.type,
       priority: leadNotification.priority,
+      title: leadNotification.title,
+      body: leadNotification.body,
       metadata: {
         leadId,
         conversationId,

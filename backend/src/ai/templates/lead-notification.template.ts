@@ -1,3 +1,5 @@
+import type { NotificationPriority, NotificationType } from "@prisma/client";
+
 export function buildLeadNotificationTemplate(input: {
   name: string;
   email: string;
@@ -6,7 +8,7 @@ export function buildLeadNotificationTemplate(input: {
   question: string;
   summary: string;
   timestamp: string;
-}) {
+}): { title: string; body: string; type: NotificationType; priority: NotificationPriority } {
   return {
     title: "New AI Chat Lead",
     body: [
