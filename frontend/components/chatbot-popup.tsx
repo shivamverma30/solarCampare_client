@@ -64,6 +64,7 @@ export default function ChatbotPopup() {
   const [error, setError] = useState("");
   const [assistantState, setAssistantState] = useState<AiChatResult | null>(null);
   const [leadForm, setLeadForm] = useState({ name: "", email: "", phone: "", city: "" });
+  const [leadFormVisible, setLeadFormVisible] = useState(false);
   const [leadSubmitting, setLeadSubmitting] = useState(false);
   const [leadSuccess, setLeadSuccess] = useState("");
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -108,9 +109,14 @@ export default function ChatbotPopup() {
       return;
     }
 
+    const isFirstUserMessage = !messages.some((message) => message.role === "user");
+
     setError("");
     setLeadSuccess("");
     setIsSending(true);
+    if (isFirstUserMessage) {
+      setLeadFormVisible(true);
+    }
     setMessages((current) => [...current, createMessage("user", trimmed)]);
 
     const response = await aiChatClient.sendMessage({
@@ -159,6 +165,7 @@ export default function ChatbotPopup() {
     if (response.success) {
       setLeadSuccess("Thanks. Our solar expert will contact you shortly.");
       setAssistantState(null);
+      setLeadFormVisible(false);
       setLeadForm({ name: "", email: "", phone: "", city: "" });
     } else {
       setError(response.error || "Unable to submit your details right now.");
@@ -288,7 +295,7 @@ export default function ChatbotPopup() {
                 </div>
               ) : null}
 
-              {assistantState?.shouldEscalate ? (
+              {leadFormVisible && !leadSuccess ? (
                 <form onSubmit={handleLeadSubmit} className="space-y-3 rounded-2xl border border-amber-200 bg-amber-50/75 p-3 sm:p-4">
                   <div>
                     <p className="text-sm font-semibold text-slate-900">Need expert assistance?</p>
@@ -316,7 +323,7 @@ export default function ChatbotPopup() {
                     <input
                       value={leadForm.phone}
                       onChange={(event) => setLeadForm((current) => ({ ...current, phone: event.target.value }))}
-                      placeholder="Phone Number"
+                      placeholder="Mobile"
                       autoComplete="tel"
                       className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-500/20"
                     />
