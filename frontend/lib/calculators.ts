@@ -106,12 +106,17 @@ export function calculateSolarEstimate(inputs: SolarInputs): SolarEstimate {
   const panelCount = Math.ceil((recommendedKw * 1000) / 550);
   const annualGenerationUnits = recommendedKw * sunHours * 365;
   const annualEnergyValue = annualGenerationUnits * electricityTariff;
-  const investment = recommendedKw * 55000;
+  const investmentPerKw = inputs.propertyType === "agriculture" ? 45000 : 55000;
+  const investment = recommendedKw * investmentPerKw;
 
   const firstTwoKw = Math.min(recommendedKw, 2);
   const nextOneKw = Math.min(Math.max(recommendedKw - 2, 0), 1);
   const calculatedSubsidy = Math.min(78000, Math.round(firstTwoKw * 30000 + nextOneKw * 18000));
-  const totalSubsidy = inputs.propertyType === "commercial" ? 0 : calculatedSubsidy;
+  const totalSubsidy = inputs.propertyType === "commercial"
+    ? 0
+    : inputs.propertyType === "agriculture"
+      ? Math.round(investment * 0.6)
+      : calculatedSubsidy;
 
   const netInvestment = Math.max(0, investment - totalSubsidy);
   const annualSavings = annualEnergyValue;

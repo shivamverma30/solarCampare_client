@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowRight, ChevronDown, Factory, Home, Leaf, Loader2, PanelTop, SunMedium, X } from "lucide-react";
+import { ArrowRight, ChevronDown, Factory, Home, Loader2, PanelTop, SunMedium, X } from "lucide-react";
 import {
   calculateEmiEstimate,
   calculateSolarEstimate,
@@ -21,7 +21,6 @@ import { getSessionProfile, getToken } from "@/lib/auth";
 const propertyOptions: Array<{ value: PropertyType; label: string; icon: typeof Home }> = [
   { value: "residential", label: "Residential", icon: Home },
   { value: "commercial", label: "Commercial", icon: Factory },
-  { value: "agriculture", label: "Agriculture", icon: Leaf },
 ];
 
 const stateOptions = Object.keys(solarStateProfiles).filter((state) => state !== "other") as SolarState[];
@@ -31,15 +30,27 @@ function formatKw(value: number) {
   return Number.isInteger(rounded) ? String(Math.round(rounded)) : rounded.toFixed(1);
 }
 
+function validateLeadCaptureForm(values: { fullName: string; city: string; phone: string; email: string }) {
+  if (!values.fullName.trim()) return "Name is required.";
+  if (!values.city.trim()) return "City is required.";
+  if (!/^\d{10}$/.test(values.phone.trim())) return "Mobile number must be exactly 10 digits.";
+  if (!/^\S+@\S+\.\S+$/.test(values.email.trim())) return "Enter a valid email address.";
+  return "";
+}
+
 function CalculatorPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useLocale();
   const { isAuthenticated, role } = useAuth();
-  const [monthlyBill, setMonthlyBill] = useState(3000);
+  const [monthlyBill, setMonthlyBill] = useState("3000");
   const [propertyType, setPropertyType] = useState<PropertyType>("residential");
   const [state, setState] = useState<SolarState>("Maharashtra");
   const [submitted, setSubmitted] = useState(false);
+  const [leadModalOpen, setLeadModalOpen] = useState(false);
+  const [leadSubmitting, setLeadSubmitting] = useState(false);
+  const [leadError, setLeadError] = useState("");
+  const [leadSuccess, setLeadSuccess] = useState("");
   const [stateMenuOpen, setStateMenuOpen] = useState(false);
   const stateMenuRef = useRef<HTMLDivElement | null>(null);
   const [showProposalForm, setShowProposalForm] = useState(false);
@@ -51,6 +62,14 @@ function CalculatorPageContent() {
     phone: "",
     city: "",
   });
+  const monthlyBillValue = useMemo(() => {
+    if (monthlyBill.trim() === "") {
+      return 0;
+    }
+
+    const parsed = Number(monthlyBill);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }, [monthlyBill]);
 
   useEffect(() => {
     const onPointerDown = (event: PointerEvent) => {
@@ -75,10 +94,10 @@ function CalculatorPageContent() {
     }));
   }, [isAuthenticated]);
 
-  const validationErrors = useMemo(() => validateSolarInputs({ monthlyBill, state, propertyType }), [monthlyBill, propertyType, state]);
+  const validationErrors = useMemo(() => validateSolarInputs({ monthlyBill: monthlyBillValue, state, propertyType }), [monthlyBillValue, propertyType, state]);
   const estimate = useMemo(
-    () => calculateSolarEstimate({ monthlyBill, state, propertyType }),
-    [monthlyBill, propertyType, state]
+    () => calculateSolarEstimate({ monthlyBill: monthlyBillValue, state, propertyType }),
+    [monthlyBillValue, propertyType, state]
   );
   const emiEstimate = useMemo(
     () => calculateEmiEstimate({ cost: estimate.netInvestment, downPayment: 0, interest: 9.5, years: 7 }),
@@ -88,7 +107,7 @@ function CalculatorPageContent() {
   const stateProfile = solarStateProfiles[state] || solarStateProfiles.other;
   const stateSummary = `${state} • ${stateProfile.discom} • ₹${Math.round(stateProfile.tariff)}/kWh`;
   const systemCost = formatCurrency(estimate.investment);
-  const subsidyLabel = propertyType === "agriculture" ? "PM-KUSUM Subsidy" : "Govt Subsidy";
+  const subsidyLabel = "Govt Subsidy";
   const subsidy = formatCurrency(estimate.totalSubsidy);
   const netInvestment = formatCurrency(estimate.netInvestment);
   const monthlySavings = formatCurrency(estimate.monthlySavings);
@@ -114,7 +133,7 @@ function CalculatorPageContent() {
     if (!submitted) return;
 
     if (!isAuthenticated || role !== "USER") {
-      const redirectPath = `/calculator?openFlow=proposal&bill=${monthlyBill}&state=${encodeURIComponent(state)}&propertyType=${encodeURIComponent(propertyType)}`;
+      const redirectPath = `/calculator?openFlow=proposal&bill=${monthlyBillValue}&state=${encodeURIComponent(state)}&propertyType=${encodeURIComponent(propertyType)}`;
       router.push(`/login?redirect=${encodeURIComponent(redirectPath)}`);
       return;
     }
@@ -126,13 +145,13 @@ function CalculatorPageContent() {
   useEffect(() => {
     const openFlow = searchParams.get("openFlow");
     if (openFlow === "proposal") {
-      const bill = Number(searchParams.get("bill") || monthlyBill);
+      const bill = Number(searchParams.get("bill") || "3000");
       const selectedState = searchParams.get("state") as SolarState | null;
       const selectedType = searchParams.get("propertyType") as PropertyType | null;
 
-      if (bill > 0) setMonthlyBill(bill);
+      if (bill > 0) setMonthlyBill(String(bill));
       if (selectedState && solarStateProfiles[selectedState]) setState(selectedState);
-      if (selectedType && ["residential", "commercial", "agriculture"].includes(selectedType)) {
+      if (selectedType && ["residential", "commercial"].includes(selectedType)) {
         setPropertyType(selectedType);
       }
 
@@ -142,6 +161,78 @@ function CalculatorPageContent() {
       }
     }
   }, [isAuthenticated, role, searchParams]);
+
+  const handleLeadCaptureSubmit = async () => {
+    const validationMessage = validateLeadCaptureForm({
+      fullName: proposalForm.fullName,
+      city: proposalForm.city,
+      phone: proposalForm.phone,
+      email: proposalForm.email,
+    });
+
+    if (validationMessage) {
+      setLeadError(validationMessage);
+      return;
+    }
+
+    setLeadSubmitting(true);
+    setLeadError("");
+
+    try {
+      const response = await apiClient.quotes.createQuote({
+        fullName: proposalForm.fullName,
+        email: proposalForm.email,
+        phone: proposalForm.phone,
+        city: proposalForm.city,
+        state,
+        projectType: "Solar Calculator Lead",
+        monthlyBill: Math.round(monthlyBillValue),
+        notes: "Lead captured before calculator estimate.",
+        metadata: {
+          source: "Solar Calculator Lead",
+          propertyType,
+          city: proposalForm.city,
+          state,
+          monthlyBill: Math.round(monthlyBillValue),
+          recommendedSystemSizeKw: Number(formatKw(estimate.recommendedKw)),
+          estimatedSavingsAnnual: Math.round(estimate.annualSavings),
+          estimatedSavingsMonthly: Math.round(estimate.monthlySavings),
+          subsidyAmount: Math.round(estimate.totalSubsidy),
+          netInvestment: Math.round(estimate.netInvestment),
+          paybackYears: Number((estimate.paybackMonths / 12).toFixed(1)),
+          roiYears: Number((estimate.paybackMonths / 12).toFixed(1)),
+          calculatorInputs: {
+            monthlyBill: Math.round(monthlyBillValue),
+            state,
+            propertyType,
+          },
+          calculatorOutputs: {
+            recommendedKw: Number(formatKw(estimate.recommendedKw)),
+            annualSavings: Math.round(estimate.annualSavings),
+            monthlySavings: Math.round(estimate.monthlySavings),
+            subsidy: Math.round(estimate.totalSubsidy),
+            investment: Math.round(estimate.investment),
+            netInvestment: Math.round(estimate.netInvestment),
+            paybackMonths: estimate.paybackMonths,
+            paybackYears: Number((estimate.paybackMonths / 12).toFixed(1)),
+          },
+          leadStatus: "NEW",
+        },
+      });
+
+      if (!response.success) {
+        throw new Error(response.error || "Unable to submit your details.");
+      }
+
+      setLeadSuccess("Thank you for your interest. Our team will contact you within 24 hours.");
+      setSubmitted(true);
+      setLeadModalOpen(false);
+    } catch (error) {
+      setLeadError(error instanceof Error ? error.message : "Unable to submit your details.");
+    } finally {
+      setLeadSubmitting(false);
+    }
+  };
 
   const handleProposalSubmit = async () => {
     if (!proposalForm.fullName.trim() || !proposalForm.email.trim() || !proposalForm.phone.trim()) {
@@ -160,14 +251,14 @@ function CalculatorPageContent() {
         city: proposalForm.city,
         state,
         projectType: "Solar Calculator Proposal",
-        monthlyBill: Math.round(monthlyBill),
+        monthlyBill: Math.round(monthlyBillValue),
         notes: "User submitted proposal intent from Solar Calculator.",
         metadata: {
           source: "Solar Calculator Proposal",
           propertyType,
           city: proposalForm.city,
           state,
-          monthlyBill: Math.round(monthlyBill),
+          monthlyBill: Math.round(monthlyBillValue),
           recommendedSystemSizeKw: Number(formatKw(estimate.recommendedKw)),
           estimatedSavingsAnnual: Math.round(estimate.annualSavings),
           estimatedSavingsMonthly: Math.round(estimate.monthlySavings),
@@ -176,7 +267,7 @@ function CalculatorPageContent() {
           paybackYears: Number((estimate.paybackMonths / 12).toFixed(1)),
           roiYears: Number((estimate.paybackMonths / 12).toFixed(1)),
           calculatorInputs: {
-            monthlyBill: Math.round(monthlyBill),
+            monthlyBill: Math.round(monthlyBillValue),
             state,
             propertyType,
           },
@@ -205,7 +296,7 @@ function CalculatorPageContent() {
           token,
           "solar",
           {
-            monthlyBill: Math.round(monthlyBill),
+            monthlyBill: Math.round(monthlyBillValue),
             state,
             propertyType,
           },
@@ -230,6 +321,12 @@ function CalculatorPageContent() {
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
+    if (!submitted) {
+      setLeadError("");
+      setLeadModalOpen(true);
+      return;
+    }
+
     setSubmitted(true);
   };
 
@@ -253,7 +350,7 @@ function CalculatorPageContent() {
 
             <div>
               <div className="label-dark">{t("calculator.propertyType")}</div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {propertyOptions.map((option) => {
                   const Icon = option.icon;
                   const active = propertyType === option.value;
@@ -321,7 +418,7 @@ function CalculatorPageContent() {
                 max={50000}
                 step={500}
                 value={monthlyBill}
-                onChange={(event) => setMonthlyBill(Number(event.target.value))}
+                onChange={(event) => setMonthlyBill(event.target.value)}
                 className="input-dark h-14.25 px-4 text-[24px]"
               />
               <input
@@ -329,8 +426,8 @@ function CalculatorPageContent() {
                 min={500}
                 max={50000}
                 step={500}
-                value={monthlyBill}
-                onChange={(event) => setMonthlyBill(Number(event.target.value))}
+                value={monthlyBillValue > 0 ? monthlyBillValue : 500}
+                onChange={(event) => setMonthlyBill(event.target.value)}
                 className="mt-3 w-full accent-brand-500"
               />
               <div className="mt-2 flex items-center justify-between text-[12px] font-medium text-slate-400">
@@ -341,7 +438,7 @@ function CalculatorPageContent() {
             </div>
 
             <button type="submit" data-testid="calc-submit" className="btn-primary mt-7 h-12 w-full">
-              {submitted ? t("calculator.calculating") : t("calculator.estimateSavings")}
+              {t("calculator.estimateSavings")}
             </button>
 
             {validationErrors.length > 0 ? <p className="mt-4 text-sm text-amber-700">{validationErrors[0]}</p> : null}
@@ -366,6 +463,11 @@ function CalculatorPageContent() {
             </div>
           ) : (
             <>
+              {leadSuccess ? (
+                <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                  {leadSuccess}
+                </div>
+              ) : null}
               <div className="rounded-[28px] border border-emerald-200 bg-linear-to-br from-emerald-50/70 via-white to-sky-50/70 p-6 shadow-[0_18px_48px_rgba(15,23,42,0.08)] md:p-8">
                 <div className="flex items-center gap-2 text-[14px] font-medium text-slate-600">
                   <SunMedium className="h-4 w-4 text-emerald-600" />
@@ -418,6 +520,57 @@ function CalculatorPageContent() {
         </div>
       </div>
 
+      {leadModalOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4 py-6 backdrop-blur-sm">
+          <div className="w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.22)] md:p-8">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Before we calculate</p>
+                <h2 className="mt-2 text-2xl font-semibold text-slate-950">Share your details</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setLeadModalOpen(false)}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              <FieldInput label="Full Name" value={proposalForm.fullName} onChange={(value) => setProposalForm((current) => ({ ...current, fullName: value }))} />
+              <FieldInput label="City" value={proposalForm.city} onChange={(value) => setProposalForm((current) => ({ ...current, city: value }))} />
+              <FieldInput label="Mobile Number" value={proposalForm.phone} onChange={(value) => setProposalForm((current) => ({ ...current, phone: value }))} />
+              <FieldInput label="Email" type="email" value={proposalForm.email} onChange={(value) => setProposalForm((current) => ({ ...current, email: value }))} />
+            </div>
+
+            <p className="mt-4 text-sm text-slate-600">Your information is safe with us and will not be shared with any third party.</p>
+
+            {leadError ? (
+              <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+                {leadError}
+              </div>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={handleLeadCaptureSubmit}
+              disabled={leadSubmitting}
+              className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-full bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {leadSubmitting ? (
+                <span className="inline-flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Submitting
+                </span>
+              ) : (
+                "Continue"
+              )}
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       {showProposalForm ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4 py-6 backdrop-blur-sm">
           <div className="w-full max-w-3xl rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.22)] md:p-8">
@@ -436,7 +589,7 @@ function CalculatorPageContent() {
             </div>
 
             <div className="mt-5 grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 sm:grid-cols-2">
-              <p><span className="font-semibold">Monthly bill:</span> {formatCurrency(monthlyBill)}</p>
+              <p><span className="font-semibold">Monthly bill:</span> {formatCurrency(monthlyBillValue)}</p>
               <p><span className="font-semibold">System size:</span> {formatKw(estimate.recommendedKw)} kW</p>
               <p><span className="font-semibold">Annual savings:</span> {formatCurrency(estimate.annualSavings)}</p>
               <p><span className="font-semibold">{subsidyLabel}:</span> {formatCurrency(estimate.totalSubsidy)}</p>

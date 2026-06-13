@@ -11,9 +11,20 @@ import { decodeReferralCode } from "./referral";
 
 const env = getEnv();
 const frontendUrl = (env.FRONTEND_URL.split(",").map((origin) => origin.trim()).find(Boolean) || "http://localhost:3000").replace(/\/$/, "");
+const duplicateEmailMessage = "An account with this email already exists. Please login or use a different email address.";
 
 function createOneTimeToken(): string {
   return randomBytes(32).toString("hex");
+}
+
+async function emailExistsInAnyAccount(email: string): Promise<boolean> {
+  const [admin, user, vendor] = await Promise.all([
+    prisma.admin.findUnique({ where: { email }, select: { id: true } }),
+    prisma.user.findUnique({ where: { email }, select: { id: true } }),
+    prisma.vendor.findUnique({ where: { email }, select: { id: true } }),
+  ]);
+
+  return Boolean(admin || user || vendor);
 }
 
 function buildVerificationLink(token: string, accountType: "user" | "vendor" | "admin"): string {
@@ -253,10 +264,8 @@ export const registerUser = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
-    const existingUser = await prisma.user.findUnique({ where: { email } });
-
-    if (existingUser) {
-      res.status(409).json({ error: "User already exists" });
+    if (await emailExistsInAnyAccount(email)) {
+      res.status(409).json({ error: duplicateEmailMessage });
       return;
     }
 
@@ -414,10 +423,8 @@ export const registerVendor = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
-    const existingVendor = await prisma.vendor.findUnique({ where: { email } });
-
-    if (existingVendor) {
-      res.status(409).json({ error: "Vendor already exists" });
+    if (await emailExistsInAnyAccount(email)) {
+      res.status(409).json({ error: duplicateEmailMessage });
       return;
     }
 
@@ -1062,11 +1069,10 @@ export const confirmEmailVerification = async (req: AuthRequest, res: Response):
 
       if (payload.fullName) {
         // User registration
-        // Check again for existing user
-        const exists = await prisma.user.findUnique({ where: { email: verificationRecord.email } });
-        if (exists) {
+        // Check again before final account creation
+        if (await emailExistsInAnyAccount(verificationRecord.email)) {
           await prisma.emailVerificationToken.delete({ where: { token } }).catch(() => {});
-          res.status(409).json({ error: "User already exists" });
+          res.status(409).json({ error: duplicateEmailMessage });
           return;
         }
 
@@ -1166,10 +1172,9 @@ export const confirmEmailVerification = async (req: AuthRequest, res: Response):
 
       if (payload.companyName) {
         // Vendor registration
-        const exists = await prisma.vendor.findUnique({ where: { email: verificationRecord.email } });
-        if (exists) {
+        if (await emailExistsInAnyAccount(verificationRecord.email)) {
           await prisma.emailVerificationToken.delete({ where: { token } }).catch(() => {});
-          res.status(409).json({ error: "Vendor already exists" });
+          res.status(409).json({ error: duplicateEmailMessage });
           return;
         }
 
