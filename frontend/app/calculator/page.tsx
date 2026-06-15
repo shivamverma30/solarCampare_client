@@ -25,6 +25,9 @@ const propertyOptions: Array<{ value: PropertyType; label: string; icon: typeof 
 
 const stateOptions = Object.keys(solarStateProfiles).filter((state) => state !== "other") as SolarState[];
 
+// localStorage key for one-time guest lead capture flag
+const LEAD_CAPTURED_KEY = "solar_lead_captured";
+
 function formatKw(value: number) {
   const rounded = Math.round(value * 10) / 10;
   return Number.isInteger(rounded) ? String(Math.round(rounded)) : rounded.toFixed(1);
@@ -62,6 +65,7 @@ function CalculatorPageContent() {
     phone: "",
     city: "",
   });
+
   const monthlyBillValue = useMemo(() => {
     if (monthlyBill.trim() === "") {
       return 0;
@@ -227,6 +231,10 @@ function CalculatorPageContent() {
       setLeadSuccess("Thank you for your interest. Our team will contact you within 24 hours.");
       setSubmitted(true);
       setLeadModalOpen(false);
+      // Mark that this guest has already submitted the lead form — won't show again
+      if (typeof window !== "undefined") {
+        localStorage.setItem(LEAD_CAPTURED_KEY, "true");
+      }
     } catch (error) {
       setLeadError(error instanceof Error ? error.message : "Unable to submit your details.");
     } finally {
@@ -321,6 +329,22 @@ function CalculatorPageContent() {
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
+
+    // Logged-in users: skip lead form entirely, show results directly
+    if (isAuthenticated) {
+      setSubmitted(true);
+      return;
+    }
+
+    // Guest who already submitted the form once: skip form, show results
+    const alreadyCaptured =
+      typeof window !== "undefined" && localStorage.getItem(LEAD_CAPTURED_KEY) === "true";
+    if (alreadyCaptured) {
+      setSubmitted(true);
+      return;
+    }
+
+    // First-time guest: show the lead capture form
     if (!submitted) {
       setLeadError("");
       setLeadModalOpen(true);

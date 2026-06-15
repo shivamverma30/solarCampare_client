@@ -1,6 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import {
+  CheckCircle2,
+  Loader2,
+  Mail,
+  ShieldCheck,
+  User,
+  XCircle,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import { getToken, setAdmin, type StoredProfile } from "@/lib/auth";
 
@@ -11,17 +20,24 @@ interface AdminProfile extends StoredProfile {
   createdAt: string;
 }
 
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .slice(0, 2)
+    .map((n) => n[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
 export default function AdminProfilePage() {
   const [profile, setProfile] = useState<AdminProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [editing, setEditing] = useState(false);
+  const successTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-  });
+  const [formData, setFormData] = useState({ name: "", email: "" });
 
   async function fetchProfile() {
     const token = getToken();
@@ -32,26 +48,18 @@ export default function AdminProfilePage() {
     }
 
     const response = await apiClient.auth.getProfile(token);
-
     if (!response.success) {
       setError(response.error || "Failed to fetch profile");
     } else {
       const profileData = response as unknown as AdminProfile;
       setProfile(profileData);
-      setFormData({
-        name: profileData?.name || "",
-        email: profileData?.email || "",
-      });
+      setFormData({ name: profileData?.name || "", email: profileData?.email || "" });
     }
-
     setLoading(false);
   }
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void fetchProfile();
-    }, 0);
-
+    const timer = window.setTimeout(() => { void fetchProfile(); }, 0);
     return () => window.clearTimeout(timer);
   }, []);
 
@@ -62,12 +70,10 @@ export default function AdminProfilePage() {
 
     setError("");
     setSuccess("");
+    setSaving(true);
 
-    const response = await apiClient.auth.updateProfile(
-      token,
-      formData.name,
-      formData.email
-    );
+    const response = await apiClient.auth.updateProfile(token, formData.name, formData.email);
+    setSaving(false);
 
     if (!response.success) {
       setError(response.error || "Failed to update profile");
@@ -77,137 +83,227 @@ export default function AdminProfilePage() {
       setAdmin(updatedAdmin as StoredProfile);
       setSuccess("Profile updated successfully!");
       setEditing(false);
-
-      setTimeout(() => setSuccess(""), 3000);
+      if (successTimer.current) clearTimeout(successTimer.current);
+      successTimer.current = setTimeout(() => setSuccess(""), 4000);
     }
   };
 
   if (loading) {
     return (
-      <div className="flex h-96 items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-amber-400 border-t-transparent"></div>
-          <p className="mt-4 text-app-fg">Loading profile...</p>
-        </div>
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
       </div>
     );
   }
 
+  const initials = getInitials(profile?.name || "A");
+  const memberSince = profile?.createdAt
+    ? new Date(profile.createdAt).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : "N/A";
+
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-4xl font-serif font-bold text-slate-900">
-          Profile
-        </h1>
-        <p className="mt-2 text-slate-600">
-          Manage your admin profile information
-        </p>
+    <div className="mx-auto max-w-3xl space-y-6">
+
+      {/* Page Header */}
+      <div className="flex items-center gap-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 text-xl font-bold text-white shadow-md">
+          {initials || <User className="h-7 w-7" />}
+        </div>
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{profile?.name || "Admin"}</h1>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-3 py-0.5 text-xs font-semibold text-violet-700">
+              <ShieldCheck className="h-3 w-3" />
+              Administrator
+            </span>
+            <span className="text-sm text-slate-500">Member since {memberSince}</span>
+          </div>
+        </div>
       </div>
 
-      {/* Success Message */}
+      {/* Feedback banners */}
       {success && (
-        <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-green-700">
-          ✓ {success}
+        <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
+          {success}
         </div>
       )}
-
-      {/* Error Message */}
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
+        <div className="flex items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800">
+          <XCircle className="h-4 w-4 shrink-0" />
           {error}
         </div>
       )}
 
-      {/* Profile Card */}
-      <div className="rounded-2xl border border-slate-200 bg-white/90 p-8 shadow-sm">
-        {!editing ? (
-          <div className="space-y-6">
-            <div>
-              <p className="text-sm font-semibold text-slate-600">
-                Name
-              </p>
-              <p className="mt-2 text-xl font-semibold text-slate-900">
-                {profile?.name}
-              </p>
-            </div>
+      {/* Account Information — read-only */}
+      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-100 px-6 py-4">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-slate-500" />
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
+              Account Information
+            </h2>
+          </div>
+        </div>
+        <div className="divide-y divide-slate-100">
+          <ReadRow
+            label="Account ID"
+            value={profile?.id ? `#${String(profile.id).slice(-8).toUpperCase()}` : "—"}
+          />
+          <ReadRow label="Member Since" value={memberSince} />
+        </div>
+      </section>
 
-            <div>
-              <p className="text-sm font-semibold text-slate-600">
-                Email
-              </p>
-              <p className="mt-2 text-xl font-semibold text-slate-900">
-                {profile?.email}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-sm font-semibold text-slate-600">
-                Member Since
-              </p>
-              <p className="mt-2 text-xl font-semibold text-slate-900">
-                {profile?.createdAt
-                  ? new Date(profile.createdAt).toLocaleDateString()
-                  : "N/A"}
-              </p>
-            </div>
-
+      {/* Profile Details */}
+      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+          <div className="flex items-center gap-2">
+            <User className="h-4 w-4 text-slate-500" />
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
+              Profile Details
+            </h2>
+          </div>
+          {!editing && (
             <button
-              onClick={() => setEditing(true)}
-              className="rounded-lg border border-amber-300/80 bg-amber-400 px-6 py-2 font-semibold text-black transition hover:bg-amber-300"
+              type="button"
+              onClick={() => { setEditing(true); setError(""); setSuccess(""); }}
+              className="rounded-lg border border-slate-200 bg-white px-4 py-1.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
             >
-              Edit Profile
+              Edit
             </button>
+          )}
+        </div>
+
+        {!editing ? (
+          <div className="divide-y divide-slate-100">
+            <ReadRow
+              label="Name"
+              value={profile?.name || "—"}
+              icon={<User className="h-4 w-4 text-slate-400" />}
+            />
+            <ReadRow
+              label="Email"
+              value={profile?.email || "—"}
+              icon={<Mail className="h-4 w-4 text-slate-400" />}
+            />
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-semibold text-slate-700">
-                Name
-              </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                required
-                className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-amber-400"
-              />
-            </div>
+          <form onSubmit={handleSubmit} className="grid gap-5 p-6 sm:grid-cols-2">
+            <ProfileInput
+              label="Name"
+              required
+              icon={User}
+              type="text"
+              value={formData.name}
+              onChange={(v) => setFormData({ ...formData, name: v })}
+              placeholder="Admin name"
+            />
+            <ProfileInput
+              label="Email Address"
+              required
+              icon={Mail}
+              type="email"
+              value={formData.email}
+              onChange={(v) => setFormData({ ...formData, email: v })}
+              placeholder="admin@email.com"
+            />
 
-            <div>
-              <label className="block text-sm font-semibold text-slate-700">
-                Email
-              </label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-                required
-                className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-amber-400"
-              />
-            </div>
-
-            <div className="flex gap-3 pt-4">
+            <div className="flex gap-3 sm:col-span-2">
               <button
                 type="submit"
-                className="flex-1 rounded-lg bg-amber-400 px-4 py-3 font-semibold text-black transition hover:bg-amber-300"
+                disabled={saving}
+                className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Save Changes
+                {saving ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</>
+                ) : "Save Changes"}
               </button>
               <button
                 type="button"
-                onClick={() => setEditing(false)}
-                className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-3 font-semibold text-slate-900 transition hover:bg-slate-50"
+                onClick={() => {
+                  setEditing(false);
+                  setFormData({ name: profile?.name || "", email: profile?.email || "" });
+                  setError("");
+                }}
+                className="inline-flex h-10 flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
               >
                 Cancel
               </button>
             </div>
           </form>
         )}
+      </section>
+    </div>
+  );
+}
+
+/* ── Shared sub-components ─────────────────────────────────────────── */
+
+function ReadRow({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: string;
+  icon?: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 px-6 py-4">
+      <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
+        {icon}
+        {label}
+      </div>
+      <span className="text-sm font-semibold text-slate-900">{value}</span>
+    </div>
+  );
+}
+
+/**
+ * ProfileInput — flexbox icon + input. No absolute positioning.
+ * The icon is a flex sibling, never overlapping the text.
+ */
+function ProfileInput({
+  label,
+  required,
+  icon: Icon,
+  type = "text",
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  required?: boolean;
+  icon?: LucideIcon;
+  type?: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className="text-sm font-medium text-slate-700">
+        {label}
+        {required && <span className="ml-0.5 text-rose-500">*</span>}
+      </label>
+      <div className="flex items-center rounded-[0.625rem] border border-slate-200 bg-white transition hover:border-slate-300 focus-within:border-emerald-500 focus-within:ring-3 focus-within:ring-emerald-500/15">
+        {Icon && (
+          <span className="flex shrink-0 items-center pl-3 pr-1 text-slate-400">
+            <Icon className="h-4 w-4" />
+          </span>
+        )}
+        <input
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="min-w-0 flex-1 bg-transparent py-2.5 pr-3 text-sm text-slate-900 outline-none placeholder:text-slate-400"
+          style={{ paddingLeft: Icon ? "0.375rem" : "0.875rem" }}
+        />
       </div>
     </div>
   );

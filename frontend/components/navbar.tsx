@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import BrandMark from "@/components/brand-mark";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -14,11 +14,13 @@ import {
   HandCoins,
   Info,
   Gift,
+  LogOut,
   Menu,
   PanelsTopLeft,
   Phone,
   Sparkles,
   SunMedium,
+  User,
   Workflow,
   Wrench,
   X,
@@ -26,6 +28,8 @@ import {
 import { useLocale } from "@/components/locale-provider";
 import { servicePages } from "@/data/service-pages";
 import { infoPages } from "@/data/info-pages";
+import { useAuth } from "@/lib/use-auth";
+import { logout } from "@/lib/auth";
 
 type NavLinkItem = {
   label: string;
@@ -198,9 +202,98 @@ function DropdownGroup({
   );
 }
 
+function UserMenu({
+  overlay,
+  displayName,
+  profileHref,
+}: {
+  overlay: boolean;
+  displayName: string;
+  profileHref: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [open]);
+
+  const handleLogout = () => {
+    logout();
+    setOpen(false);
+    router.push("/");
+  };
+
+  return (
+    <div ref={menuRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-label="User menu"
+        className={`inline-flex h-11 w-11 items-center justify-center rounded-full border text-sm font-semibold transition focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 ${
+          overlay
+            ? "border-white/18 bg-white/10 text-white hover:bg-white/16"
+            : "border-slate-200 bg-white text-slate-900 shadow-sm hover:border-slate-300 hover:bg-slate-50"
+        }`}
+      >
+        <User className="h-5 w-5" />
+      </button>
+
+      <div
+        className={`absolute right-0 top-[calc(100%+0.6rem)] w-52 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_24px_50px_rgba(15,23,42,0.14)] transition duration-200 ${
+          open ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-2 opacity-0"
+        }`}
+        role="menu"
+      >
+        <div className="border-b border-slate-100 px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Signed in as</p>
+          <p className="mt-0.5 truncate text-sm font-semibold text-slate-900">{displayName}</p>
+        </div>
+        <Link
+          href={profileHref}
+          onClick={() => setOpen(false)}
+          role="menuitem"
+          className="flex w-full items-center gap-3 px-4 py-3 text-sm text-slate-700 transition hover:bg-slate-50 hover:text-slate-900"
+        >
+          <User className="h-4 w-4 text-slate-500" />
+          My Profile
+        </Link>
+        <button
+          type="button"
+          onClick={handleLogout}
+          role="menuitem"
+          className="flex w-full items-center gap-3 px-4 py-3 text-sm text-rose-600 transition hover:bg-rose-50"
+        >
+          <LogOut className="h-4 w-4" />
+          Logout
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function Navbar() {
   const pathname = usePathname();
   const { locale, setLocale, t } = useLocale();
+  const { isAuthenticated, isLoading, profile, role } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
 
@@ -292,6 +385,21 @@ export default function Navbar() {
   const isHome = pathname === "/";
   const overlay = false;
 
+  // Determine profile link based on role
+  const profileHref =
+    role === "ADMIN" || role === "SUPERADMIN"
+      ? "/admin/profile"
+      : role === "VENDOR"
+        ? "/vendor/profile"
+        : "/user/profile";
+
+  const displayName =
+    (profile?.fullName as string) ||
+    (profile?.ownerName as string) ||
+    (profile?.companyName as string) ||
+    (profile?.name as string) ||
+    "My Account";
+
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -363,19 +471,26 @@ export default function Navbar() {
           </div>
         </div>
 
+        {/* Desktop right side: language + auth */}
         <div className="hidden items-center gap-3 lg:flex">
           <LanguageSwitcher locale={locale} setLocale={setLocale} overlay={overlay} />
 
-          <Link
-            href="/login"
-            className={`inline-flex h-11 items-center rounded-full border px-5 text-sm font-semibold transition focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 ${
-              overlay
-                ? "border-white/18 bg-white/10 text-white hover:bg-white/16 focus-visible:ring-white/30"
-                : "border-slate-200 bg-white text-slate-900 shadow-sm hover:border-slate-300 hover:bg-slate-50"
-            }`}
-          >
-            {t("buttons.login")}
-          </Link>
+          {!isLoading && (
+            isAuthenticated ? (
+              <UserMenu overlay={overlay} displayName={displayName} profileHref={profileHref} />
+            ) : (
+              <Link
+                href="/login"
+                className={`inline-flex h-11 items-center rounded-full border px-5 text-sm font-semibold transition focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 ${
+                  overlay
+                    ? "border-white/18 bg-white/10 text-white hover:bg-white/16 focus-visible:ring-white/30"
+                    : "border-slate-200 bg-white text-slate-900 shadow-sm hover:border-slate-300 hover:bg-slate-50"
+                }`}
+              >
+                {t("buttons.login")}
+              </Link>
+            )
+          )}
 
           <Link
             href="/calculator"
@@ -384,6 +499,7 @@ export default function Navbar() {
             {t("buttons.getProposal")}
           </Link>
         </div>
+
         <button
           type="button"
           onClick={() => setMobileOpen((value) => !value)}
@@ -399,6 +515,7 @@ export default function Navbar() {
         </button>
       </div>
 
+      {/* Mobile menu */}
       <div
         className={`lg:hidden ${mobileOpen ? "max-h-[calc(100vh-4rem)] opacity-100" : "pointer-events-none max-h-0 opacity-0"} overflow-hidden border-t border-slate-200/80 bg-white/98 backdrop-blur-xl transition-all duration-300`}
       >
@@ -469,14 +586,41 @@ export default function Navbar() {
               <LanguageSwitcher locale={locale} setLocale={setLocale} overlay={false} />
             </div>
 
-            <Link
-              href="/login"
-              onClick={closeMenus}
-              className="inline-flex h-11 flex-1 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm"
-            >
-              {t("buttons.login")}
-            </Link>
+            {!isLoading && (
+              isAuthenticated ? (
+                <Link
+                  href={profileHref}
+                  onClick={closeMenus}
+                  className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm"
+                >
+                  <User className="h-4 w-4" />
+                  My Profile
+                </Link>
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={closeMenus}
+                  className="inline-flex h-11 flex-1 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm"
+                >
+                  {t("buttons.login")}
+                </Link>
+              )
+            )}
           </div>
+
+          {isAuthenticated && !isLoading && (
+            <button
+              type="button"
+              onClick={() => {
+                logout();
+                closeMenus();
+              }}
+              className="mt-2 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-4 text-sm font-medium text-rose-600"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </button>
+          )}
 
           <Link
             href="/calculator"
@@ -490,5 +634,3 @@ export default function Navbar() {
     </header>
   );
 }
-
-
