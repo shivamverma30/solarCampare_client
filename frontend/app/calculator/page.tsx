@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -356,6 +357,28 @@ function CalculatorPageContent() {
 
   return (
     <section className="hero-shell container-x">
+      {/* Background image hero banner */}
+      <div className="relative mb-10 min-h-[360px] overflow-hidden rounded-[28px] md:mb-12 md:min-h-[440px]">
+        <Image
+          src="/images/calcultor.png"
+          alt="Solar Calculator"
+          fill
+          sizes="100vw"
+          className="object-cover object-center"
+          priority
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(2,6,23,0.92),rgba(2,6,23,0.45))]" />
+        <div className="relative flex min-h-[360px] flex-col justify-center px-8 py-16 md:min-h-[440px] md:px-14 md:py-24">
+          <div className="overline mb-3 text-cyan-200">{t("calculator.eyebrow")}</div>
+          <h1 className="text-[38px] font-bold leading-tight tracking-[-0.9px] text-white md:text-[52px]">
+            {t("calculator.heroTitle")}
+          </h1>
+          <p className="mt-4 max-w-2xl text-[17px] leading-7 text-slate-100/90">
+            {t("calculator.heroSubtitle")}
+          </p>
+        </div>
+      </div>
+
       <div className="grid gap-8 lg:grid-cols-[390px_minmax(0,1.12fr)] lg:items-start lg:gap-10">
         <div className="max-w-3xl">
           <div className="overline mb-3">{t("calculator.eyebrow")}</div>

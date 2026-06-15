@@ -42,23 +42,22 @@ export function extractJsonObject(text: string): string | null {
 }
 
 export function isLikelySalesLead(message: string): boolean {
+  // Only flag messages that are genuine requests for a quote, vendor contact,
+  // or site-specific service — not general informational solar questions.
   const normalized = message.toLowerCase();
   return [
     "quotation",
-    "quote",
-    "pricing",
-    "price",
-    "cost",
-    "vendor",
-    "vendor-specific",
-    "installation",
+    "get a quote",
+    "send me a quote",
     "site survey",
-    "commercial",
-    "business",
-    "custom",
-    "proposal",
+    "site visit",
     "call me",
     "contact me",
-    "rooftop",
+    "book installation",
+    "schedule installation",
+    "assign vendor",
+    "connect me to",
+    "get proposal",
+    "request proposal",
   ].some((keyword) => normalized.includes(keyword));
 }

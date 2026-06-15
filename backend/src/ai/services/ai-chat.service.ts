@@ -9,6 +9,12 @@ import { groqProvider } from "../providers/groq.provider";
 import { buildLeadNotificationTemplate } from "../templates/lead-notification.template";
 import { SYSTEM_PROMPT } from "../prompts/system.prompt";
 
+/** Detect simple greetings — these should not get default CTA suggestions injected. */
+function isGreeting(message: string): boolean {
+  const normalized = message.toLowerCase().trim();
+  return /^(hi+|hello+|hey+|howdy|namaste|good\s*(morning|afternoon|evening|day)|how are you|how r u|what'?s up|sup|greetings)[\s!?.]*$/.test(normalized);
+}
+
 type ConversationRow = {
   id: string;
   original_question: string;
@@ -210,7 +216,7 @@ export const aiChatService = {
       reply: shortReply,
       confidence: providerReply.confidence,
       shouldEscalate,
-      ctaSuggestions: ctaSuggestions.length ? ctaSuggestions : ["CALCULATOR", "COMPARE_PANELS"],
+      ctaSuggestions: ctaSuggestions.length ? ctaSuggestions : (isGreeting(cleanMessage) ? [] : ["CALCULATOR", "COMPARE_PANELS"]),
       suggestedQuestions: [
         "How much roof space is needed for a 5kW solar plant?",
         "What subsidy is available for residential rooftop solar?",
