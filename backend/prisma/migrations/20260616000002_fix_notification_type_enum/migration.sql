@@ -1,0 +1,6 @@
+-- Fix schema drift: add missing values to NotificationType enum
+
+ALTER TYPE "NotificationType" ADD VALUE IF NOT EXISTS 'USER_REGISTERED';
+ALTER TYPE "NotificationType" ADD VALUE IF NOT EXISTS 'VENDOR_REGISTERED';
+ALTER TYPE "NotificationType" ADD VALUE IF NOT EXISTS 'AI_CHAT_LEAD';
+ALTER TYPE "NotificationType" ADD VALUE IF NOT EXISTS 'CONSULTATION_REQUEST';
