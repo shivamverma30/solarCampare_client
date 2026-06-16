@@ -31,12 +31,18 @@ function initTransporter() {
 
   const env = getEnv();
   const host = env.SMTP_HOST;
-  const port = Number(env.SMTP_PORT || 587);
-  const secure = String(env.SMTP_SECURE || "false") === "true";
+  // Use port 465 (SMTPS) in production for Railway compatibility — port 587
+  // (STARTTLS) is frequently blocked by cloud provider egress firewalls.
+  // Falls back to whatever SMTP_PORT is set locally.
+  const isProduction = env.NODE_ENV === "production";
+  const port = Number(env.SMTP_PORT || (isProduction ? 465 : 587));
+  // port 465 requires secure:true (implicit TLS); 587 uses STARTTLS (secure:false)
+  const secure = port === 465 ? true : String(env.SMTP_SECURE || "false") === "true";
   const user = env.SMTP_USER;
   const pass = env.SMTP_PASS;
 
   if (!host || !user || !pass) {
+    console.warn("[email] SMTP not configured — emails will be skipped");
     transporter = null;
     return null;
   }
@@ -45,9 +51,13 @@ function initTransporter() {
     host,
     port,
     secure,
+    family: 4,               // force IPv4 — Railway containers may prefer IPv6 which Gmail rejects
+    connectionTimeout: 10000, // 10 s to establish TCP connection
+    greetingTimeout: 10000,   // 10 s to receive SMTP greeting after connect
     auth: { user, pass },
   });
 
+  console.info(`[email] transporter ready — ${host}:${port} secure=${secure} family=4`);
   return transporter;
 }
 
