@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import tls from "tls";
 import {getEnv} from "./env";
 
 // NOTE: getEnv() is intentionally NOT called at module level.
@@ -51,9 +52,12 @@ function initTransporter() {
     host,
     port,
     secure,
-    family: 4,               // force IPv4 — Railway containers may prefer IPv6 which Gmail rejects
     connectionTimeout: 10000, // 10 s to establish TCP connection
     greetingTimeout: 10000,   // 10 s to receive SMTP greeting after connect
+    // Force IPv4 via tls options — nodemailer 8 merges tls into the connect opts
+    // for secure connections (port 465). 'family' is a valid net.connect option
+    // but absent from @types/nodemailer, so we cast only this property.
+    tls: { family: 4 } as tls.ConnectionOptions,
     auth: { user, pass },
   });
 
