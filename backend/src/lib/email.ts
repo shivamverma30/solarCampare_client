@@ -1,11 +1,15 @@
 import nodemailer from "nodemailer";
 import {getEnv} from "./env";
 
-const env = getEnv();
+// NOTE: getEnv() is intentionally NOT called at module level.
+// ES module imports are hoisted before dotenv.config() runs in index.ts,
+// so reading env vars at import time would always see undefined SMTP values.
+// All functions call getEnv() lazily at invocation time instead.
 
 let transporter: nodemailer.Transporter | null = null;
 
 function getSupportEmail() {
+  const env = getEnv();
   const supportEmail = env.ADMIN_EMAIL || process.env.ADMIN_EMAIL || env.EMAIL_FROM || process.env.EMAIL_FROM;
   if (!supportEmail) {
     throw new Error("Missing required environment variable: ADMIN_EMAIL or EMAIL_FROM");
@@ -14,6 +18,7 @@ function getSupportEmail() {
 }
 
 function getAppUrl() {
+  const env = getEnv();
   const appUrl = env.FRONTEND_URL || process.env.FRONTEND_URL;
   if (!appUrl) {
     throw new Error("Missing required environment variable: FRONTEND_URL");
@@ -24,6 +29,7 @@ function getAppUrl() {
 function initTransporter() {
   if (transporter) return transporter;
 
+  const env = getEnv();
   const host = env.SMTP_HOST;
   const port = Number(env.SMTP_PORT || 587);
   const secure = String(env.SMTP_SECURE || "false") === "true";
@@ -134,7 +140,7 @@ export async function sendEmail({ to, subject, text, html }: { to: string; subje
   }
 
   const message = {
-    from: env.EMAIL_FROM || env.SMTP_USER,
+    from: getEnv().EMAIL_FROM || getEnv().SMTP_USER,
     to,
     subject,
     text: text || subject,
