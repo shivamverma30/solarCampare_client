@@ -1,82 +1,66 @@
-import nodemailer from "nodemailer";
-import tls from "tls";
-import {getEnv} from "./env";
+import { Resend } from "resend";
 
-// NOTE: getEnv() is intentionally NOT called at module level.
+// NOTE: No module-level env reads.
 // ES module imports are hoisted before dotenv.config() runs in index.ts,
-// so reading env vars at import time would always see undefined SMTP values.
-// All functions call getEnv() lazily at invocation time instead.
+// so all env access happens inside functions at call time.
 
-let transporter: nodemailer.Transporter | null = null;
+let resendClient: Resend | null = null;
 
-function getSupportEmail() {
-  const env = getEnv();
-  const supportEmail = env.ADMIN_EMAIL || process.env.ADMIN_EMAIL || env.EMAIL_FROM || process.env.EMAIL_FROM;
-  if (!supportEmail) {
-    throw new Error("Missing required environment variable: ADMIN_EMAIL or EMAIL_FROM");
-  }
-  return supportEmail;
-}
-
-function getAppUrl() {
-  const env = getEnv();
-  const appUrl = env.FRONTEND_URL || process.env.FRONTEND_URL;
-  if (!appUrl) {
-    throw new Error("Missing required environment variable: FRONTEND_URL");
-  }
-  return appUrl.replace(/\/$/, "");
-}
-
-function initTransporter() {
-  if (transporter) return transporter;
-
-  const env = getEnv();
-  const host = env.SMTP_HOST;
-  // Use port 465 (SMTPS) in production for Railway compatibility — port 587
-  // (STARTTLS) is frequently blocked by cloud provider egress firewalls.
-  // Falls back to whatever SMTP_PORT is set locally.
-  const isProduction = env.NODE_ENV === "production";
-  const port = Number(env.SMTP_PORT || (isProduction ? 465 : 587));
-  // port 465 requires secure:true (implicit TLS); 587 uses STARTTLS (secure:false)
-  const secure = port === 465 ? true : String(env.SMTP_SECURE || "false") === "true";
-  const user = env.SMTP_USER;
-  const pass = env.SMTP_PASS;
-
-  if (!host || !user || !pass) {
-    console.warn("[email] SMTP not configured — emails will be skipped");
-    transporter = null;
+function getResendClient(): Resend | null {
+  if (resendClient) return resendClient;
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.warn("[email] RESEND_API_KEY not set — emails will be skipped");
     return null;
   }
-
-  transporter = nodemailer.createTransport({
-    host,
-    port,
-    secure,
-    connectionTimeout: 10000, // 10 s to establish TCP connection
-    greetingTimeout: 10000,   // 10 s to receive SMTP greeting after connect
-    // Force IPv4 via tls options — nodemailer 8 merges tls into the connect opts
-    // for secure connections (port 465). 'family' is a valid net.connect option
-    // but absent from @types/nodemailer, so we cast only this property.
-    tls: { family: 4 } as tls.ConnectionOptions,
-    auth: { user, pass },
-  });
-
-  console.info(`[email] transporter ready — ${host}:${port} secure=${secure} family=4`);
-  return transporter;
+  resendClient = new Resend(apiKey);
+  console.info("[email] Resend client ready");
+  return resendClient;
 }
 
-function baseHtmlTemplate({ title, preheader, bodyHtml, ctaText, ctaHref }: { title: string; preheader?: string; bodyHtml: string; ctaText?: string; ctaHref?: string; }) {
+function getSupportEmail(): string {
+  return (
+    process.env.ADMIN_EMAIL ||
+    process.env.EMAIL_FROM ||
+    "support@solarcompare.in"
+  );
+}
+
+function getAppUrl(): string {
+  return (process.env.FRONTEND_URL || "http://localhost:3000").replace(/\/$/, "");
+}
+
+// ---------------------------------------------------------------------------
+// Base HTML template — unchanged from original
+// ---------------------------------------------------------------------------
+
+function baseHtmlTemplate({
+  title,
+  preheader,
+  bodyHtml,
+  ctaText,
+  ctaHref,
+}: {
+  title: string;
+  preheader?: string;
+  bodyHtml: string;
+  ctaText?: string;
+  ctaHref?: string;
+}) {
   const supportEmail = getSupportEmail();
   const appUrl = getAppUrl();
 
-  const primaryButton = ctaText && ctaHref ? `
+  const primaryButton =
+    ctaText && ctaHref
+      ? `
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:22px;">
       <tr>
         <td style="border-radius:999px; background:#0f172a;">
           <a href="${ctaHref}" style="display:inline-block;padding:13px 22px;font-size:14px;font-weight:700;color:#ffffff;text-decoration:none;border:1px solid #0f172a;border-radius:999px;">${ctaText}</a>
         </td>
       </tr>
-    </table>` : "";
+    </table>`
+      : "";
 
   return `<!doctype html>
   <html lang="en">
@@ -146,38 +130,55 @@ function baseHtmlTemplate({ title, preheader, bodyHtml, ctaText, ctaHref }: { ti
   </html>`;
 }
 
-export async function sendEmail({ to, subject, text, html }: { to: string; subject: string; text?: string; html?: string; }) {
-  const t = initTransporter();
-  if (!t) {
+// ---------------------------------------------------------------------------
+// sendEmail — same signature as before, now uses Resend
+// ---------------------------------------------------------------------------
+
+export async function sendEmail({
+  to,
+  subject,
+  text,
+  html,
+}: {
+  to: string;
+  subject: string;
+  text?: string;
+  html?: string;
+}) {
+  const client = getResendClient();
+
+  if (!client) {
     console.info(`[email][dry] to=${to} subject=${subject} text=${text}`);
-    return { success: false, error: "No SMTP configured" };
+    return { success: false, error: "No email provider configured" };
   }
 
-  const message = {
-    from: getEnv().EMAIL_FROM || getEnv().SMTP_USER,
+  const from = process.env.EMAIL_FROM || "no-reply@localhost";
+
+  // TEMPORARY DEBUG — remove after confirming sender value
+  console.log("EMAIL_FROM ENV =", process.env.EMAIL_FROM);
+  console.log("RESEND FROM =", from);
+  console.log("RESEND PAYLOAD =", JSON.stringify({ from, to, subject, html: html ? "[html present]" : undefined, text }));
+
+  const { data, error } = await client.emails.send({
+    from,
     to,
     subject,
+    html: html || `<pre>${text || subject}</pre>`,
     text: text || subject,
-    html,
-  };
+  });
 
-  const maxAttempts = 3;
-  let lastErr: unknown = null;
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    try {
-      await t.sendMail(message);
-      return { success: true };
-    } catch (err) {
-      lastErr = err;
-      console.warn(`[email] attempt ${attempt} failed`, err);
-      if (attempt === maxAttempts) break;
-      await new Promise((r) => setTimeout(r, attempt * 500));
-    }
+  if (error) {
+    console.error(`[email] Resend error — to=${to} subject="${subject}"`, error);
+    return { success: false, error: error.message };
   }
 
-  console.error("Email send failed", lastErr);
-  return { success: false, error: (lastErr as any)?.message || String(lastErr) };
+  console.info(`[email] sent — id=${data?.id} to=${to} subject="${subject}"`);
+  return { success: true };
 }
+
+// ---------------------------------------------------------------------------
+// Email templates — unchanged from original
+// ---------------------------------------------------------------------------
 
 export function verificationTemplate(name: string, link: string) {
   const body = `
@@ -188,7 +189,13 @@ export function verificationTemplate(name: string, link: string) {
         <td style="padding:16px;border:1px solid #dbe4ee;border-radius:16px;background:#f8fbff;color:#334155;">Security tip: only verify from a trusted device.</td>
       </tr>
     </table>`;
-  return baseHtmlTemplate({ title: "Verify your email", preheader: "Confirm your email to activate your account", bodyHtml: body, ctaText: "Verify email", ctaHref: link });
+  return baseHtmlTemplate({
+    title: "Verify your email",
+    preheader: "Confirm your email to activate your account",
+    bodyHtml: body,
+    ctaText: "Verify email",
+    ctaHref: link,
+  });
 }
 
 export function otpTemplate(name: string, otp: string, expiryMinutes = 10) {
@@ -211,8 +218,11 @@ export function otpTemplate(name: string, otp: string, expiryMinutes = 10) {
         <td style="padding:16px;border-radius:16px;border:1px solid #dbe4ee;background:#f8fbff;color:#475569;font-size:13px;line-height:1.7;">Security notice: Never share this code with anyone. If you did not request it, you can safely ignore this email.</td>
       </tr>
     </table>`;
-
-  return baseHtmlTemplate({ title: "Verify your email", preheader: "Enter the verification code to continue", bodyHtml: body });
+  return baseHtmlTemplate({
+    title: "Verify your email",
+    preheader: "Enter the verification code to continue",
+    bodyHtml: body,
+  });
 }
 
 export function resetTemplate(name: string, link: string) {
@@ -224,7 +234,13 @@ export function resetTemplate(name: string, link: string) {
         <td style="padding:16px;border:1px solid #dbe4ee;border-radius:16px;background:#fff7ed;color:#9a3412;font-size:13px;line-height:1.7;">If you didn't request this, you can ignore this email. Your password will remain unchanged.</td>
       </tr>
     </table>`;
-  return baseHtmlTemplate({ title: "Reset your password", preheader: "Secure password reset", bodyHtml: body, ctaText: "Reset password", ctaHref: link });
+  return baseHtmlTemplate({
+    title: "Reset your password",
+    preheader: "Secure password reset",
+    bodyHtml: body,
+    ctaText: "Reset password",
+    ctaHref: link,
+  });
 }
 
 export function welcomeTemplate(name: string) {
@@ -245,7 +261,13 @@ export function welcomeTemplate(name: string) {
         <td style="padding:12px;border-radius:16px;background:#ecfeff;border:1px solid #a5f3fc;color:#155e75;">Support available whenever you need help with onboarding, solar choices or account setup.</td>
       </tr>
     </table>`;
-  return baseHtmlTemplate({ title: "Welcome to Solar Compare", preheader: "Thanks for joining", bodyHtml: body, ctaText: "Explore platform", ctaHref: appUrl });
+  return baseHtmlTemplate({
+    title: "Welcome to Solar Compare",
+    preheader: "Thanks for joining",
+    bodyHtml: body,
+    ctaText: "Explore platform",
+    ctaHref: appUrl,
+  });
 }
 
 export function vendorApprovalTemplate(companyName: string) {
@@ -263,14 +285,20 @@ export function vendorApprovalTemplate(companyName: string) {
         <td style="padding:14px 16px;border-radius:16px;background:#f8fbff;border:1px solid #dbe4ee;color:#475569;line-height:1.7;">Next steps: complete your profile, review your leads and keep your service details up to date.</td>
       </tr>
     </table>`;
-  return baseHtmlTemplate({ title: "Vendor application approved", preheader: "Your vendor account is live", bodyHtml: body, ctaText: "Open dashboard", ctaHref: `${appUrl}/vendor/dashboard` });
+  return baseHtmlTemplate({
+    title: "Vendor application approved",
+    preheader: "Your vendor account is live",
+    bodyHtml: body,
+    ctaText: "Open dashboard",
+    ctaHref: `${appUrl}/vendor/dashboard`,
+  });
 }
 
 export function vendorRejectionTemplate(companyName: string, reason?: string) {
   const supportEmail = getSupportEmail();
   const body = `
     <div style="margin:0 0 12px 0;">Hi ${companyName},</div>
-    <div style="margin:0 0 18px 0;">Thank you for applying to join Solar Compare. After review, we’re unable to approve the application at this time.</div>
+    <div style="margin:0 0 18px 0;">Thank you for applying to join Solar Compare. After review, we're unable to approve the application at this time.</div>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
       <tr>
         <td style="padding:14px 16px;border-radius:16px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;line-height:1.7;">${reason ? `Reason: ${reason}` : "Please review your details and supporting information before reapplying."}</td>
@@ -281,7 +309,13 @@ export function vendorRejectionTemplate(companyName: string, reason?: string) {
         <td style="padding:14px 16px;border-radius:16px;background:#f8fbff;border:1px solid #dbe4ee;color:#475569;line-height:1.7;">You can reapply after updating the relevant information or contact support for guidance.</td>
       </tr>
     </table>`;
-  return baseHtmlTemplate({ title: "Vendor application update", preheader: "Application update", bodyHtml: body, ctaText: "Contact support", ctaHref: `mailto:${supportEmail}` });
+  return baseHtmlTemplate({
+    title: "Vendor application update",
+    preheader: "Application update",
+    bodyHtml: body,
+    ctaText: "Contact support",
+    ctaHref: `mailto:${supportEmail}`,
+  });
 }
 
 export function adminNotificationTemplate(subject: string, message: string) {
@@ -298,11 +332,16 @@ export function quoteNotificationTemplate(payloadSummary: string) {
         <td style="padding:14px 16px;border-radius:16px;background:#f8fbff;border:1px solid #dbe4ee;color:#334155;white-space:pre-line;line-height:1.7;">${payloadSummary}</td>
       </tr>
     </table>`;
-  return baseHtmlTemplate({ title: "New quote request", preheader: "New lead or quote captured", bodyHtml: body, ctaText: "Open dashboard", ctaHref: `${appUrl}/admin/leads` });
+  return baseHtmlTemplate({
+    title: "New quote request",
+    preheader: "New lead or quote captured",
+    bodyHtml: body,
+    ctaText: "Open dashboard",
+    ctaHref: `${appUrl}/admin/leads`,
+  });
 }
 
 export default {
-  initTransporter,
   sendEmail,
   verificationTemplate,
   resetTemplate,

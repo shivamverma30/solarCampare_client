@@ -1,14 +1,9 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import dns from "dns";
 import path from "path";
 
 dotenv.config();
-
-// Force IPv4-first DNS resolution globally — prevents ENETUNREACH on Railway
-// where smtp.gmail.com may resolve to an IPv6 address unreachable from the container.
-dns.setDefaultResultOrder("ipv4first");
 
 // validate environment early
 import {getEnv} from "./lib/env";

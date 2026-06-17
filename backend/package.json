@@ -12,8 +12,8 @@
     "prisma:migrate": "npx prisma migrate dev",
     "prisma:seed": "tsx prisma/seed.ts",
     "db:push": "npx prisma db push",
-    "db:reset": "npx prisma migrate reset"
-    ,"test:integration": "NODE_ENV=test tsx tests/integration.ts"
+    "db:reset": "npx prisma migrate reset",
+    "test:integration": "NODE_ENV=test tsx tests/integration.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -28,7 +28,8 @@
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.0",
     "multer": "^2.1.1",
-    "nodemailer": "^8.0.8"
+    "nodemailer": "^8.0.8",
+    "resend": "6.12.4"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.2",
