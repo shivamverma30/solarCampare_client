@@ -41,7 +41,7 @@ export default function ReferralPromptModal() {
             </button>
           </div>
 
-          <p className="mt-3 text-sm leading-7 text-slate-600">Invite friends and earn Amazon vouchers while the quote flow continues uninterrupted.</p>
+          <p className="mt-3 text-sm leading-7 text-slate-600">Invite friends and earn a special gift while the quote flow continues uninterrupted.</p>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             {REFERRAL_REWARD_SLABS.map((slab) => (

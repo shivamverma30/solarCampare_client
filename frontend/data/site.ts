@@ -48,11 +48,6 @@ const benefitsByLocale: Record<string, BenefitCard[]> = {
       description:
         "Stay supported after handover with monitoring, maintenance, insurance guidance, and escalation help when needed.",
     },
-    {
-      title: "Zero commission — you pay the same as going direct",
-      description:
-        "The price you see is the price you get, with no hidden commission from homeowners and no markup on the platform.",
-    },
   ],
   hi: [
     {
@@ -79,11 +74,6 @@ const benefitsByLocale: Record<string, BenefitCard[]> = {
       title: "इंस्टॉलेशन के बाद भी निगरानी और सहायता",
       description:
         "मॉनिटरिंग, मेंटेनेंस, बीमा मार्गदर्शन और ज़रूरत पड़ने पर एस्केलेशन सपोर्ट के साथ हम जुड़े रहते हैं।",
-    },
-    {
-      title: "कोई कमीशन नहीं - सीधे जैसा ही मूल्य",
-      description:
-        "जो कीमत दिखती है, वही अंतिम कीमत होती है; घर मालिकों से कोई छिपा कमीशन नहीं और प्लेटफ़ॉर्म पर कोई मार्कअप नहीं।",
     },
   ],
 };

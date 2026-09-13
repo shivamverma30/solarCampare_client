@@ -141,17 +141,17 @@ function DropdownGroup({
 }) {
   const triggerStyles = overlay
     ? isActive
-      ? "border-white/18 bg-white/14 text-white font-semibold ring-1 ring-white/20"
-      : "border-white/10 text-white/95 hover:border-white/18 hover:bg-white/10 hover:text-white"
+      ? "border-white/18 bg-white/14 text-white font-bold text-[15px] ring-1 ring-white/20"
+      : "border-white/10 text-white/95 hover:border-white/18 hover:bg-white/10 hover:text-white text-[15px] font-semibold"
     : isActive
-      ? "border-slate-900/10 bg-slate-50 text-slate-900 font-semibold shadow-sm"
-      : "border-transparent text-slate-900 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900";
+      ? "border-slate-900/10 bg-slate-50 text-slate-900 font-bold text-[15px] shadow-sm"
+      : "border-transparent text-slate-800 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900 text-[15px] font-semibold";
 
   return (
     <div className="relative group">
       <button
         type="button"
-        className={`inline-flex h-11 items-center gap-1 rounded-full border px-4 text-sm font-semibold transition focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${triggerStyles}`}
+        className={`inline-flex h-11 items-center gap-1 rounded-full border px-4 text-[16px] font-semibold transition focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${triggerStyles}`}
         aria-expanded={isOpen}
         onClick={(event) => {
           event.stopPropagation();
@@ -529,7 +529,7 @@ export default function Navbar() {
                   key={navKey}
                   href={link.href}
                   onClick={closeMenus}
-                  className="flex items-center justify-between rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900"
+                  className="flex items-center justify-between rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-800 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900"
                 >
                   <span>{link.label}</span>
                   <ChevronDown className="h-4 w-4 -rotate-90 text-slate-400" />
@@ -544,7 +544,7 @@ export default function Navbar() {
                 <div key={group.label} className="rounded-2xl border border-slate-200 bg-slate-50/80">
                   <button
                     type="button"
-                    className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-semibold text-slate-800"
+                    className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-bold text-slate-900"
                     onClick={() => setActiveGroup((current) => (current === group.label ? null : group.label))}
                     aria-expanded={isOpen}
                   >

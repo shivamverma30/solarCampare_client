@@ -203,7 +203,7 @@ function PublicReferralView({
 }) {
   const stats = [
     { label: "Total referrals", value: String(referralCount), detail: "Verified and shown here", tone: "cyan" as Tone, icon: Users },
-    { label: "Current tier", value: currentTierLabel, detail: referral?.currentReward || "Begin sharing to unlock vouchers", tone: "emerald" as Tone, icon: Crown },
+    { label: "Current tier", value: currentTierLabel, detail: referral?.currentReward || "Begin sharing to unlock rewards", tone: "emerald" as Tone, icon: Crown },
     { label: "Next target", value: String(referral?.rewardProgress.target || 5), detail: `${referral?.rewardProgress.percentage || 0}% progress to the next milestone`, tone: "amber" as Tone, icon: LineChart },
   ];
 
@@ -230,7 +230,7 @@ function PublicReferralView({
                 </h1>
 
                 <p className="mt-6 max-w-3xl text-base leading-8 text-white/78 md:text-lg lg:text-xl">
-                  Invite your friends to SolarCompare and unlock exciting Amazon vouchers while helping more families switch to clean energy.
+                  Refer your friends and receive a special gift while helping more families switch to clean energy.
                 </p>
 
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center sm:flex-wrap">
@@ -253,7 +253,7 @@ function PublicReferralView({
 
                 <div className="mt-8 flex flex-wrap justify-center gap-3 text-sm text-white/80">
                   <PillBadge icon={ShieldCheck} label="Login required to share" />
-                  <PillBadge icon={Gift} label="Amazon vouchers up to ₹4000" />
+                  <PillBadge icon={Gift} label="Special gifts for successful referrals" />
                   <PillBadge icon={BadgeCheck} label="Public page, private sharing" />
                 </div>
               </div>
@@ -330,7 +330,7 @@ function PublicReferralView({
               { step: "01", title: "Share Referral Link", text: "Send your personalized SolarCompare link from any device.", icon: Share2, tone: "cyan" as Tone },
               { step: "02", title: "Friend Requests Solar Quote", text: "Your friend explores the calculator or quote flow.", icon: Users, tone: "amber" as Tone },
               { step: "03", title: "Referral Gets Verified", text: "We verify the activity and log the reward event.", icon: ShieldCheck, tone: "emerald" as Tone },
-              { step: "04", title: "Earn Amazon Voucher", text: "Your reward tier updates and the voucher journey begins.", icon: Trophy, tone: "violet" as Tone },
+              { step: "04", title: "Earn a special gift", text: "Your reward tier updates and your referral reward journey begins.", icon: Trophy, tone: "violet" as Tone },
             ].map((item, index) => (
               <TimelineCard key={item.title} {...item} index={index} isLast={index === 3} />
             ))}
@@ -631,7 +631,7 @@ function RewardCard({ tier, index, isCurrent, progress }: { tier: ReferralReward
         </div>
 
         <div className="mt-4 rounded-3xl border border-slate-200 bg-slate-50 p-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Amazon voucher</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Reward</p>
           <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{tier.reward}</p>
         </div>
 
@@ -754,7 +754,7 @@ function ReferralHistoryTable({ history }: { history: ReferralHistoryItem[] }) {
         </table>
       </div>
       <div className="border-t border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-        After completing successful referrals, send a screenshot of your completed referrals to the admin email and claim your reward voucher.
+        After completing successful referrals, send a screenshot of your completed referrals to the admin email and claim your reward.
       </div>
     </div>
   );

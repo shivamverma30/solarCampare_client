@@ -181,7 +181,7 @@ export default async function MorePage({ params, searchParams }: MorePageProps) 
             <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
               <h3 className="text-xl font-semibold text-slate-950">Business contact information</h3>
               <div className="mt-4 space-y-3 text-sm text-slate-700">
-                <p><span className="font-semibold text-slate-900">Email:</span> hello@safweenergy.com</p>
+                <p><span className="font-semibold text-slate-900">Email:</span> <a href="mailto:solarcompare.in@gmail.com" className="text-emerald-700 underline-offset-2 hover:underline">solarcompare.in@gmail.com</a></p>
                 <p><span className="font-semibold text-slate-900">Phone:</span> +91 98765 43210</p>
                 <p><span className="font-semibold text-slate-900">Hours:</span> Mon-Sat | 9:00 AM - 7:00 PM</p>
               </div>

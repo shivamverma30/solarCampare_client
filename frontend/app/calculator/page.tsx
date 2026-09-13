@@ -9,6 +9,7 @@ import {
   calculateEmiEstimate,
   calculateSolarEstimate,
   formatCurrency,
+  isSolarStateAvailable,
   solarStateProfiles,
   type PropertyType,
   type SolarState,
@@ -56,6 +57,8 @@ function CalculatorPageContent() {
   const [leadError, setLeadError] = useState("");
   const [leadSuccess, setLeadSuccess] = useState("");
   const [stateMenuOpen, setStateMenuOpen] = useState(false);
+  const [tariff, setTariff] = useState(8.5);
+  const [roofArea, setRoofArea] = useState(780);
   const stateMenuRef = useRef<HTMLDivElement | null>(null);
   const [showProposalForm, setShowProposalForm] = useState(false);
   const [proposalSubmitting, setProposalSubmitting] = useState(false);
@@ -110,7 +113,12 @@ function CalculatorPageContent() {
   );
 
   const stateProfile = solarStateProfiles[state] || solarStateProfiles.other;
+  const isAvailableState = isSolarStateAvailable(state);
   const stateSummary = `${state} • ${stateProfile.discom} • ₹${Math.round(stateProfile.tariff)}/kWh`;
+
+  useEffect(() => {
+    setTariff(stateProfile.tariff);
+  }, [stateProfile.tariff]);
   const systemCost = formatCurrency(estimate.investment);
   const subsidyLabel = "Govt Subsidy";
   const subsidy = formatCurrency(estimate.totalSubsidy);
@@ -331,28 +339,8 @@ function CalculatorPageContent() {
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
 
-    // Logged-in users: skip lead form entirely, show results directly
-    if (isAuthenticated) {
-      setSubmitted(true);
-      return;
-    }
-
-    // Guest who already submitted the form once: skip form, show results
-    const alreadyCaptured =
-      typeof window !== "undefined" && localStorage.getItem(LEAD_CAPTURED_KEY) === "true";
-    if (alreadyCaptured) {
-      setSubmitted(true);
-      return;
-    }
-
-    // First-time guest: show the lead capture form
-    if (!submitted) {
-      setLeadError("");
-      setLeadModalOpen(true);
-      return;
-    }
-
-    setSubmitted(true);
+    setLeadError("");
+    setLeadModalOpen(true);
   };
 
   return (
@@ -379,8 +367,8 @@ function CalculatorPageContent() {
         </div>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[390px_minmax(0,1.12fr)] lg:items-start lg:gap-10">
-        <div className="max-w-3xl">
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start lg:gap-8">
+        <div className="w-full">
           <div className="overline mb-3">{t("calculator.eyebrow")}</div>
           <h1 className="text-[36px] font-bold leading-10 tracking-[-0.9px] text-slate-900 md:text-[36px]">
             {t("calculator.heroTitle")}
@@ -451,37 +439,50 @@ function CalculatorPageContent() {
                     ))}
                   </div>
                 ) : null}
-                <div className="mt-2 text-[14px] leading-6 text-slate-600">
-                  {stateProfile.discom} • avg tariff ₹{Math.round(stateProfile.tariff)}/kWh • {stateProfile.sunHours.toFixed(1)} sun-hr/day
-                </div>
+                {!isAvailableState ? (
+                  <div className="mt-2 text-[14px] leading-6 text-amber-700">
+                    * Currently unavailable in your city. Our team will reach out as we expand our services.
+                  </div>
+                ) : null}
               </div>
             </div>
 
-            <div className="mt-5">
-              <div className="label-dark">{t("calculator.monthlyBill")}</div>
-              <input
-                type="number"
+            <div className="mt-5 grid gap-4 md:gap-5 xl:grid-cols-3">
+              <SliderField
+                label={t("calculator.monthlyBill")}
+                value={`₹${monthlyBillValue.toLocaleString("en-IN")}`}
                 min={500}
                 max={50000}
                 step={500}
-                value={monthlyBill}
-                onChange={(event) => setMonthlyBill(event.target.value)}
-                className="input-dark h-14.25 px-4 text-[24px]"
+                sliderValue={monthlyBillValue > 0 ? monthlyBillValue : 500}
+                onChange={(value) => setMonthlyBill(String(value))}
+                minLabel="₹500"
+                maxLabel="₹50,000"
               />
-              <input
-                type="range"
-                min={500}
-                max={50000}
-                step={500}
-                value={monthlyBillValue > 0 ? monthlyBillValue : 500}
-                onChange={(event) => setMonthlyBill(event.target.value)}
-                className="mt-3 w-full accent-brand-500"
+
+              <SliderField
+                label="Tariff"
+                value={`₹${tariff.toFixed(1)}/unit`}
+                min={2}
+                max={15}
+                step={0.5}
+                sliderValue={tariff}
+                onChange={(value) => setTariff(value)}
+                minLabel="₹2"
+                maxLabel="₹15"
               />
-              <div className="mt-2 flex items-center justify-between text-[12px] font-medium text-slate-400">
-                <span>₹500</span>
-                <span>₹25,000</span>
-                <span>₹50,000</span>
-              </div>
+
+              <SliderField
+                label="Shade-free roof"
+                value={`${Math.round(roofArea).toLocaleString("en-IN")} sq ft`}
+                min={200}
+                max={25000}
+                step={100}
+                sliderValue={roofArea}
+                onChange={(value) => setRoofArea(value)}
+                minLabel="200 sq ft"
+                maxLabel="25k sq ft"
+              />
             </div>
 
             <button type="submit" data-testid="calc-submit" className="btn-primary mt-7 h-12 w-full">
@@ -551,9 +552,11 @@ function CalculatorPageContent() {
                     {t("calculator.detailedEmi")}
                     <ArrowRight className="h-4 w-4" />
                   </Link>
-                  <button type="button" onClick={handleCompareVendors} className="btn-ghost h-12 flex-1">
-                    {t("calculator.compareVendors")}
-                    <ArrowRight className="h-4 w-4" />
+                  <button type="button" onClick={handleCompareVendors} className="btn-ghost h-auto min-h-12 flex-1 min-w-0 whitespace-normal px-3 py-3 text-center leading-5">
+                    <span className="inline-flex items-center justify-center gap-2 text-center">
+                      {t("calculator.compareVendors")}
+                      <ArrowRight className="h-4 w-4 shrink-0" />
+                    </span>
                   </button>
                 </div>
 
@@ -561,6 +564,10 @@ function CalculatorPageContent() {
                   {t("calculator.detailedProposal")}
                   <ArrowRight className="h-4 w-4" />
                 </button>
+
+                <p className="mt-5 text-[12px] leading-6 text-slate-600">
+                  Estimates only. Your actual tariff, subsidy and net-metering terms are set by your state DISCOM, so these figures will differ from a final quote.
+                </p>
               </div>
             </>
           )}
@@ -568,7 +575,7 @@ function CalculatorPageContent() {
       </div>
 
       {leadModalOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4 py-6 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/60 px-4 py-8 pt-28 backdrop-blur-sm">
           <div className="w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.22)] md:p-8">
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -619,7 +626,7 @@ function CalculatorPageContent() {
       ) : null}
 
       {showProposalForm ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4 py-6 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/60 px-4 py-8 pt-28 backdrop-blur-sm">
           <div className="w-full max-w-3xl rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.22)] md:p-8">
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -718,6 +725,61 @@ function Stat({ label, value }: { label: string; value: string }) {
     <div className="rounded-[20px] border border-emerald-100 bg-white px-4 py-4 shadow-[0_10px_24px_rgba(16,185,129,0.06)]">
       <div className="text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500">{label}</div>
       <div className="mt-2 text-[24px] font-semibold leading-none tracking-[-0.03em] text-slate-950">{value}</div>
+    </div>
+  );
+}
+
+function SliderField({
+  label,
+  value,
+  min,
+  max,
+  step,
+  sliderValue,
+  onChange,
+  minLabel,
+  maxLabel,
+}: {
+  label: string;
+  value: string;
+  min: number;
+  max: number;
+  step: number;
+  sliderValue: number;
+  onChange: (value: number) => void;
+  minLabel: string;
+  maxLabel: string;
+}) {
+  const percent = Math.min(100, Math.max(0, ((sliderValue - min) / (max - min)) * 100));
+
+  return (
+    <div className="min-w-0">
+      <div className="flex items-end justify-between gap-2">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">{label}</div>
+        <div className="text-right text-[13px] font-semibold text-slate-900">{value}</div>
+      </div>
+
+      <div className="mt-3">
+        <input
+          type="range"
+          className="h-2 w-full cursor-pointer appearance-none rounded-full border-0 bg-transparent"
+          min={min}
+          max={max}
+          step={step}
+          value={sliderValue}
+          onChange={(event) => onChange(Number(event.target.value))}
+          style={{
+            background: `linear-gradient(90deg, #10b981 0%, #10b981 ${percent}%, #e2e8f0 ${percent}%, #e2e8f0 100%)`,
+            WebkitAppearance: "none",
+            appearance: "none",
+          }}
+        />
+      </div>
+
+      <div className="mt-2 flex items-center justify-between text-[10px] font-medium text-slate-400">
+        <span>{minLabel}</span>
+        <span>{maxLabel}</span>
+      </div>
     </div>
   );
 }

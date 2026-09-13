@@ -154,11 +154,6 @@ export async function sendEmail({
 
   const from = process.env.EMAIL_FROM || "no-reply@localhost";
 
-  // TEMPORARY DEBUG — remove after confirming sender value
-  console.log("EMAIL_FROM ENV =", process.env.EMAIL_FROM);
-  console.log("RESEND FROM =", from);
-  console.log("RESEND PAYLOAD =", JSON.stringify({ from, to, subject, html: html ? "[html present]" : undefined, text }));
-
   const { data, error } = await client.emails.send({
     from,
     to,

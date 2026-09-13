@@ -37,6 +37,12 @@ export const stateSubsidies = solarStateProfiles;
 
 export type SolarState = keyof typeof solarStateProfiles;
 
+export const AVAILABLE_SOLAR_STATES = ["MadhyaPradesh", "UttarPradesh", "Haryana", "Delhi"] as const satisfies readonly SolarState[];
+
+export function isSolarStateAvailable(state: SolarState): boolean {
+  return AVAILABLE_SOLAR_STATES.includes(state as (typeof AVAILABLE_SOLAR_STATES)[number]);
+}
+
 export type SolarInputs = {
   monthlyBill: number;
   state: SolarState;

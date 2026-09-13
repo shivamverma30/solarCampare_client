@@ -5,12 +5,12 @@ import { Facebook, Instagram, Linkedin, Twitter, Youtube } from "lucide-react";
 import BrandMark from "@/components/brand-mark";
 import { useLocale } from "@/components/locale-provider";
 
-const socialPlaceholders = [
-  { label: "Instagram", icon: Instagram },
-  { label: "Facebook", icon: Facebook },
-  { label: "LinkedIn", icon: Linkedin },
-  { label: "YouTube", icon: Youtube },
-  { label: "X", icon: Twitter },
+const socialLinks = [
+  { label: "Instagram", href: "/", icon: Instagram },
+  { label: "Facebook", href: "/", icon: Facebook },
+  { label: "LinkedIn", href: "https://www.linkedin.com/company/safweenergy/", icon: Linkedin, external: true },
+  { label: "YouTube", href: "/", icon: Youtube },
+  { label: "X", href: "/", icon: Twitter },
 ];
 
 export default function Footer() {
@@ -60,14 +60,17 @@ export default function Footer() {
           <div className="mt-5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">{t("footer.social")}</p>
             <div className="mt-3 flex flex-wrap gap-2.5">
-              {socialPlaceholders.map((item) => {
+              {socialLinks.map((item) => {
                 const Icon = item.icon;
+                const isExternal = Boolean(item.external);
 
                 return (
                   <Link
                     key={item.label}
-                    href="/"
-                    aria-label={`${item.label} placeholder link`}
+                    href={item.href}
+                    target={isExternal ? "_blank" : undefined}
+                    rel={isExternal ? "noopener noreferrer" : undefined}
+                    aria-label={item.label}
                     className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-700"
                   >
                     <Icon className="h-4 w-4" />
@@ -75,6 +78,13 @@ export default function Footer() {
                 );
               })}
             </div>
+          </div>
+
+          <div className="mt-6 text-sm leading-7 text-slate-700">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Address</p>
+            <address className="mt-2 not-italic text-slate-700">
+              E-29 Girnar Valley, Bhopal, Madhya Pradesh 462010, India
+            </address>
           </div>
         </div>
 
