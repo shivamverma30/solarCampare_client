@@ -28,7 +28,7 @@ export function getEnv(): EnvConfig {
     JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "7d",
     FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:3000",
     GROQ_API_KEY: process.env.GROQ_API_KEY || "",
-    GROQ_MODEL: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
+    GROQ_MODEL: process.env.GROQ_MODEL || "openai/gpt-oss-20b",
     EMAIL_LOGO_URL: process.env.EMAIL_LOGO_URL,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     EMAIL_FROM: process.env.EMAIL_FROM || "no-reply@localhost",

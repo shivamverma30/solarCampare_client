@@ -48,7 +48,7 @@ function buildRequestBody(systemPrompt: string, messages: ProviderMessage[], use
       { role: "user", content: userMessage },
     ],
     temperature: 0.35,
-    max_tokens: 280,
+    max_tokens: 700,
   };
 }
 

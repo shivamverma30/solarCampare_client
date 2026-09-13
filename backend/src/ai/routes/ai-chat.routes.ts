@@ -28,18 +28,15 @@ export const messageHandler = [
       const result = await aiChatService.respondToMessage(payload);
       res.status(200).json({ success: true, data: result });
     } catch (error) {
-      console.error("AI message error:", error);
-      res.status(200).json({
-        success: true,
-        data: {
-          reply: "Sorry, I couldn't process that request right now. Please try again.",
-          confidence: 0,
-          shouldEscalate: true,
-          ctaSuggestions: ["GET_PROPOSAL"],
-          suggestedQuestions: [],
-          conversationId: parsed.data?.conversationId || "",
-        },
+      const reason = error instanceof Error ? error.message : String(error);
+      const statusMatch = reason.match(/status (\d{3})/i);
+
+      console.error("[AI CHAT ERROR]", {
+        status: statusMatch ? Number(statusMatch[1]) : 500,
+        provider: "groq",
+        reason: reason.slice(0, 500),
       });
+      res.status(502).json({ success: false, error: "Solar AI is temporarily unavailable. Please try again." });
     }
   },
 ];
