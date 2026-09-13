@@ -70,7 +70,7 @@ function LoginPageContent() {
           <h1 className="mt-3 text-5xl">{t("auth.powerFuture")}</h1>
           <p className="mt-5 max-w-sm text-sm leading-7 text-white/80">{t("auth.signinDescription")}</p>
           <div className="mt-10 rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur">
-            <p className="text-sm text-white/85">New here?</p>
+            <p className="text-sm text-white/85">{t("auth.newHere")}</p>
             <Link href={signupHref} className="mt-3 inline-flex rounded-full border border-emerald-300/70 bg-emerald-400 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300">
               {t("buttons.createAccount")}
             </Link>
@@ -85,14 +85,14 @@ function LoginPageContent() {
 
           <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
             <label className="block text-sm font-medium text-slate-700">
-              Account type
+              {t("auth.accountType")}
               <select
                 value={role}
                 onChange={(event) => setRole(event.target.value as LoginRole)}
                 className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-emerald-400"
               >
-                <option value="user">User</option>
-                <option value="vendor">Vendor</option>
+                <option value="user">{t("auth.user")}</option>
+                <option value="vendor">{t("auth.vendor")}</option>
               </select>
             </label>
 
@@ -125,7 +125,7 @@ function LoginPageContent() {
               </label>
               <div className="flex items-center gap-4">
                 <Link href="/forgot-password" className="text-sm font-semibold text-emerald-700 transition hover:text-emerald-600">
-                  {t("buttons.forgotPassword")}
+                  {t("auth.forgotPassword")}
                 </Link>
                 <Link href={signupHref} className="text-sm font-semibold text-emerald-700 transition hover:text-emerald-600">
                   {t("buttons.createAccount")}
@@ -134,14 +134,14 @@ function LoginPageContent() {
             </div>
 
             <button type="submit" disabled={loading} className="mt-2 w-full rounded-xl border border-emerald-300/80 bg-emerald-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300 disabled:opacity-60">
-              {loading ? "Signing in..." : t("buttons.login")}
+              {loading ? t("auth.signingIn") : t("buttons.login")}
             </button>
           </form>
 
           <PrivacyNote />
 
           <p className="mt-5 text-sm text-slate-600">
-            {t("auth.dontHaveAccount")} <Link href={signupHref} className="font-semibold text-emerald-700 transition hover:text-emerald-600">{t("buttons.signUp")}</Link>
+            {t("auth.dontHaveAccount")} <Link href={signupHref} className="font-semibold text-emerald-700 transition hover:text-emerald-600">{t("auth.signUp")}</Link>
           </p>
         </div>
       </div>
