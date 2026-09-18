@@ -50,13 +50,13 @@ async function request<T>(path: string, payload: unknown): Promise<{ success: bo
 
 export const aiChatClient = {
   async sendMessage(payload: AiMessagePayload) {
-    const body: any = { ...payload };
+    const body: AiMessagePayload = { ...payload };
     if (body.conversationId === null) delete body.conversationId;
     return request<AiChatResult>("/api/ai-chat/message", body);
   },
 
   async submitLead(payload: AiLeadPayload) {
-    const body: any = { ...payload };
+    const body: AiLeadPayload = { ...payload };
     if (body.conversationId === null) delete body.conversationId;
     return request<{ leadId: string; status: string; conversationId?: string }>("/api/ai-chat/lead", body);
   },
