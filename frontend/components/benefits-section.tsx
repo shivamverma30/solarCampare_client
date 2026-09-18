@@ -83,7 +83,7 @@ export default function BenefitsSection() {
               "समझदार ग्राहक सिर्फ सोलर नहीं अपनाते। वे सही सोलर अपनाते हैं।"
             ) : (
               <>
-                Smart buyers don't just go solar. They go solar <span className="bg-linear-to-r from-emerald-600 via-teal-600 to-sky-600 bg-clip-text font-extrabold text-transparent">right.</span>
+                Smart buyers don&apos;t just go solar. They go solar <span className="bg-linear-to-r from-emerald-600 via-teal-600 to-sky-600 bg-clip-text font-extrabold text-transparent">right.</span>
               </>
             )}
           </p>

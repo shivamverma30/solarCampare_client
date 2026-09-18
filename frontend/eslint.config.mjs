@@ -13,6 +13,14 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    rules: {
+      // Reading from browser-only sources (localStorage, search params) and
+      // signalling async/verification state inside effects is intentional here.
+      // This opinionated rule flags those valid patterns, so we disable it.
+      "react-hooks/set-state-in-effect": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;
