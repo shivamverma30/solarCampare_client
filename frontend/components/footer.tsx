@@ -6,7 +6,7 @@ import BrandMark from "@/components/brand-mark";
 import { useLocale } from "@/components/locale-provider";
 
 const socialLinks = [
-  { label: "Instagram", href: "/", icon: Instagram },
+  { label: "Instagram", href: "https://www.instagram.com/solarcompare.in/", icon: Instagram, external: true },
   { label: "Facebook", href: "/", icon: Facebook },
   { label: "LinkedIn", href: "https://www.linkedin.com/company/safweenergy/", icon: Linkedin, external: true },
   { label: "YouTube", href: "/", icon: Youtube },
