@@ -9,7 +9,7 @@ const socialLinks = [
   { label: "Instagram", href: "https://www.instagram.com/solarcompare.in/", icon: Instagram, external: true },
   { label: "Facebook", href: "/", icon: Facebook },
   { label: "LinkedIn", href: "https://www.linkedin.com/company/safweenergy/", icon: Linkedin, external: true },
-  { label: "YouTube", href: "/", icon: Youtube },
+  { label: "YouTube", href: "https://www.youtube.com/@solarcompare", icon: Youtube, external: true },
   { label: "X", href: "/", icon: Twitter },
 ];
 
