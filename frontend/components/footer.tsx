@@ -9,7 +9,7 @@ const socialLinks = [
   { label: "Instagram", href: "https://www.instagram.com/solarcompare.in/", icon: Instagram, external: true },
   { label: "Facebook", href: "/", icon: Facebook },
   { label: "LinkedIn", href: "https://www.linkedin.com/company/safweenergy/", icon: Linkedin, external: true },
-  { label: "YouTube", href: "https://www.youtube.com/@solarcompare", icon: Youtube, external: true },
+  { label: "YouTube", href: "https://youtube.com/@solarcompare?si=BWSyuUDlfRTkeKTW", icon: Youtube, external: true },
   { label: "X", href: "/", icon: Twitter },
 ];
 
@@ -39,20 +39,27 @@ export default function Footer() {
     { label: t("footer.vendorPartners"), href: "/become-vendor" },
     { label: t("footer.careers"), href: "/more/contact-us" },
     { label: t("footer.contact"), href: "/more/contact-us" },
-    { label: t("footer.privacyPolicy"), href: "/more/contact-us" },
+    { label: t("footer.privacyPolicy"), href: "/privacy-policy" },
   ];
 
   return (
     <footer className="border-t border-slate-200 bg-white/90 pt-8 md:pt-10">
       <div className="mx-auto grid w-full max-w-7xl gap-8 px-4 md:grid-cols-[1.2fr_1fr_1fr_1fr] md:gap-10 md:px-8">
         <div className="max-w-sm">
-          <BrandMark
-            href="/"
-            compact
-            className="items-start"
-            titleClassName="text-slate-900"
-            taglineClassName="text-slate-500"
-          />
+          <div className="flex items-center gap-2">
+            <BrandMark
+              href="/"
+              compact
+              className="items-start"
+              titleClassName="text-slate-900"
+              taglineClassName="text-slate-500"
+              showTagline={false}
+              showTitle={false}
+            />
+            <span className="max-w-[18rem] text-[0.68rem] font-bold uppercase leading-5 tracking-[0.12em] text-slate-700">
+              SOLAR COMPARE BY SAFWE ENERGY SOLUTIONS PRIVATE LIMITED
+            </span>
+          </div>
           <p className="mt-3 text-sm leading-7 text-slate-600">
             {t("footer.description")}
           </p>

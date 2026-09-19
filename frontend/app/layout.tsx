@@ -18,8 +18,8 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   title: {
-    default: "Solar Compare by SAFWE ENERGY",
-    template: "%s | Solar Compare by SAFWE ENERGY",
+    default: "SOLAR COMPARE BY SAFWE ENERGY SOLUTIONS PRIVATE LIMITED",
+    template: "%s | SOLAR COMPARE BY SAFWE ENERGY SOLUTIONS PRIVATE LIMITED",
   },
   description: "Compare solar brands, estimate savings, and connect with trusted installers across India.",
   icons: {
