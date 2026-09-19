@@ -123,7 +123,21 @@ export default function Footer() {
       </div>
 
       <div className="mx-auto mt-8 flex w-full max-w-7xl flex-wrap items-center justify-center gap-x-3 gap-y-2 border-t border-slate-200 px-4 py-5 text-center text-xs text-slate-500 md:px-8">
-        <p>© 2026 Solar Compare. All Rights Reserved.</p>
+        <p className="inline-flex flex-wrap items-center justify-center gap-x-1 gap-y-1">
+          <span>© 2026 SAFWE ENERGY SOLUTIONS PRIVATE LIMITED. All Rights Reserved.</span>
+          <span aria-hidden="true" className="text-slate-300">|</span>
+          <span>
+            CIN:&nbsp;
+            <a
+              href="https://www.google.com/search?q=U35105MP2026PTC086766"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-slate-600 underline-offset-4 transition hover:text-slate-900 hover:underline"
+            >
+              U35105MP2026PTC086766
+            </a>
+          </span>
+        </p>
         <span aria-hidden="true" className="text-slate-300">|</span>
         <span className="inline-flex items-center gap-1.5">
           <span>Made with ❤️ by</span>
