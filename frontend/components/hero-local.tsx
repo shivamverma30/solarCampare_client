@@ -31,7 +31,14 @@ export default function HeroLocal() {
             {...fadeUp}
             className="mx-auto max-w-5xl text-4xl font-extrabold leading-[1.02] tracking-[-0.02em] text-white drop-shadow-[0_10px_28px_rgba(2,6,23,0.3)] sm:text-5xl md:text-6xl lg:text-7xl"
           >
-            {t("home.heroTitle")}
+            {t("home.heroTitle").endsWith("Confidence") ? (
+              <>
+                {t("home.heroTitle").slice(0, -"Confidence".length)}
+                <span className="text-[var(--accent)]">Confidence</span>
+              </>
+            ) : (
+              t("home.heroTitle")
+            )}
           </motion.h1>
 
           <motion.p

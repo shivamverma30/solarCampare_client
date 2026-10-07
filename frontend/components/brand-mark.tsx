@@ -46,8 +46,8 @@ export default function BrandMark({
         <span className={`flex min-w-0 leading-none ${stacked ? "flex-col" : "flex-col"}`}>
           {stacked ? (
             <>
-              <span className={`${titleClasses} text-[1.16rem] font-black tracking-[0.11em]`}>Solar</span>
-              <span className={`${titleClasses} mt-0.5 text-[1.16rem] font-black tracking-[0.09em]`}>Compare</span>
+              <span className={`${titleClasses} !text-blue-600 text-[1.16rem] font-black tracking-[0.11em]`}>Solar</span>
+              <span className={`${titleClasses} !text-[var(--accent)] mt-0.5 text-[1.16rem] font-black tracking-[0.09em]`}>Compare</span>
             </>
           ) : (
             <span className={titleClasses}>Solar Compare</span>

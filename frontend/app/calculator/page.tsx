@@ -47,12 +47,13 @@ function CalculatorPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useLocale();
-  const { isAuthenticated, role } = useAuth();
+  const { isAuthenticated, isLoading, role } = useAuth();
   const [monthlyBill, setMonthlyBill] = useState("3000");
   const [propertyType, setPropertyType] = useState<PropertyType>("residential");
   const [state, setState] = useState<SolarState>("Maharashtra");
   const [submitted, setSubmitted] = useState(false);
   const [leadModalOpen, setLeadModalOpen] = useState(false);
+  const [pendingCalculatorFlow, setPendingCalculatorFlow] = useState(false);
   const [leadSubmitting, setLeadSubmitting] = useState(false);
   const [leadError, setLeadError] = useState("");
   const [leadSuccess, setLeadSuccess] = useState("");
@@ -101,6 +102,17 @@ function CalculatorPageContent() {
       city: String(profile.city || current.city || ""),
     }));
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (!pendingCalculatorFlow || isLoading) return;
+
+    setPendingCalculatorFlow(false);
+    if (isAuthenticated) {
+      setSubmitted(true);
+    } else {
+      setLeadModalOpen(true);
+    }
+  }, [isAuthenticated, isLoading, pendingCalculatorFlow]);
 
   const validationErrors = useMemo(() => validateSolarInputs({ monthlyBill: monthlyBillValue, state, propertyType }), [monthlyBillValue, propertyType, state]);
   const estimate = useMemo(
@@ -340,6 +352,16 @@ function CalculatorPageContent() {
     event.preventDefault();
 
     setLeadError("");
+    if (isLoading) {
+      setPendingCalculatorFlow(true);
+      return;
+    }
+
+    if (isAuthenticated) {
+      setSubmitted(true);
+      return;
+    }
+
     setLeadModalOpen(true);
   };
 
