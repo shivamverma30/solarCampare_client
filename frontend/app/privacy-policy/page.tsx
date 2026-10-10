@@ -118,7 +118,7 @@ const sections: PolicySection[] = [
   {
     title: "Contact Us",
     paragraphs: [
-      `For questions, access or correction requests, privacy concerns, or requests about information submitted through Solar Compare, contact ${companyName} at solarcompare.in@gmail.com. You may also write to us at E-29 Girnar Valley, Bhopal, Madhya Pradesh 462010, India. Please include enough detail for us to identify the relevant account or request, but do not send passwords or verification codes.`,
+      `For questions, access or correction requests, privacy concerns, or requests about information submitted through Solar Compare, contact ${companyName} at info@solarcompare.in. You may also write to us at E-29 Girnar Valley, Bhopal, Madhya Pradesh 462010, India. Please include enough detail for us to identify the relevant account or request, but do not send passwords or verification codes.`,
     ],
   },
 ];
@@ -163,7 +163,7 @@ export default function PrivacyPolicyPage() {
           <p className="mt-4 text-sm leading-7 text-slate-300">
             This policy describes the information used to provide accounts, comparisons, enquiries, vendor connections, calculators, notifications, and support.
           </p>
-          <a href="mailto:solarcompare.in@gmail.com" className="mt-6 inline-flex text-sm font-semibold text-white underline decoration-slate-500 underline-offset-4 transition hover:decoration-white">
+          <a href="mailto:info@solarcompare.in" className="mt-6 inline-flex text-sm font-semibold text-white underline decoration-slate-500 underline-offset-4 transition hover:decoration-white">
             Contact privacy support
           </a>
         </aside>

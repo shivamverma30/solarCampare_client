@@ -145,28 +145,6 @@ export default function Footer() {
             </a>
           </span>
         </p>
-        <span aria-hidden="true" className="text-slate-300">|</span>
-        <span className="inline-flex items-center gap-1.5">
-          <span>Made with ❤️ by</span>
-          <Link
-            href="https://www.shivamverma.me/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-medium text-slate-600 transition hover:text-slate-900"
-          >
-            Shivam Verma
-          </Link>
-        </span>
-        <span aria-hidden="true" className="text-slate-300">|</span>
-        <Link
-          href="https://www.linkedin.com/in/shubham-kumar-0115a9224/"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Shubham Kumar on LinkedIn"
-          className="inline-flex items-center font-medium text-slate-600 transition hover:text-slate-900"
-        >
-          <span>Shubham Kumar</span>
-        </Link>
       </div>
     </footer>
   );
