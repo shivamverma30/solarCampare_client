@@ -380,15 +380,7 @@ function CalculatorPageContent() {
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start lg:gap-8">
         <div className="w-full">
-          <div className="overline mb-3">{t("calculator.eyebrow")}</div>
-          <h1 className="text-[36px] font-bold leading-10 tracking-[-0.9px] text-slate-900 md:text-[36px]">
-            {t("calculator.heroTitle")}
-          </h1>
-          <p className="mt-4 max-w-2xl text-[16px] leading-7 text-slate-600">
-            {t("calculator.heroSubtitle")}
-          </p>
-
-          <form onSubmit={handleSubmit} className="mt-8 rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-16px_rgba(15,23,42,0.08)] md:p-7">
+          <form onSubmit={handleSubmit} className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-16px_rgba(15,23,42,0.08)] md:p-7">
             <div className="mb-5 flex items-center gap-2 text-sm font-semibold text-slate-900">
               <PanelTop className="h-4 w-4 text-emerald-600" />
               <span>{t("calculator.estimateSystem")}</span>
